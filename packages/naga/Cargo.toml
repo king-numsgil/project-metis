@@ -1,0 +1,25 @@
+[package]
+name = "naga-wasm"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wasm-bindgen = "0.2"
+
+naga = { version = "^27.0.0", default-features = false, features = [
+  "wgsl-in",   # read WGSL
+  "wgsl-out",  # write WGSL (for debug output)
+  "spv-in",    # read SPIR-V
+  "spv-out",   # write SPIR-V
+  "msl-out"    # write MSL
+] }
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"
+
+[profile.release]
+opt-level = "s"

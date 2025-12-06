@@ -15,6 +15,7 @@
       "name": "metis-app",
       "dependencies": {
         "metis-engine": "workspace:*",
+        "naga": "workspace:*",
         "sdl-ffi": "workspace:*",
       },
       "devDependencies": {
@@ -35,6 +36,10 @@
       "peerDependencies": {
         "typescript": "^5",
       },
+    },
+    "packages/naga": {
+      "name": "naga",
+      "version": "0.1.0",
     },
     "packages/sdl-ffi": {
       "name": "sdl-ffi",
@@ -62,6 +67,8 @@
     "metis-app": ["metis-app@workspace:packages/metis-app"],
 
     "metis-engine": ["metis-engine@workspace:packages/metis-engine"],
+
+    "naga": ["naga@workspace:packages/naga"],
 
     "sdl-ffi": ["sdl-ffi@workspace:packages/sdl-ffi"],
 
