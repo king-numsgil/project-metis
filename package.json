@@ -1,11 +1,16 @@
 {
-  "name": "metis",
-  "private": true,
-  "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
-  },
-  "workspaces": ["packages/*"]
+    "name": "metis",
+    "private": true,
+    "dependencies": {
+        "naga": "workspace:*"
+    },
+    "devDependencies": {
+        "@types/bun": "latest"
+    },
+    "peerDependencies": {
+        "typescript": "^5"
+    },
+    "workspaces": [
+        "packages/*"
+    ]
 }

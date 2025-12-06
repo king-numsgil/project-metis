@@ -24,6 +24,7 @@
         "noUnusedLocals": false,
         "noUnusedParameters": false,
         "noPropertyAccessFromIndexSignature": false,
+        "types": ["@types/bun"],
         "paths": {
             "sdl-ffi": ["./packages/sdl-ffi/src"],
             "metis-engine": ["./packages/metis-engine/src"],

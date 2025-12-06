@@ -1,6 +1,9 @@
 import { EventType, GPULoadOp, GPUStoreOp, Keymod, Scancode, sdlGetError, ShaderFormat } from "sdl-ffi";
 import { Device, System, Window } from "metis-engine";
 
+import triangle from "./triangle.wgsl";
+console.log(triangle.vertex);
+
 function decodeKeymods(mod: Keymod): string[] {
     return (Object.keys(Keymod) as Array<keyof typeof Keymod>)
         .filter(key => isNaN(Number(key))) // strip reverse numeric mappings

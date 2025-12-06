@@ -1,0 +1,4 @@
+preload = ["./plugins/wgsl.ts"]
+
+[console]
+depth = 3
