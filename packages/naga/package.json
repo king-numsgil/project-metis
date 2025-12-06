@@ -1,12 +1,15 @@
 {
-  "name": "naga",
-  "version": "0.1.0",
-  "license": "MIT",
-  "files": [
-    "wasm/naga_wasm_bg.wasm",
-    "wasm/naga_wasm.js",
-    "wasm/naga_wasm.d.ts"
-  ],
-  "main": "wasm/naga_wasm.js",
-  "types": "wasm/naga_wasm.d.ts"
+    "name": "naga",
+    "version": "0.1.0",
+    "license": "MIT",
+    "scripts": {
+        "build": "wasm-pack build --target nodejs --out-dir wasm --release && rm wasm/package.json wasm/.gitignore wasm/LICENSE"
+    },
+    "files": [
+        "wasm/naga_wasm_bg.wasm",
+        "wasm/naga_wasm.js",
+        "wasm/naga_wasm.d.ts"
+    ],
+    "main": "wasm/naga_wasm.js",
+    "types": "wasm/naga_wasm.d.ts"
 }

@@ -2,6 +2,7 @@ use naga::valid::{Capabilities, ModuleInfo, ValidationFlags, Validator};
 use naga::Module;
 use naga::{back, front};
 use wasm_bindgen::prelude::*;
+use serde::{Serialize, Deserialize};
 
 /// WGSL -> Naga IR + validation.
 fn parse_and_validate(wgsl: &str) -> Result<(Module, ModuleInfo), JsValue> {
@@ -30,12 +31,37 @@ pub fn validate_wgsl(wgsl: &str) -> Result<(), JsValue> {
 }
 
 /// WGSL -> SPIR-V (binary words -> LE bytes) for Vulkan.
+/// If entry_point is provided, only compiles that specific entry point.
+/// If entry_point is None or empty string, compiles all entry points.
 #[wasm_bindgen(js_name = wgslToSpirvBin)]
-pub fn wgsl_to_spirv_bin(wgsl: &str) -> Result<Box<[u8]>, JsValue> {
+pub fn wgsl_to_spirv_bin(wgsl: &str, entry_point: Option<String>) -> Result<Box<[u8]>, JsValue> {
     let (module, info) = parse_and_validate(wgsl)?;
     let spv_opts = back::spv::Options::default();
-    // naga 26.x: (&module, &info, &Options, Option<&PipelineOptions>)
-    let words: Vec<u32> = back::spv::write_vec(&module, &info, &spv_opts, None)
+
+    // Determine pipeline options based on entry point
+    let pipeline_opts = if let Some(ep_name) = entry_point {
+        if ep_name.is_empty() {
+            None
+        } else {
+            // Find the entry point in the module
+            let entry = module
+                .entry_points
+                .iter()
+                .find(|ep| ep.name == ep_name)
+                .ok_or_else(|| {
+                    JsValue::from_str(&format!("Entry point '{}' not found", ep_name))
+                })?;
+
+            Some(back::spv::PipelineOptions {
+                shader_stage: entry.stage,
+                entry_point: ep_name,
+            })
+        }
+    } else {
+        None
+    };
+
+    let words: Vec<u32> = back::spv::write_vec(&module, &info, &spv_opts, pipeline_opts.as_ref())
         .map_err(|e| JsValue::from_str(&format!("SPIR-V error: {e:?}")))?;
 
     // u32 words -> little-endian bytes
@@ -44,6 +70,48 @@ pub fn wgsl_to_spirv_bin(wgsl: &str) -> Result<Box<[u8]>, JsValue> {
         bytes.extend_from_slice(&w.to_le_bytes());
     }
     Ok(bytes.into_boxed_slice())
+}
+
+/// WGSL -> MSL (Metal Shading Language) source code for Metal/macOS/iOS.
+/// If entry_point is provided, only compiles that specific entry point.
+/// If entry_point is None or empty string, compiles all entry points.
+#[wasm_bindgen(js_name = wgslToMsl)]
+pub fn wgsl_to_msl(wgsl: &str, entry_point: Option<String>) -> Result<String, JsValue> {
+    let (module, info) = parse_and_validate(wgsl)?;
+
+    // Build pipeline options based on entry point
+    let msl_opts = back::msl::Options::default();
+
+    if let Some(ep_name) = entry_point {
+        if !ep_name.is_empty() {
+            // Find the entry point in the module
+            let entry = module
+                .entry_points
+                .iter()
+                .find(|ep| ep.name == ep_name)
+                .ok_or_else(|| {
+                    JsValue::from_str(&format!("Entry point '{}' not found", ep_name))
+                })?;
+
+            // For MSL, we need to create PipelineOptions with the entry point info
+            let pipeline_opts = back::msl::PipelineOptions {
+                entry_point: Some((entry.stage, ep_name)),
+                ..Default::default()
+            };
+
+            let (msl_source, _) = back::msl::write_string(&module, &info, &msl_opts, &pipeline_opts)
+                .map_err(|e| JsValue::from_str(&format!("MSL error: {e:?}")))?;
+
+            return Ok(msl_source);
+        }
+    }
+
+    // No specific entry point - compile all
+    let pipeline_opts = back::msl::PipelineOptions::default();
+    let (msl_source, _) = back::msl::write_string(&module, &info, &msl_opts, &pipeline_opts)
+        .map_err(|e| JsValue::from_str(&format!("MSL error: {e:?}")))?;
+
+    Ok(msl_source)
 }
 
 /// SPIR-V binary -> disassembled text for debugging.
@@ -74,4 +142,373 @@ pub fn spirv_bin_to_text(spirv_bytes: &[u8]) -> Result<String, JsValue> {
         .map_err(|e| JsValue::from_str(&format!("WGSL write error: {e:?}")))?;
 
     Ok(wgsl_text)
+}
+
+// ============================================================================
+// Reflection Types
+// ============================================================================
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[wasm_bindgen(getter_with_clone)]
+pub struct ReflectionData {
+    #[wasm_bindgen(readonly)]
+    pub entry_points: Vec<EntryPointInfo>,
+    #[wasm_bindgen(readonly)]
+    pub types: Vec<TypeInfo>,
+}
+
+#[wasm_bindgen]
+impl ReflectionData {
+    #[wasm_bindgen(js_name = toJSON)]
+    pub fn to_json(&self) -> Result<JsValue, JsValue> {
+        serde_wasm_bindgen::to_value(self).map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+#[wasm_bindgen(getter_with_clone)]
+pub struct EntryPointInfo {
+    #[wasm_bindgen(readonly)]
+    pub name: String,
+    #[wasm_bindgen(readonly)]
+    pub stage: String,
+    #[wasm_bindgen(readonly)]
+    pub workgroup_size: Option<Vec<u32>>,
+    #[wasm_bindgen(readonly)]
+    pub bindings: Vec<BindingInfo>,
+    #[wasm_bindgen(readonly)]
+    pub vertex_inputs: Vec<VertexInputInfo>,
+    #[wasm_bindgen(readonly)]
+    pub fragment_outputs: Vec<FragmentOutputInfo>,
+}
+
+#[wasm_bindgen]
+impl EntryPointInfo {
+    #[wasm_bindgen(js_name = toJSON)]
+    pub fn to_json(&self) -> Result<JsValue, JsValue> {
+        serde_wasm_bindgen::to_value(self).map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+#[wasm_bindgen(getter_with_clone)]
+pub struct BindingInfo {
+    #[wasm_bindgen(readonly)]
+    pub name: String,
+    #[wasm_bindgen(readonly)]
+    pub group: u32,
+    #[wasm_bindgen(readonly)]
+    pub binding: u32,
+    #[wasm_bindgen(readonly)]
+    pub resource_type: String,
+    #[wasm_bindgen(readonly)]
+    pub type_name: Option<String>,
+}
+
+#[wasm_bindgen]
+impl BindingInfo {
+    #[wasm_bindgen(js_name = toJSON)]
+    pub fn to_json(&self) -> Result<JsValue, JsValue> {
+        serde_wasm_bindgen::to_value(self).map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+#[wasm_bindgen(getter_with_clone)]
+pub struct VertexInputInfo {
+    #[wasm_bindgen(readonly)]
+    pub name: String,
+    #[wasm_bindgen(readonly)]
+    pub location: u32,
+    #[wasm_bindgen(readonly)]
+    pub type_name: String,
+}
+
+#[wasm_bindgen]
+impl VertexInputInfo {
+    #[wasm_bindgen(js_name = toJSON)]
+    pub fn to_json(&self) -> Result<JsValue, JsValue> {
+        serde_wasm_bindgen::to_value(self).map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+#[wasm_bindgen(getter_with_clone)]
+pub struct FragmentOutputInfo {
+    #[wasm_bindgen(readonly)]
+    pub name: String,
+    #[wasm_bindgen(readonly)]
+    pub location: u32,
+    #[wasm_bindgen(readonly)]
+    pub type_name: String,
+}
+
+#[wasm_bindgen]
+impl FragmentOutputInfo {
+    #[wasm_bindgen(js_name = toJSON)]
+    pub fn to_json(&self) -> Result<JsValue, JsValue> {
+        serde_wasm_bindgen::to_value(self).map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+#[wasm_bindgen(getter_with_clone)]
+pub struct TypeInfo {
+    #[wasm_bindgen(readonly)]
+    pub name: String,
+    #[wasm_bindgen(readonly)]
+    pub kind: String,
+    #[wasm_bindgen(readonly)]
+    pub members: Option<Vec<StructMemberInfo>>,
+}
+
+#[wasm_bindgen]
+impl TypeInfo {
+    #[wasm_bindgen(js_name = toJSON)]
+    pub fn to_json(&self) -> Result<JsValue, JsValue> {
+        serde_wasm_bindgen::to_value(self).map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+#[wasm_bindgen(getter_with_clone)]
+pub struct StructMemberInfo {
+    #[wasm_bindgen(readonly)]
+    pub name: String,
+    #[wasm_bindgen(readonly)]
+    pub type_name: String,
+    #[wasm_bindgen(readonly)]
+    pub offset: u32,
+}
+
+#[wasm_bindgen]
+impl StructMemberInfo {
+    #[wasm_bindgen(js_name = toJSON)]
+    pub fn to_json(&self) -> Result<JsValue, JsValue> {
+        serde_wasm_bindgen::to_value(self).map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+}
+
+// ============================================================================
+// Reflection Implementation
+// ============================================================================
+
+/// Reflects WGSL shader and returns detailed information about entry points,
+/// bindings, inputs/outputs, and type definitions.
+#[wasm_bindgen(js_name = reflectWgsl)]
+pub fn reflect_wgsl(wgsl: &str) -> Result<ReflectionData, JsValue> {
+    let (module, _info) = parse_and_validate(wgsl)?;
+
+    let mut entry_points = Vec::new();
+
+    for entry in &module.entry_points {
+        let stage = match entry.stage {
+            naga::ShaderStage::Vertex => "vertex",
+            naga::ShaderStage::Fragment => "fragment",
+            naga::ShaderStage::Compute => "compute",
+            naga::ShaderStage::Task => "task",
+            naga::ShaderStage::Mesh => "mesh",
+        };
+
+        let workgroup_size = if entry.stage == naga::ShaderStage::Compute {
+            Some(vec![entry.workgroup_size[0], entry.workgroup_size[1], entry.workgroup_size[2]])
+        } else {
+            None
+        };
+
+        // Collect bindings
+        let mut bindings = Vec::new();
+        for (handle, var) in module.global_variables.iter() {
+            if let Some(binding) = &var.binding {
+                // Check if this entry point uses this global
+                if entry.function.expressions.iter().any(|(_, expr)| {
+                    matches!(expr, naga::Expression::GlobalVariable(h) if *h == handle)
+                }) {
+                    let resource_type = match module.types[var.ty].inner {
+                        naga::TypeInner::Struct { .. } => {
+                            match var.space {
+                                naga::AddressSpace::Uniform => "uniform",
+                                naga::AddressSpace::Storage { .. } => "storage",
+                                _ => "unknown",
+                            }
+                        }
+                        naga::TypeInner::Image { .. } => "texture",
+                        naga::TypeInner::Sampler { .. } => "sampler",
+                        _ => "unknown",
+                    };
+
+                    let type_name = get_type_name(&module, var.ty);
+
+                    bindings.push(BindingInfo {
+                        name: var.name.clone().unwrap_or_else(|| format!("binding_{}_{}", binding.group, binding.binding)),
+                        group: binding.group,
+                        binding: binding.binding,
+                        resource_type: resource_type.to_string(),
+                        type_name,
+                    });
+                }
+            }
+        }
+
+        // Collect vertex inputs
+        let mut vertex_inputs = Vec::new();
+        if entry.stage == naga::ShaderStage::Vertex {
+            for arg in &entry.function.arguments {
+                if let Some(naga::Binding::Location { location, .. }) = arg.binding {
+                    let type_name = get_type_name(&module, arg.ty);
+                    vertex_inputs.push(VertexInputInfo {
+                        name: arg.name.clone().unwrap_or_else(|| format!("input_{}", location)),
+                        location,
+                        type_name: type_name.unwrap_or_else(|| "unknown".to_string()),
+                    });
+                }
+            }
+        }
+
+        // Collect fragment outputs
+        let mut fragment_outputs = Vec::new();
+        if entry.stage == naga::ShaderStage::Fragment {
+            if let Some(ref result) = entry.function.result {
+                match &result.binding {
+                    Some(naga::Binding::Location { location, .. }) => {
+                        let type_name = get_type_name(&module, result.ty);
+                        fragment_outputs.push(FragmentOutputInfo {
+                            name: "output".to_string(),
+                            location: *location,
+                            type_name: type_name.unwrap_or_else(|| "unknown".to_string()),
+                        });
+                    }
+                    _ => {
+                        // Check if return type is a struct with location bindings
+                        if let naga::TypeInner::Struct { ref members, .. } = module.types[result.ty].inner {
+                            for member in members {
+                                if let Some(naga::Binding::Location { location, .. }) = member.binding {
+                                    let type_name = get_type_name(&module, member.ty);
+                                    fragment_outputs.push(FragmentOutputInfo {
+                                        name: member.name.clone().unwrap_or_else(|| format!("output_{}", location)),
+                                        location,
+                                        type_name: type_name.unwrap_or_else(|| "unknown".to_string()),
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        entry_points.push(EntryPointInfo {
+            name: entry.name.clone(),
+            stage: stage.to_string(),
+            workgroup_size,
+            bindings,
+            vertex_inputs,
+            fragment_outputs,
+        });
+    }
+
+    // Collect type information (structs mainly)
+    let mut types = Vec::new();
+    for (handle, ty) in module.types.iter() {
+        if let naga::TypeInner::Struct { ref members, .. } = ty.inner {
+            let mut struct_members = Vec::new();
+            for member in members {
+                let type_name = get_type_name(&module, member.ty);
+                struct_members.push(StructMemberInfo {
+                    name: member.name.clone().unwrap_or_else(|| "unnamed".to_string()),
+                    type_name: type_name.unwrap_or_else(|| "unknown".to_string()),
+                    offset: member.offset,
+                });
+            }
+
+            types.push(TypeInfo {
+                name: ty.name.clone().unwrap_or_else(|| format!("type_{:?}", handle)),
+                kind: "struct".to_string(),
+                members: Some(struct_members),
+            });
+        }
+    }
+
+    Ok(ReflectionData {
+        entry_points,
+        types,
+    })
+}
+
+fn get_type_name(module: &Module, handle: naga::Handle<naga::Type>) -> Option<String> {
+    let ty = &module.types[handle];
+
+    if let Some(ref name) = ty.name {
+        return Some(name.clone());
+    }
+
+    Some(match ty.inner {
+        naga::TypeInner::Scalar(scalar) => {
+            format_scalar(scalar)
+        }
+        naga::TypeInner::Vector { size, scalar } => {
+            let scalar_suffix = scalar_suffix(scalar);
+            format!("vec{}{}", size as u8, scalar_suffix)
+        }
+        naga::TypeInner::Matrix { columns, rows, scalar } => {
+            let scalar_suffix = scalar_suffix(scalar);
+            format!("mat{}x{}{}", columns as u8, rows as u8, scalar_suffix)
+        }
+        naga::TypeInner::Array { base, size, .. } => {
+            let base_name = get_type_name(module, base)?;
+            match size {
+                naga::ArraySize::Constant(size) => format!("array<{}, {}>", base_name, size),
+                naga::ArraySize::Dynamic => format!("array<{}>", base_name),
+                naga::ArraySize::Pending(_) => format!("array<{}, ?>", base_name),
+            }
+        }
+        naga::TypeInner::Struct { .. } => "struct".to_string(),
+        naga::TypeInner::Image { dim, arrayed, class } => {
+            let dim_str = match dim {
+                naga::ImageDimension::D1 => "1d",
+                naga::ImageDimension::D2 => "2d",
+                naga::ImageDimension::D3 => "3d",
+                naga::ImageDimension::Cube => "cube",
+            };
+            let array_str = if arrayed { "_array" } else { "" };
+            let class_str = match class {
+                naga::ImageClass::Sampled { multi: true, .. } => "_multisampled",
+                naga::ImageClass::Depth { .. } => "_depth",
+                naga::ImageClass::Storage { .. } => "_storage",
+                _ => "",
+            };
+            format!("texture_{}{}{}", dim_str, array_str, class_str)
+        }
+        naga::TypeInner::Sampler { .. } => "sampler".to_string(),
+        _ => return None,
+    })
+}
+
+fn scalar_suffix(scalar: naga::Scalar) -> &'static str {
+    match (scalar.kind, scalar.width) {
+        (naga::ScalarKind::Float, 4) => "f",
+        (naga::ScalarKind::Sint, 4) => "i",
+        (naga::ScalarKind::Uint, 4) => "u",
+        (naga::ScalarKind::Bool, _) => "b",
+        (naga::ScalarKind::Float, 8) => "d",
+        _ => "",
+    }
+}
+
+fn format_scalar(scalar: naga::Scalar) -> String {
+    match (scalar.kind, scalar.width) {
+        (naga::ScalarKind::Float, 4) => "f32".to_string(),
+        (naga::ScalarKind::Float, 8) => "f64".to_string(),
+        (naga::ScalarKind::Sint, 4) => "i32".to_string(),
+        (naga::ScalarKind::Uint, 4) => "u32".to_string(),
+        (naga::ScalarKind::Bool, _) => "bool".to_string(),
+        _ => format!("{:?}", scalar),
+    }
 }
