@@ -1,8 +1,8 @@
-use naga::valid::{Capabilities, ModuleInfo, ValidationFlags, Validator};
 use naga::Module;
+use naga::valid::{Capabilities, ModuleInfo, ValidationFlags, Validator};
 use naga::{back, front};
+use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
-use serde::{Serialize, Deserialize};
 
 /// WGSL -> Naga IR + validation.
 fn parse_and_validate(wgsl: &str) -> Result<(Module, ModuleInfo), JsValue> {
@@ -99,8 +99,9 @@ pub fn wgsl_to_msl(wgsl: &str, entry_point: Option<String>) -> Result<String, Js
                 ..Default::default()
             };
 
-            let (msl_source, _) = back::msl::write_string(&module, &info, &msl_opts, &pipeline_opts)
-                .map_err(|e| JsValue::from_str(&format!("MSL error: {e:?}")))?;
+            let (msl_source, _) =
+                back::msl::write_string(&module, &info, &msl_opts, &pipeline_opts)
+                    .map_err(|e| JsValue::from_str(&format!("MSL error: {e:?}")))?;
 
             return Ok(msl_source);
         }
@@ -318,7 +319,11 @@ pub fn reflect_wgsl(wgsl: &str) -> Result<ReflectionData, JsValue> {
         };
 
         let workgroup_size = if entry.stage == naga::ShaderStage::Compute {
-            Some(vec![entry.workgroup_size[0], entry.workgroup_size[1], entry.workgroup_size[2]])
+            Some(vec![
+                entry.workgroup_size[0],
+                entry.workgroup_size[1],
+                entry.workgroup_size[2],
+            ])
         } else {
             None
         };
@@ -328,17 +333,15 @@ pub fn reflect_wgsl(wgsl: &str) -> Result<ReflectionData, JsValue> {
         for (handle, var) in module.global_variables.iter() {
             if let Some(binding) = &var.binding {
                 // Check if this entry point uses this global
-                if entry.function.expressions.iter().any(|(_, expr)| {
-                    matches!(expr, naga::Expression::GlobalVariable(h) if *h == handle)
-                }) {
+                if entry.function.expressions.iter().any(
+                    |(_, expr)| matches!(expr, naga::Expression::GlobalVariable(h) if *h == handle),
+                ) {
                     let resource_type = match module.types[var.ty].inner {
-                        naga::TypeInner::Struct { .. } => {
-                            match var.space {
-                                naga::AddressSpace::Uniform => "uniform",
-                                naga::AddressSpace::Storage { .. } => "storage",
-                                _ => "unknown",
-                            }
-                        }
+                        naga::TypeInner::Struct { .. } => match var.space {
+                            naga::AddressSpace::Uniform => "uniform",
+                            naga::AddressSpace::Storage { .. } => "storage",
+                            _ => "unknown",
+                        },
                         naga::TypeInner::Image { .. } => "texture",
                         naga::TypeInner::Sampler { .. } => "sampler",
                         _ => "unknown",
@@ -347,7 +350,9 @@ pub fn reflect_wgsl(wgsl: &str) -> Result<ReflectionData, JsValue> {
                     let type_name = get_type_name(&module, var.ty);
 
                     bindings.push(BindingInfo {
-                        name: var.name.clone().unwrap_or_else(|| format!("binding_{}_{}", binding.group, binding.binding)),
+                        name: var.name.clone().unwrap_or_else(|| {
+                            format!("binding_{}_{}", binding.group, binding.binding)
+                        }),
                         group: binding.group,
                         binding: binding.binding,
                         resource_type: resource_type.to_string(),
@@ -364,7 +369,10 @@ pub fn reflect_wgsl(wgsl: &str) -> Result<ReflectionData, JsValue> {
                 if let Some(naga::Binding::Location { location, .. }) = arg.binding {
                     let type_name = get_type_name(&module, arg.ty);
                     vertex_inputs.push(VertexInputInfo {
-                        name: arg.name.clone().unwrap_or_else(|| format!("input_{}", location)),
+                        name: arg
+                            .name
+                            .clone()
+                            .unwrap_or_else(|| format!("input_{}", location)),
                         location,
                         type_name: type_name.unwrap_or_else(|| "unknown".to_string()),
                     });
@@ -387,14 +395,22 @@ pub fn reflect_wgsl(wgsl: &str) -> Result<ReflectionData, JsValue> {
                     }
                     _ => {
                         // Check if return type is a struct with location bindings
-                        if let naga::TypeInner::Struct { ref members, .. } = module.types[result.ty].inner {
+                        if let naga::TypeInner::Struct { ref members, .. } =
+                            module.types[result.ty].inner
+                        {
                             for member in members {
-                                if let Some(naga::Binding::Location { location, .. }) = member.binding {
+                                if let Some(naga::Binding::Location { location, .. }) =
+                                    member.binding
+                                {
                                     let type_name = get_type_name(&module, member.ty);
                                     fragment_outputs.push(FragmentOutputInfo {
-                                        name: member.name.clone().unwrap_or_else(|| format!("output_{}", location)),
+                                        name: member
+                                            .name
+                                            .clone()
+                                            .unwrap_or_else(|| format!("output_{}", location)),
                                         location,
-                                        type_name: type_name.unwrap_or_else(|| "unknown".to_string()),
+                                        type_name: type_name
+                                            .unwrap_or_else(|| "unknown".to_string()),
                                     });
                                 }
                             }
@@ -429,7 +445,10 @@ pub fn reflect_wgsl(wgsl: &str) -> Result<ReflectionData, JsValue> {
             }
 
             types.push(TypeInfo {
-                name: ty.name.clone().unwrap_or_else(|| format!("type_{:?}", handle)),
+                name: ty
+                    .name
+                    .clone()
+                    .unwrap_or_else(|| format!("type_{:?}", handle)),
                 kind: "struct".to_string(),
                 members: Some(struct_members),
             });
@@ -450,14 +469,16 @@ fn get_type_name(module: &Module, handle: naga::Handle<naga::Type>) -> Option<St
     }
 
     Some(match ty.inner {
-        naga::TypeInner::Scalar(scalar) => {
-            format_scalar(scalar)
-        }
+        naga::TypeInner::Scalar(scalar) => format_scalar(scalar),
         naga::TypeInner::Vector { size, scalar } => {
             let scalar_suffix = scalar_suffix(scalar);
             format!("vec{}{}", size as u8, scalar_suffix)
         }
-        naga::TypeInner::Matrix { columns, rows, scalar } => {
+        naga::TypeInner::Matrix {
+            columns,
+            rows,
+            scalar,
+        } => {
             let scalar_suffix = scalar_suffix(scalar);
             format!("mat{}x{}{}", columns as u8, rows as u8, scalar_suffix)
         }
@@ -470,7 +491,11 @@ fn get_type_name(module: &Module, handle: naga::Handle<naga::Type>) -> Option<St
             }
         }
         naga::TypeInner::Struct { .. } => "struct".to_string(),
-        naga::TypeInner::Image { dim, arrayed, class } => {
+        naga::TypeInner::Image {
+            dim,
+            arrayed,
+            class,
+        } => {
             let dim_str = match dim {
                 naga::ImageDimension::D1 => "1d",
                 naga::ImageDimension::D2 => "2d",
