@@ -1,7 +1,6 @@
+import {type GPUBufferCreateInfo, type GPUTransferBufferCreateInfo, ShaderFormat} from "sdl3";
 import {
-    type GPUBufferCreateInfo,
     type GPUDevicePtr,
-    type GPUTransferBufferCreateInfo,
     sdlAcquireGPUCommandBuffer,
     sdlClaimWindowForGPUDevice,
     sdlCreateGPUBuffer,
@@ -15,14 +14,13 @@ import {
     sdlGetNumGPUDrivers,
     sdlReleaseWindowFromGPUDevice,
     sdlWaitForGPUFences,
-    ShaderFormat,
 } from "./ffi";
 
-import { TransferBuffer } from "./transfer_buffer.ts";
-import { CommandBuffer } from "./command_buffer.ts";
-import { DeviceBuffer } from "./device_buffer.ts";
-import type { Window } from "./window.ts";
-import { Fence } from "./fence.ts";
+import {TransferBuffer} from "./transfer_buffer.ts";
+import {CommandBuffer} from "./command_buffer.ts";
+import {DeviceBuffer} from "./device_buffer.ts";
+import type {Window} from "./window.ts";
+import {Fence} from "./fence.ts";
 
 export class Device {
     private readonly handle: GPUDevicePtr;

@@ -1,6 +1,5 @@
+import {FlashOperation, type SDL_WindowFlags, type WindowID} from "sdl3";
 import {
-    FlashOperation,
-    type SDL_WindowFlags,
     sdlCreateWindow,
     sdlDestroyWindow,
     sdlFlashWindow,
@@ -15,7 +14,6 @@ import {
     sdlRestoreWindow,
     sdlSetWindowTitle,
     sdlShowWindow,
-    type WindowID,
     type WindowPtr,
 } from "./ffi";
 
