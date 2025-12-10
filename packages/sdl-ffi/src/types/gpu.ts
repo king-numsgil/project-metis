@@ -1,9 +1,15 @@
 import type { Tagged } from "type-fest";
 
+import type { PropertiesID } from "./properties.ts";
+
 export type GPUDevicePtr = Tagged<{}, "SDL_GPUDevice">;
 export type GPUCommandBufferPtr = Tagged<{}, "SDL_GPUCommandBuffer">;
 export type GPUTexturePtr = Tagged<{}, "SDL_GPUTexture">;
 export type GPURenderPassPtr = Tagged<{}, "SDL_GPURenderPass">;
+export type GPUBufferPtr = Tagged<{}, "SDL_GPUBuffer">;
+export type GPUTransferBufferPtr = Tagged<{}, "SDL_GPUTransferBuffer">;
+export type GPUFencePtr = Tagged<{}, "SDL_GPUFence">;
+export type GPUCopyPassPtr = Tagged<{}, "SDL_GPUCopyPass">;
 
 export enum ShaderFormat {
     Invalid = 0,
@@ -77,7 +83,7 @@ export enum GPUVertexInputRate {
     Instance,   // Attribute indexing uses the instance index
 }
 
-export enum GpuBufferUsageFlags {
+export enum GPUBufferUsageFlags {
     Vertex                = 1 << 0, // Vertex buffer
     Index                 = 1 << 1, // Index buffer
     Indirect              = 1 << 2, // Indirect buffer
@@ -86,12 +92,12 @@ export enum GpuBufferUsageFlags {
     ComputeStorageWrite   = 1 << 5, // Storage write in compute stage
 }
 
-export enum GpuTransferBufferUsage {
+export enum GPUTransferBufferUsage {
     Upload,
     Download,
 }
 
-export enum GpuShaderStage {
+export enum GPUShaderStage {
     Vertex,
     Fragment,
 }
@@ -139,4 +145,32 @@ export interface GPUDepthStencilTargetInfo {
     stencil_store_op?: GPUStoreOp;
     cycle?: boolean;
     clear_stencil?: number;
+}
+
+export interface GPUBufferCreateInfo {
+    usage: GPUBufferUsageFlags;
+    size: number;
+    props?: PropertiesID;
+}
+
+export interface GPUTransferBufferCreateInfo {
+    usage: GPUTransferBufferUsage;
+    size: number;
+    props?: PropertiesID;
+}
+
+export interface GPUBufferLocation {
+    buffer: GPUBufferPtr,
+    offset: number;
+}
+
+export interface GPUTransferBufferLocation {
+    transfer_buffer: GPUTransferBufferPtr,
+    offset: number;
+}
+
+export interface GPUBufferRegion {
+    buffer: GPUBufferPtr;
+    offset: number;
+    size: number;
 }

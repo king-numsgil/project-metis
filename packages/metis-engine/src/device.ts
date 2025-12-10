@@ -1,18 +1,28 @@
 import {
+    type GPUBufferCreateInfo,
     type GPUDevicePtr,
+    type GPUTransferBufferCreateInfo,
     sdlAcquireGPUCommandBuffer,
     sdlClaimWindowForGPUDevice,
+    sdlCreateGPUBuffer,
     sdlCreateGPUDevice,
+    sdlCreateGPUTransferBuffer,
     sdlDestroyGPUDevice,
     sdlGetError,
-    sdlGetGPUDeviceDriver, sdlGetGPUDriver,
-    sdlGetGPUShaderFormats, sdlGetNumGPUDrivers,
+    sdlGetGPUDeviceDriver,
+    sdlGetGPUDriver,
+    sdlGetGPUShaderFormats,
+    sdlGetNumGPUDrivers,
     sdlReleaseWindowFromGPUDevice,
+    sdlWaitForGPUFences,
     ShaderFormat,
 } from "sdl-ffi";
 
-import type { Window } from "./window.ts";
+import { TransferBuffer } from "./transfer_buffer.ts";
 import { CommandBuffer } from "./command_buffer.ts";
+import { DeviceBuffer } from "./device_buffer.ts";
+import type { Window } from "./window.ts";
+import { Fence } from "./fence.ts";
 
 export class Device {
     private readonly handle: GPUDevicePtr;
@@ -72,5 +82,27 @@ export class Device {
         }
 
         return new CommandBuffer(cb);
+    }
+
+    public waitFences(fences: Array<Fence>, wait_all: boolean = true): boolean {
+        return sdlWaitForGPUFences(this.handle, wait_all, fences.map(fence => fence.raw));
+    }
+
+    public createBuffer(create_info: GPUBufferCreateInfo): DeviceBuffer {
+        const b = sdlCreateGPUBuffer(this.handle, create_info);
+        if (!b) {
+            throw new Error(`Failed to create DeviceBuffer : ${sdlGetError()}`);
+        }
+
+        return new DeviceBuffer(this, b, create_info.size);
+    }
+
+    public createTransferBuffer(create_info: GPUTransferBufferCreateInfo): TransferBuffer {
+        const tb = sdlCreateGPUTransferBuffer(this.handle, create_info);
+        if (!tb) {
+            throw new Error(`Failed to create TransferBuffer : ${sdlGetError()}`);
+        }
+
+        return new TransferBuffer(this, tb, create_info.size);
     }
 }

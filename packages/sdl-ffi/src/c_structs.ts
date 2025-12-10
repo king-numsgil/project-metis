@@ -1,5 +1,6 @@
 import { struct, array, union, alias, opaque } from "koffi";
 
+alias("SDL_PropertiesID", "uint32");
 alias("SDL_DisplayID", "uint32");
 alias("SDL_WindowFlags", "uint64");
 alias("SDL_WindowID", "uint32");
@@ -8,10 +9,16 @@ opaque("SDL_Window");
 alias("SDL_GPUShaderFormat", "uint32");
 alias("SDL_GPULoadOp", "int");
 alias("SDL_GPUStoreOp", "int");
+alias("SDL_GPUBufferUsageFlags", "uint32");
+alias("SDL_GPUTransferBufferUsage", "int");
 opaque("SDL_GPUDevice");
 opaque("SDL_GPUCommandBuffer");
 opaque("SDL_GPUTexture");
 opaque("SDL_GPURenderPass");
+opaque("SDL_GPUBuffer");
+opaque("SDL_GPUTransferBuffer");
+opaque("SDL_GPUFence");
+opaque("SDL_GPUCopyPass");
 
 export const SDL_Rect = struct("SDL_Rect", {
     x: "int",
@@ -526,4 +533,32 @@ export const SDL_GPUDepthStencilTargetInfo = struct("SDL_GPUDepthStencilTargetIn
     clear_stencil: "uint8",
     padding1: "uint8",
     padding2: "uint8",
+});
+
+export const SDL_GPUBufferCreateInfo = struct("SDL_GPUBufferCreateInfo", {
+    usage: "SDL_GPUBufferUsageFlags",
+    size: "uint32",
+    props: "SDL_PropertiesID",
+});
+
+export const SDL_GPUTransferBufferCreateInfo = struct("SDL_GPUTransferBufferCreateInfo", {
+    usage: "SDL_GPUTransferBufferUsage",
+    size: "uint32",
+    props: "SDL_PropertiesID",
+});
+
+export const SDL_GPUBufferLocation = struct("SDL_GPUBufferLocation", {
+    buffer: "SDL_GPUBuffer*",
+    offset: "uint32",
+});
+
+export const SDL_GPUTransferBufferLocation = struct("SDL_GPUTransferBufferLocation", {
+    transfer_buffer: "SDL_GPUTransferBuffer*",
+    offset: "uint32",
+});
+
+export const SDL_GPUBufferRegion = struct("SDL_GPUBufferRegion", {
+    buffer: "SDL_GPUBuffer*",
+    offset: "uint32",
+    size: "uint32",
 });
