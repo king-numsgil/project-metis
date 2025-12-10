@@ -16,7 +16,7 @@ import {
     sdlReleaseWindowFromGPUDevice,
     sdlWaitForGPUFences,
     ShaderFormat,
-} from "sdl-ffi";
+} from "./ffi";
 
 import { TransferBuffer } from "./transfer_buffer.ts";
 import { CommandBuffer } from "./command_buffer.ts";

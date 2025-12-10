@@ -17,7 +17,7 @@ import {
     sdlShowWindow,
     type WindowID,
     type WindowPtr,
-} from "sdl-ffi";
+} from "./ffi";
 
 export class Window {
     private constructor(private readonly handle: WindowPtr) {

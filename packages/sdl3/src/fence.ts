@@ -1,4 +1,4 @@
-import { type GPUFencePtr, sdlQueryGPUFence, sdlReleaseGPUFence, sdlWaitForGPUFences } from "sdl-ffi";
+import { type GPUFencePtr, sdlQueryGPUFence, sdlReleaseGPUFence, sdlWaitForGPUFences } from "./ffi";
 
 import type { Device } from "./device.ts";
 

@@ -10,8 +10,7 @@
     "typescript": "^5"
   },
   "dependencies": {
-	  "sdl-ffi": "workspace:*",
-	  "metis-engine": "workspace:*",
+	  "sdl3": "workspace:*",
       "naga": "workspace:*"
   }
 }

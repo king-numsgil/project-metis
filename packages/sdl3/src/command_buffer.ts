@@ -8,7 +8,7 @@ import {
     sdlSubmitGPUCommandBuffer,
     sdlSubmitGPUCommandBufferAndAcquireFence,
     sdlWaitAndAcquireGPUSwapchainTexture,
-} from "sdl-ffi";
+} from "./ffi";
 
 import { RenderPass } from "./render_pass.ts";
 import type { Window } from "./window.ts";

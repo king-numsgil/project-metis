@@ -4,7 +4,7 @@ import {
     sdlMapGPUTransferBuffer,
     sdlReleaseGPUTransferBuffer,
     sdlUnmapGPUTransferBuffer
-} from "sdl-ffi";
+} from "./ffi";
 
 import { Device } from "./device.ts";
 

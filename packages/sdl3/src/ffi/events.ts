@@ -1,6 +1,6 @@
 import { alloc, decode, sizeof, free } from "koffi";
 
-import { EventType, type SDLEvent } from "./types";
+import { EventType, type SDLEvent } from "sdl3";
 import { sdl3 } from "./lib.ts";
 
 export const sdlPumpEvents = sdl3.func("void SDL_PumpEvents()") as () => void;

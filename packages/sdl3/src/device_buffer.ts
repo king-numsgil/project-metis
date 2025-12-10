@@ -1,4 +1,4 @@
-import { type GPUBufferPtr, sdlReleaseGPUBuffer } from "sdl-ffi";
+import { type GPUBufferPtr, sdlReleaseGPUBuffer } from "./ffi";
 
 import { Device } from "./device.ts";
 

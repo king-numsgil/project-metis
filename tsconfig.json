@@ -26,8 +26,7 @@
         "noPropertyAccessFromIndexSignature": false,
         "types": ["@types/bun"],
         "paths": {
-            "sdl-ffi": ["./packages/sdl-ffi/src"],
-            "metis-engine": ["./packages/metis-engine/src"],
+            "sdl3": ["./packages/sdl3/src"],
 			"naga": ["./packages/naga/wasm"],
         }
     }

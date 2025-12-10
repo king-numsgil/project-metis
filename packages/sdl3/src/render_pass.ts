@@ -1,4 +1,4 @@
-import { type GPURenderPassPtr, sdlEndGPURenderPass } from "sdl-ffi";
+import { type GPURenderPassPtr, sdlEndGPURenderPass } from "./ffi";
 
 export class RenderPass {
     public constructor(private readonly handle: GPURenderPassPtr) {

@@ -1,4 +1,4 @@
-import { InitFlags, type SDLEvent, sdlGetError, sdlGetPlatform, sdlInit, sdlPollEvent, sdlQuit } from "sdl-ffi";
+import { InitFlags, type SDLEvent, sdlGetError, sdlGetPlatform, sdlInit, sdlPollEvent, sdlQuit } from "./ffi";
 
 export class System {
     public constructor() {

@@ -1,7 +1,8 @@
-import { EventType, GPULoadOp, GPUStoreOp, Keymod, Scancode, sdlGetError, ShaderFormat } from "sdl-ffi";
-import { Device, System, Window } from "metis-engine";
+import { Device, EventType, GPULoadOp, GPUStoreOp, Keymod, Scancode, ShaderFormat, System, Window } from "sdl3";
+import { sdlGetError } from "sdl3/ffi";
 
 import triangle from "./triangle.wgsl";
+
 console.log(triangle.vertex);
 
 function decodeKeymods(mod: Keymod): string[] {
