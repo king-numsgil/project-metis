@@ -1,8 +1,7 @@
+import type {GPUColorTargetInfo, GPUDepthStencilTargetInfo} from "sdl3";
 import {
-    type GPUColorTargetInfo,
     type GPUCommandBufferPtr,
-    type GPUDepthStencilTargetInfo,
-    type GPUTexturePtr,
+    type GPUTexturePtr, sdlBeginGPUCopyPass,
     sdlBeginGPURenderPass,
     sdlGetError,
     sdlSubmitGPUCommandBuffer,
@@ -10,10 +9,11 @@ import {
     sdlWaitAndAcquireGPUSwapchainTexture,
 } from "./ffi";
 
-import { RenderPass } from "./render_pass.ts";
-import type { Window } from "./window.ts";
-import type { Device } from "./device.ts";
-import { Fence } from "./fence.ts";
+import {RenderPass} from "./render_pass.ts";
+import type {Window} from "./window.ts";
+import type {Device} from "./device.ts";
+import {CopyPass} from "./copy_pass.ts";
+import {Fence} from "./fence.ts";
 
 export class CommandBuffer {
     public constructor(private readonly handle: GPUCommandBufferPtr) {
@@ -34,6 +34,10 @@ export class CommandBuffer {
 
     public beginRenderPass(colorTargets: GPUColorTargetInfo[], depthSencil: GPUDepthStencilTargetInfo | null): RenderPass {
         return new RenderPass(sdlBeginGPURenderPass(this.handle, colorTargets, depthSencil));
+    }
+
+    public beginCopyPass(): CopyPass {
+        return new CopyPass(sdlBeginGPUCopyPass(this.handle));
     }
 
     public submit(): boolean {
