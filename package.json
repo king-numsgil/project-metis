@@ -1,6 +1,9 @@
 {
     "name": "metis",
     "private": true,
+    "scripts": {
+        "compile": "bun build ./packages/metis-app/src/main.ts --compile --no-compile-autoload-bunfig --outfile metis.exe"
+    },
     "dependencies": {
         "naga": "workspace:*"
     },
