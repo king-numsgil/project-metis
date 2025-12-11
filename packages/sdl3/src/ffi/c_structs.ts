@@ -1,4 +1,4 @@
-import { struct, array, union, alias, opaque } from "koffi";
+import { alias, array, opaque, struct, union } from "koffi";
 
 alias("SDL_PropertiesID", "uint32");
 alias("SDL_DisplayID", "uint32");

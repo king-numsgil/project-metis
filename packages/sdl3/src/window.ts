@@ -1,4 +1,4 @@
-import {FlashOperation, type SDL_WindowFlags, type WindowID} from "sdl3";
+import { FlashOperation, type SDL_WindowFlags, type WindowID } from "sdl3";
 import {
     sdlCreateWindow,
     sdlDestroyWindow,
@@ -20,6 +20,24 @@ import {
 export class Window {
     private constructor(private readonly handle: WindowPtr) {
         this.handle = handle;
+    }
+
+    public get raw(): WindowPtr {
+        return this.handle;
+    }
+
+    public get windowID(): WindowID {
+        return sdlGetWindowID(this.handle);
+    }
+
+    public get title(): string {
+        return sdlGetWindowTitle(this.handle);
+    }
+
+    public set title(title: string) {
+        if (!sdlSetWindowTitle(this.handle, title)) {
+            throw new Error(`Failed to set title: ${sdlGetError()}`);
+        }
     }
 
     public static create(title: string, width: number, height: number, flags: SDL_WindowFlags = 0n): Window {
@@ -46,24 +64,6 @@ export class Window {
 
     public dispose(): void {
         sdlDestroyWindow(this.handle);
-    }
-
-    public get raw(): WindowPtr {
-        return this.handle;
-    }
-
-    public get windowID(): WindowID {
-        return sdlGetWindowID(this.handle);
-    }
-
-    public get title(): string {
-        return sdlGetWindowTitle(this.handle);
-    }
-
-    public set title(title: string) {
-        if (!sdlSetWindowTitle(this.handle, title)) {
-            throw new Error(`Failed to set title: ${sdlGetError()}`);
-        }
     }
 
     public show(): void {

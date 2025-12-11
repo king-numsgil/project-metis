@@ -12,20 +12,20 @@ export class TransferBuffer {
     public constructor(private readonly device: Device, private readonly handle: GPUTransferBufferPtr, private readonly _size: number) {
     }
 
-    public [Symbol.dispose](): void {
-        this.dispose();
-    }
-
-    public dispose(): void {
-        sdlReleaseGPUTransferBuffer(this.device.raw, this.handle);
-    }
-
     public get raw(): GPUTransferBufferPtr {
         return this.handle;
     }
 
     public get size(): number {
         return this._size;
+    }
+
+    public [Symbol.dispose](): void {
+        this.dispose();
+    }
+
+    public dispose(): void {
+        sdlReleaseGPUTransferBuffer(this.device.raw, this.handle);
     }
 
     public map(cb: (array_buffer: ArrayBuffer) => void): void;

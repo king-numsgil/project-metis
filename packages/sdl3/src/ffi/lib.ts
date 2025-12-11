@@ -1,4 +1,4 @@
-import {load} from "koffi";
+import { load } from "koffi";
 
 import "./c_structs.ts";
 

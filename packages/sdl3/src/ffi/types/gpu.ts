@@ -84,12 +84,12 @@ export enum GPUVertexInputRate {
 }
 
 export enum GPUBufferUsageFlags {
-    Vertex                = 1 << 0, // Vertex buffer
-    Index                 = 1 << 1, // Index buffer
-    Indirect              = 1 << 2, // Indirect buffer
-    GraphicsStorageRead   = 1 << 3, // Storage read in graphics stages
-    ComputeStorageRead    = 1 << 4, // Storage read in compute stage
-    ComputeStorageWrite   = 1 << 5, // Storage write in compute stage
+    Vertex = 1 << 0, // Vertex buffer
+    Index = 1 << 1, // Index buffer
+    Indirect = 1 << 2, // Indirect buffer
+    GraphicsStorageRead = 1 << 3, // Storage read in graphics stages
+    ComputeStorageRead = 1 << 4, // Storage read in compute stage
+    ComputeStorageWrite = 1 << 5, // Storage write in compute stage
 }
 
 export enum GPUTransferBufferUsage {

@@ -1,4 +1,4 @@
-import { alloc, decode, sizeof, free } from "koffi";
+import { alloc, decode, free, sizeof } from "koffi";
 
 import { EventType, type SDLEvent } from "sdl3";
 import { sdl3 } from "./lib.ts";

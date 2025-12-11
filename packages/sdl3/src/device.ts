@@ -1,4 +1,4 @@
-import {type GPUBufferCreateInfo, type GPUTransferBufferCreateInfo, ShaderFormat} from "sdl3";
+import { type GPUBufferCreateInfo, type GPUTransferBufferCreateInfo, ShaderFormat } from "sdl3";
 import {
     type GPUDevicePtr,
     sdlAcquireGPUCommandBuffer,
@@ -16,23 +16,14 @@ import {
     sdlWaitForGPUFences,
 } from "./ffi";
 
-import {TransferBuffer} from "./transfer_buffer.ts";
-import {CommandBuffer} from "./command_buffer.ts";
-import {DeviceBuffer} from "./device_buffer.ts";
-import type {Window} from "./window.ts";
-import {Fence} from "./fence.ts";
+import { TransferBuffer } from "./transfer_buffer.ts";
+import { CommandBuffer } from "./command_buffer.ts";
+import { DeviceBuffer } from "./device_buffer.ts";
+import type { Window } from "./window.ts";
+import { Fence } from "./fence.ts";
 
 export class Device {
     private readonly handle: GPUDevicePtr;
-
-    public static listSupportedDrivers(): string[] {
-        let list: string[] = [];
-        for (let i = 0; i < sdlGetNumGPUDrivers(); i++) {
-            list = [...list, sdlGetGPUDriver(i)];
-        }
-
-        return list;
-    }
 
     public constructor(format_flags: ShaderFormat, debug_mode: boolean, name: string | null = null) {
         const handle = sdlCreateGPUDevice(format_flags, debug_mode, name);
@@ -40,14 +31,6 @@ export class Device {
             throw new Error("Failed to create GPUDevice");
         }
         this.handle = handle;
-    }
-
-    public [Symbol.dispose](): void {
-        this.dispose();
-    }
-
-    public dispose(): void {
-        sdlDestroyGPUDevice(this.handle);
     }
 
     public get raw(): GPUDevicePtr {
@@ -60,6 +43,23 @@ export class Device {
 
     public get shader_formats(): ShaderFormat {
         return sdlGetGPUShaderFormats(this.handle);
+    }
+
+    public static listSupportedDrivers(): string[] {
+        let list: string[] = [];
+        for (let i = 0; i < sdlGetNumGPUDrivers(); i++) {
+            list = [...list, sdlGetGPUDriver(i)];
+        }
+
+        return list;
+    }
+
+    public [Symbol.dispose](): void {
+        this.dispose();
+    }
+
+    public dispose(): void {
+        sdlDestroyGPUDevice(this.handle);
     }
 
     public claimWindow(window: Window) {

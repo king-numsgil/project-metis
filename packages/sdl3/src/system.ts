@@ -9,16 +9,16 @@ export class System {
         }
     }
 
+    public get platform(): string {
+        return sdlGetPlatform();
+    }
+
     public [Symbol.dispose](): void {
         this.dispose();
     }
 
     public dispose(): void {
         sdlQuit();
-    }
-
-    public get platform(): string {
-        return sdlGetPlatform();
     }
 
     public* events(): IterableIterator<SDLEvent> {
