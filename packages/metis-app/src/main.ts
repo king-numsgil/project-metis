@@ -42,7 +42,7 @@ console.log(`Device Shader Format : ${ShaderFormat[dev.shader_formats]}`);
 
 using buffer = dev.createBuffer({
     usage: GPUBufferUsageFlags.Vertex,
-    size: 12, // 3x f32
+    size: 3 * Float32Array.BYTES_PER_ELEMENT,
 });
 {
     using transfer = dev.createTransferBuffer({
