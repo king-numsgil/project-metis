@@ -1,7 +1,20 @@
-import { Device, EventType, GPULoadOp, GPUStoreOp, Keymod, Scancode, ShaderFormat, System, Window } from "sdl3";
+import {
+    Device,
+    EventType,
+    GPUBufferUsageFlags,
+    GPULoadOp,
+    GPUStoreOp,
+    GPUTransferBufferUsage,
+    Keymod,
+    Scancode,
+    ShaderFormat,
+    System,
+    Window
+} from "sdl3";
 import { sdlGetError } from "sdl3/ffi";
 
 import triangle from "./triangle.wgsl";
+import * as console from "node:console";
 
 console.log(triangle.vertex);
 
@@ -26,6 +39,38 @@ using dev = new Device(ShaderFormat.SPIRV | ShaderFormat.MSL, true);
 dev.claimWindow(wnd);
 console.log(`Device Driver : ${dev.driver}`);
 console.log(`Device Shader Format : ${ShaderFormat[dev.shader_formats]}`);
+
+using buffer = dev.createBuffer({
+    usage: GPUBufferUsageFlags.Vertex,
+    size: 12, // 3x f32
+});
+{
+    using transfer = dev.createTransferBuffer({
+        usage: GPUTransferBufferUsage.Upload,
+        size: 3 * Float32Array.BYTES_PER_ELEMENT,
+    });
+    transfer.map(array_buffer => {
+        const array = new Float32Array(array_buffer);
+        array[0] = 1.0;
+        array[1] = 2.0;
+        array[2] = 3.0;
+    });
+
+    const cb = dev.acquireCommandBuffer();
+    const copy = cb.beginCopyPass();
+    copy.uploadToDeviceBuffer({
+        transfer_buffer: transfer.raw,
+        offset: 0,
+    }, {
+        buffer: buffer.raw,
+        offset: 0,
+        size: 3 * Float32Array.BYTES_PER_ELEMENT,
+    });
+    copy.end();
+
+    using fence = cb.submitWithFence(dev);
+    console.log(`Fence Wait : ${fence.wait()}`);
+}
 
 let running = true;
 while (running) {
@@ -54,6 +99,33 @@ while (running) {
     if (!cb.submit()) {
         console.log(`Failed to submit command buffer : ${sdlGetError()}`);
     }
+}
+
+{
+    using transfer = dev.createTransferBuffer({
+        usage: GPUTransferBufferUsage.Download,
+        size: 3 * Float32Array.BYTES_PER_ELEMENT,
+    });
+
+    const cb = dev.acquireCommandBuffer();
+    const copy = cb.beginCopyPass();
+    copy.downloadFromDeviceBuffer({
+        buffer: buffer.raw,
+        offset: 0,
+        size: 3 * Float32Array.BYTES_PER_ELEMENT,
+    }, {
+        transfer_buffer: transfer.raw,
+        offset: 0,
+    });
+    copy.end();
+
+    using fence = cb.submitWithFence(dev);
+    console.log(`Fence Wait : ${fence.wait()}`);
+
+    transfer.map(array_buffer => {
+        const array = new Float32Array(array_buffer);
+        console.log(array);
+    });
 }
 
 dev.releaseWindow(wnd);
