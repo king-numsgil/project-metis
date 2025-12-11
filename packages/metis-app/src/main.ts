@@ -14,7 +14,6 @@ import {
 import { sdlGetError } from "sdl3/ffi";
 
 import triangle from "./triangle.wgsl";
-import * as console from "node:console";
 
 console.log(triangle.vertex);
 
@@ -69,7 +68,7 @@ using buffer = dev.createBuffer({
     copy.end();
 
     using fence = cb.submitWithFence(dev);
-    console.log(`Fence Wait : ${fence.wait()}`);
+    fence.wait();
 }
 
 let running = true;
@@ -120,7 +119,7 @@ while (running) {
     copy.end();
 
     using fence = cb.submitWithFence(dev);
-    console.log(`Fence Wait : ${fence.wait()}`);
+    fence.wait();
 
     transfer.map(array_buffer => {
         const array = new Float32Array(array_buffer);
