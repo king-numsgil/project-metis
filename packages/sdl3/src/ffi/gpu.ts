@@ -1,15 +1,20 @@
-import {view} from "koffi";
+import { view } from "koffi";
 
 import {
-    type GPUBufferCreateInfo, type GPUBufferLocation,
-    type GPUBufferPtr, type GPUBufferRegion,
+    type GPUBufferCreateInfo,
+    type GPUBufferLocation,
+    type GPUBufferPtr,
+    type GPUBufferRegion,
     type GPUColorTargetInfo,
-    type GPUCommandBufferPtr, type GPUCopyPassPtr,
+    type GPUCommandBufferPtr,
+    type GPUCopyPassPtr,
     type GPUDepthStencilTargetInfo,
-    type GPUDevicePtr, type GPUFencePtr,
+    type GPUDevicePtr,
+    type GPUFencePtr,
     type GPURenderPassPtr,
     type GPUTexturePtr,
-    type GPUTransferBufferCreateInfo, type GPUTransferBufferLocation,
+    type GPUTransferBufferCreateInfo,
+    type GPUTransferBufferLocation,
     type GPUTransferBufferPtr,
     ShaderFormat,
     type WindowPtr,
@@ -64,7 +69,7 @@ export const sdlSubmitGPUCommandBufferAndAcquireFence = sdl3.func("SDL_GPUFence*
 export const sdlQueryGPUFence = sdl3.func("bool SDL_QueryGPUFence(SDL_GPUDevice* device, SDL_GPUFence* fence)") as (device: GPUDevicePtr, fence: GPUFencePtr) => boolean;
 export const sdlReleaseGPUFence = sdl3.func("void SDL_ReleaseGPUFence(SDL_GPUDevice* device, SDL_GPUFence* fence)") as (device: GPUDevicePtr, fence: GPUFencePtr) => void;
 
-const SDL_WaitForGPUFences = sdl3.func("bool SDL_WaitForGPUFences(SDL_GPUDevice* device, bool wait_all, _In_ SDL_GPUFence* const* fences, uint32 num_fences)");
+const SDL_WaitForGPUFences = sdl3.func("bool SDL_WaitForGPUFences(SDL_GPUDevice* device, bool wait_all, _In_ SDL_GPUFence** fences, uint32 num_fences)");
 
 export function sdlWaitForGPUFences(device: GPUDevicePtr, wait_all: boolean, fences: Array<GPUFencePtr>): boolean {
     if (fences.length === 0) {
@@ -97,5 +102,6 @@ export function sdlMapGPUTransferBuffer(device: GPUDevicePtr, buffer: GPUTransfe
 export const sdlUnmapGPUTransferBuffer = sdl3.func("void SDL_UnmapGPUTransferBuffer(SDL_GPUDevice* device, SDL_GPUTransferBuffer* transfer_buffer)") as (device: GPUDevicePtr, transfer_buffer: GPUTransferBufferPtr) => void;
 export const sdlBeginGPUCopyPass = sdl3.func("SDL_GPUCopyPass* SDL_BeginGPUCopyPass(SDL_GPUCommandBuffer* command_buffer)") as (command_buffer: GPUCommandBufferPtr) => GPUCopyPassPtr;
 export const sdlUploadToGPUBuffer = sdl3.func("void SDL_UploadToGPUBuffer(SDL_GPUCopyPass* copy_pass, _In_ const SDL_GPUTransferBufferLocation* source, _In_ const SDL_GPUBufferRegion* destination, bool cycle)") as (copy_pass: GPUCopyPassPtr, source: GPUTransferBufferLocation, destination: GPUBufferRegion, cycle: boolean) => void;
+export const sdlDownloadFromGPUBuffer = sdl3.func("void SDL_DownloadFromGPUBuffer(SDL_GPUCopyPass* copy_pass, _In_ const SDL_GPUBufferRegion* source, _In_ const SDL_GPUTransferBufferLocation* destination)") as (copy_pass: GPUCopyPassPtr, source: GPUBufferRegion, destination: GPUTransferBufferLocation) => void;
 export const sdlCopyGPUBufferToBuffer = sdl3.func("void SDL_CopyGPUBufferToBuffer(SDL_GPUCopyPass* copy_pass, const SDL_GPUBufferLocation* source, const SDL_GPUBufferLocation* destination, uint32 size, bool cycle)") as (copy_pass: GPUCopyPassPtr, source: GPUBufferLocation, destination: GPUBufferLocation, size: number, cycle: boolean) => void;
 export const sdlEndGPUCopyPass = sdl3.func("void SDL_EndGPUCopyPass(SDL_GPUCopyPass* copy_pass)") as (copy_pass: GPUCopyPassPtr) => void;
