@@ -1,5 +1,12 @@
-import {type GPUCopyPassPtr, sdlCopyGPUBufferToBuffer, sdlEndGPUCopyPass, sdlUploadToGPUBuffer} from "./ffi";
-import type {GPUBufferLocation, GPUBufferRegion, GPUTransferBufferLocation} from "./ffi/types";
+import type { GPUBufferLocation, GPUBufferRegion, GPUTransferBufferLocation } from "sdl3";
+
+import {
+    type GPUCopyPassPtr,
+    sdlCopyGPUBufferToBuffer,
+    sdlDownloadFromGPUBuffer,
+    sdlEndGPUCopyPass,
+    sdlUploadToGPUBuffer
+} from "./ffi";
 
 export class CopyPass {
     public constructor(private readonly handle: GPUCopyPassPtr) {
@@ -13,6 +20,10 @@ export class CopyPass {
     public uploadToDeviceBuffer(source: GPUTransferBufferLocation, destination: GPUBufferRegion, cycle: boolean): void;
     public uploadToDeviceBuffer(source: GPUTransferBufferLocation, destination: GPUBufferRegion, cycle?: boolean): void {
         sdlUploadToGPUBuffer(this.handle, source, destination, cycle ?? false);
+    }
+
+    public downloadFromDeviceBuffer(source: GPUBufferRegion, destination: GPUTransferBufferLocation): void {
+        sdlDownloadFromGPUBuffer(this.handle, source, destination);
     }
 
     public copyBufferToBuffer(source: GPUBufferLocation, destination: GPUBufferLocation, size: number): void;
