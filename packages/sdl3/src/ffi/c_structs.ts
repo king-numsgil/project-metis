@@ -594,9 +594,9 @@ export const SDL_GPUVertexAttribute = struct("SDL_GPUVertexAttribute", {
 });
 
 export const SDL_GPUVertexInputState = struct("SDL_GPUVertexInputState", {
-    vertex_buffer_descriptions: array(SDL_GPUVertexBufferDescription, "num_vertex_buffers", 16, "Typed"),
+    vertex_buffer_descriptions: "const SDL_GPUVertexBufferDescription*",
     num_vertex_buffers: "uint32",
-    vertex_attributes: array(SDL_GPUVertexAttribute, "num_vertex_attributes", 16, "Array"),
+    vertex_attributes: "const SDL_GPUVertexAttribute*",
     num_vertex_attributes: "uint32",
 });
 
@@ -676,7 +676,7 @@ export const SDL_GPUColorTargetDescription = struct("SDL_GPUColorTargetDescripti
 });
 
 export const SDL_GPUGraphicsPipelineTargetInfo = struct("SDL_GPUGraphicsPipelineTargetInfo", {
-    color_target_descriptions: array(SDL_GPUColorTargetDescription, "num_color_targets", 16, "Array"),
+    color_target_descriptions: "const SDL_GPUColorTargetDescription*",
     num_color_targets: "uint32",
     depth_stencil_format: "SDL_GPUTextureFormat",
     has_depth_stencil_target: "bool",
