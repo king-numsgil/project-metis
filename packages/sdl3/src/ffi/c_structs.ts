@@ -7,10 +7,24 @@ alias("SDL_WindowID", "uint32");
 opaque("SDL_Window");
 
 alias("SDL_GPUShaderFormat", "uint32");
+alias("SDL_GPUShaderStage", "uint32");
 alias("SDL_GPULoadOp", "int");
 alias("SDL_GPUStoreOp", "int");
 alias("SDL_GPUBufferUsageFlags", "uint32");
 alias("SDL_GPUTransferBufferUsage", "int");
+alias("SDL_GPUFillMode", "int");
+alias("SDL_GPUVertexInputRate", "int");
+alias("SDL_GPUVertexElementFormat", "int");
+alias("SDL_GPUStencilOp", "int");
+alias("SDL_GPUCompareOp", "int");
+alias("SDL_GPUBlendFactor", "int");
+alias("SDL_GPUBlendOp", "int");
+alias("SDL_GPUColorComponentFlags", "uint8");
+alias("SDL_GPUCullMode", "int");
+alias("SDL_GPUFrontFace", "int");
+alias("SDL_GPUSampleCount", "int");
+alias("SDL_GPUTextureFormat", "int");
+alias("SDL_GPUPrimitiveType", "int");
 opaque("SDL_GPUDevice");
 opaque("SDL_GPUCommandBuffer");
 opaque("SDL_GPUTexture");
@@ -19,6 +33,8 @@ opaque("SDL_GPUBuffer");
 opaque("SDL_GPUTransferBuffer");
 opaque("SDL_GPUFence");
 opaque("SDL_GPUCopyPass");
+opaque("SDL_GPUShader");
+opaque("SDL_GPUGraphicsPipeline");
 
 export const SDL_Rect = struct("SDL_Rect", {
     x: "int",
@@ -561,4 +577,122 @@ export const SDL_GPUBufferRegion = struct("SDL_GPUBufferRegion", {
     buffer: "SDL_GPUBuffer*",
     offset: "uint32",
     size: "uint32",
+});
+
+export const SDL_GPUVertexBufferDescription = struct("SDL_GPUVertexBufferDescription", {
+    slot: "uint32",
+    pitch: "uint32",
+    input_rate: "SDL_GPUVertexInputRate",
+    instance_step_rate: "uint32",
+});
+
+export const SDL_GPUVertexAttribute = struct("SDL_GPUVertexAttribute", {
+    location: "uint32",
+    buffer_slot: "uint32",
+    format: "SDL_GPUVertexElementFormat",
+    offset: "uint32",
+});
+
+export const SDL_GPUVertexInputState = struct("SDL_GPUVertexInputState", {
+    vertex_buffer_descriptions: array(SDL_GPUVertexBufferDescription, "num_vertex_buffers", 16, "Typed"),
+    num_vertex_buffers: "uint32",
+    vertex_attributes: array(SDL_GPUVertexAttribute, "num_vertex_attributes", 16, "Array"),
+    num_vertex_attributes: "uint32",
+});
+
+export const SDL_GPUStencilOpState = struct("SDL_GPUStencilOpState", {
+    fail_op: "SDL_GPUStencilOp",
+    pass_op: "SDL_GPUStencilOp",
+    depth_fail_op: "SDL_GPUStencilOp",
+    compare_op: "SDL_GPUCompareOp",
+});
+
+export const SDL_GPUColorTargetBlendState = struct("SDL_GPUColorTargetBlendState", {
+    src_color_blendfactor: "SDL_GPUBlendFactor",
+    dst_color_blendfactor: "SDL_GPUBlendFactor",
+    color_blend_op: "SDL_GPUBlendOp",
+    src_alpha_blendfactor: "SDL_GPUBlendFactor",
+    dst_alpha_blendfactor: "SDL_GPUBlendFactor",
+    alpha_blend_op: "SDL_GPUBlendOp",
+    color_write_mask: "SDL_GPUColorComponentFlags",
+    enable_blend: "bool",
+    enable_color_write_mask: "bool",
+    padding1: "uint8",
+    padding2: "uint8",
+});
+
+export const SDL_GPUShaderCreateInfo = struct("SDL_GPUShaderCreateInfo", {
+    code_size: "uint64",
+    code: "const uint8*",
+    entrypoint: "const char*",
+    format: "SDL_GPUShaderFormat",
+    stage: "SDL_GPUShaderStage",
+    num_samplers: "uint32",
+    num_storage_textures: "uint32",
+    num_storage_buffers: "uint32",
+    num_uniform_buffers: "uint32",
+    props: "SDL_PropertiesID",
+});
+
+export const SDL_GPURasterizerState = struct("SDL_GPURasterizerState", {
+    fill_mode: "SDL_GPUFillMode",
+    cull_mode: "SDL_GPUCullMode",
+    front_face: "SDL_GPUFrontFace",
+    depth_bias_constant_factor: "float",
+    depth_bias_clamp: "float",
+    depth_bias_slope_factor: "float",
+    enable_depth_bias: "bool",
+    enable_depth_clip: "bool",
+    padding1: "uint8",
+    padding2: "uint8",
+});
+
+export const SDL_GPUMultisampleState = struct("SDL_GPUMultisampleState", {
+    sample_count: "SDL_GPUSampleCount",
+    sample_mask: "uint32",
+    enable_mask: "bool",
+    padding1: "uint8",
+    padding2: "uint8",
+    padding3: "uint8",
+});
+
+export const SDL_GPUDepthStencilState = struct("SDL_GPUDepthStencilState", {
+    compare_op: "SDL_GPUCompareOp",
+    back_stencil_state: SDL_GPUStencilOpState,
+    front_stencil_state: SDL_GPUStencilOpState,
+    compare_mask: "uint8",
+    write_mask: "uint8",
+    enable_depth_test: "bool",
+    enable_depth_write: "bool",
+    enable_stencil_test: "bool",
+    padding1: "uint8",
+    padding2: "uint8",
+    padding3: "uint8",
+});
+
+export const SDL_GPUColorTargetDescription = struct("SDL_GPUColorTargetDescription", {
+    format: "SDL_GPUTextureFormat",
+    blend_state: SDL_GPUColorTargetBlendState,
+});
+
+export const SDL_GPUGraphicsPipelineTargetInfo = struct("SDL_GPUGraphicsPipelineTargetInfo", {
+    color_target_descriptions: array(SDL_GPUColorTargetDescription, "num_color_targets", 16, "Array"),
+    num_color_targets: "uint32",
+    depth_stencil_format: "SDL_GPUTextureFormat",
+    has_depth_stencil_target: "bool",
+    padding1: "uint8",
+    padding2: "uint8",
+    padding3: "uint8",
+});
+
+export const SDL_GPUGraphicsPipelineCreateInfo = struct("SDL_GPUGraphicsPipelineCreateInfo", {
+    vertex_shader: "SDL_GPUShader*",
+    fragment_shader: "SDL_GPUShader*",
+    vertex_input_state: SDL_GPUVertexInputState,
+    primitive_type: "SDL_GPUPrimitiveType",
+    rasterizer_state: SDL_GPURasterizerState,
+    multisample_state: SDL_GPUMultisampleState,
+    depth_stencil_state: SDL_GPUDepthStencilState,
+    target_info: SDL_GPUGraphicsPipelineTargetInfo,
+    props: "SDL_PropertiesID",
 });

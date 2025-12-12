@@ -6,7 +6,7 @@ export {
     Scancode,
     GPUTransferBufferUsage,
     GPUBufferUsageFlags,
-    ShaderFormat,
+    GPUShaderFormat,
     FlashOperation,
     GPUShaderStage,
     GPUVertexElementFormat,

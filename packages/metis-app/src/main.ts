@@ -7,7 +7,7 @@ import {
     GPUTransferBufferUsage,
     Keymod,
     Scancode,
-    ShaderFormat,
+    GPUShaderFormat,
     System,
     Window
 } from "sdl3";
@@ -34,10 +34,10 @@ console.log(`WindowID: ${wnd.windowID}`);
 
 console.log("Supported GPU drivers :", Device.listSupportedDrivers());
 
-using dev = new Device(ShaderFormat.SPIRV | ShaderFormat.MSL, true);
+using dev = new Device(GPUShaderFormat.SPIRV | GPUShaderFormat.MSL, true);
 dev.claimWindow(wnd);
 console.log(`Device Driver : ${dev.driver}`);
-console.log(`Device Shader Format : ${ShaderFormat[dev.shader_formats]}`);
+console.log(`Device Shader Format : ${GPUShaderFormat[dev.shader_formats]}`);
 
 using buffer = dev.createBuffer({
     usage: GPUBufferUsageFlags.Vertex,

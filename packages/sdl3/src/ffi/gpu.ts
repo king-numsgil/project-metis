@@ -16,17 +16,17 @@ import {
     type GPUTransferBufferCreateInfo,
     type GPUTransferBufferLocation,
     type GPUTransferBufferPtr,
-    ShaderFormat,
+    GPUShaderFormat,
     type WindowPtr,
 } from "./types";
 import { sdl3 } from "./lib.ts";
 
-export const sdlCreateGPUDevice = sdl3.func("SDL_GPUDevice* SDL_CreateGPUDevice(SDL_GPUShaderFormat format_flags, bool debug_mode, const char* name)") as (format_flags: ShaderFormat, debug_mode: boolean, name: string | null) => GPUDevicePtr | null;
+export const sdlCreateGPUDevice = sdl3.func("SDL_GPUDevice* SDL_CreateGPUDevice(SDL_GPUShaderFormat format_flags, bool debug_mode, const char* name)") as (format_flags: GPUShaderFormat, debug_mode: boolean, name: string | null) => GPUDevicePtr | null;
 export const sdlDestroyGPUDevice = sdl3.func("void SDL_DestroyGPUDevice(SDL_GPUDevice* device)") as (device: GPUDevicePtr) => void;
 export const sdlGetNumGPUDrivers = sdl3.func("int SDL_GetNumGPUDrivers()") as () => number;
 export const sdlGetGPUDriver = sdl3.func("const char* SDL_GetGPUDriver(int index)") as (index: number) => string;
 export const sdlGetGPUDeviceDriver = sdl3.func("const char* SDL_GetGPUDeviceDriver(SDL_GPUDevice* device)") as (device: GPUDevicePtr) => string;
-export const sdlGetGPUShaderFormats = sdl3.func("SDL_GPUShaderFormat SDL_GetGPUShaderFormats(SDL_GPUDevice* device)") as (device: GPUDevicePtr) => ShaderFormat;
+export const sdlGetGPUShaderFormats = sdl3.func("SDL_GPUShaderFormat SDL_GetGPUShaderFormats(SDL_GPUDevice* device)") as (device: GPUDevicePtr) => GPUShaderFormat;
 export const sdlAcquireGPUCommandBuffer = sdl3.func("SDL_GPUCommandBuffer* SDL_AcquireGPUCommandBuffer(SDL_GPUDevice* device)") as (device: GPUDevicePtr) => GPUCommandBufferPtr | null;
 export const sdlClaimWindowForGPUDevice = sdl3.func("bool SDL_ClaimWindowForGPUDevice(SDL_GPUDevice* device, SDL_Window* window)") as (device: GPUDevicePtr, window: WindowPtr) => boolean;
 export const sdlReleaseWindowFromGPUDevice = sdl3.func("void SDL_ReleaseWindowFromGPUDevice(SDL_GPUDevice* device, SDL_Window* window)") as (device: GPUDevicePtr, window: WindowPtr) => void;

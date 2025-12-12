@@ -1,4 +1,4 @@
-import { type GPUBufferCreateInfo, type GPUTransferBufferCreateInfo, ShaderFormat } from "sdl3";
+import { type GPUBufferCreateInfo, type GPUTransferBufferCreateInfo, GPUShaderFormat } from "sdl3";
 import {
     type GPUDevicePtr,
     sdlAcquireGPUCommandBuffer,
@@ -25,7 +25,7 @@ import { Fence } from "./fence.ts";
 export class Device {
     private readonly handle: GPUDevicePtr;
 
-    public constructor(format_flags: ShaderFormat, debug_mode: boolean, name: string | null = null) {
+    public constructor(format_flags: GPUShaderFormat, debug_mode: boolean, name: string | null = null) {
         const handle = sdlCreateGPUDevice(format_flags, debug_mode, name);
         if (!handle) {
             throw new Error("Failed to create GPUDevice");
@@ -41,7 +41,7 @@ export class Device {
         return sdlGetGPUDeviceDriver(this.handle);
     }
 
-    public get shader_formats(): ShaderFormat {
+    public get shader_formats(): GPUShaderFormat {
         return sdlGetGPUShaderFormats(this.handle);
     }
 
