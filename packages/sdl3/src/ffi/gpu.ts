@@ -1,6 +1,7 @@
 import { view } from "koffi";
 
 import {
+    type GPUBufferBinding,
     type GPUBufferCreateInfo,
     type GPUBufferLocation,
     type GPUBufferPtr,
@@ -11,12 +12,17 @@ import {
     type GPUDepthStencilTargetInfo,
     type GPUDevicePtr,
     type GPUFencePtr,
+    type GPUGraphicsPipelineCreateInfo,
+    type GPUGraphicsPipelinePtr,
     type GPURenderPassPtr,
+    type GPUShaderCreateInfo,
+    GPUShaderFormat,
+    type GPUShaderPtr,
+    GPUTextureFormat,
     type GPUTexturePtr,
     type GPUTransferBufferCreateInfo,
     type GPUTransferBufferLocation,
     type GPUTransferBufferPtr,
-    GPUShaderFormat,
     type WindowPtr,
 } from "./types";
 import { sdl3 } from "./lib.ts";
@@ -79,10 +85,15 @@ export function sdlWaitForGPUFences(device: GPUDevicePtr, wait_all: boolean, fen
     return SDL_WaitForGPUFences(device, wait_all, fences, fences.length) as boolean;
 }
 
+export const sdlGetGPUSwapchainTextureFormat = sdl3.func("SDL_GPUTextureFormat SDL_GetGPUSwapchainTextureFormat(SDL_GPUDevice* device, SDL_Window* window)") as (device: GPUDevicePtr, window: WindowPtr) => GPUTextureFormat;
 export const sdlCreateGPUBuffer = sdl3.func("SDL_GPUBuffer* SDL_CreateGPUBuffer(SDL_GPUDevice* device, _In_ const SDL_GPUBufferCreateInfo* createinfo)") as (device: GPUDevicePtr, createinfo: GPUBufferCreateInfo) => GPUBufferPtr | null;
 export const sdlCreateGPUTransferBuffer = sdl3.func("SDL_GPUTransferBuffer* SDL_CreateGPUTransferBuffer(SDL_GPUDevice* device, _In_ const SDL_GPUTransferBufferCreateInfo* createinfo)") as (device: GPUDevicePtr, createinfo: GPUTransferBufferCreateInfo) => GPUTransferBufferPtr | null;
+export const sdlCreateGPUShader = sdl3.func("SDL_GPUShader* SDL_CreateGPUShader(SDL_GPUDevice* device, _In_ const SDL_GPUShaderCreateInfo* createinfo)") as (device: GPUDevicePtr, createinfo: GPUShaderCreateInfo) => GPUShaderPtr | null;
+export const sdlCreateGPUGraphicsPipeline = sdl3.func("SDL_GPUGraphicsPipeline* SDL_CreateGPUGraphicsPipeline(SDL_GPUDevice* device, _In_ const SDL_GPUGraphicsPipelineCreateInfo* createinfo)") as (device: GPUDevicePtr, createinfo: GPUGraphicsPipelineCreateInfo) => GPUGraphicsPipelinePtr | null;
 export const sdlReleaseGPUBuffer = sdl3.func("void SDL_ReleaseGPUBuffer(SDL_GPUDevice* device, SDL_GPUBuffer* buffer)") as (device: GPUDevicePtr, buffer: GPUBufferPtr) => void;
 export const sdlReleaseGPUTransferBuffer = sdl3.func("void SDL_ReleaseGPUTransferBuffer(SDL_GPUDevice* device, SDL_GPUTransferBuffer* transfer_buffer)") as (device: GPUDevicePtr, transfer_buffer: GPUTransferBufferPtr) => void;
+export const sdlReleaseGPUShader = sdl3.func("void SDL_ReleaseGPUShader(SDL_GPUDevice* device, SDL_GPUShader* shader)") as (device: GPUDevicePtr, shader: GPUShaderPtr) => void;
+export const sdlReleaseGPUGraphicsPipeline = sdl3.func("void SDL_ReleaseGPUGraphicsPipeline(SDL_GPUDevice* device, SDL_GPUGraphicsPipeline* pipeline)") as (device: GPUDevicePtr, pipeline: GPUGraphicsPipelinePtr) => void;
 
 const SDL_MapGPUTransferBuffer = sdl3.func("void* SDL_MapGPUTransferBuffer(SDL_GPUDevice* device, SDL_GPUTransferBuffer* transfer_buffer, bool cycle)");
 
@@ -105,3 +116,12 @@ export const sdlUploadToGPUBuffer = sdl3.func("void SDL_UploadToGPUBuffer(SDL_GP
 export const sdlDownloadFromGPUBuffer = sdl3.func("void SDL_DownloadFromGPUBuffer(SDL_GPUCopyPass* copy_pass, _In_ const SDL_GPUBufferRegion* source, _In_ const SDL_GPUTransferBufferLocation* destination)") as (copy_pass: GPUCopyPassPtr, source: GPUBufferRegion, destination: GPUTransferBufferLocation) => void;
 export const sdlCopyGPUBufferToBuffer = sdl3.func("void SDL_CopyGPUBufferToBuffer(SDL_GPUCopyPass* copy_pass, const SDL_GPUBufferLocation* source, const SDL_GPUBufferLocation* destination, uint32 size, bool cycle)") as (copy_pass: GPUCopyPassPtr, source: GPUBufferLocation, destination: GPUBufferLocation, size: number, cycle: boolean) => void;
 export const sdlEndGPUCopyPass = sdl3.func("void SDL_EndGPUCopyPass(SDL_GPUCopyPass* copy_pass)") as (copy_pass: GPUCopyPassPtr) => void;
+export const sdlBindGPUGraphicsPipeline = sdl3.func("void SDL_BindGPUGraphicsPipeline(SDL_GPURenderPass* render_pass, SDL_GPUGraphicsPipeline* graphics_pipeline)") as (render_pass: GPURenderPassPtr, graphics_pipeline: GPUGraphicsPipelinePtr) => void;
+
+const SDL_BindGPUVertexBuffers = sdl3.func("void SDL_BindGPUVertexBuffers(SDL_GPURenderPass* render_pass, uint32 first_slot, const SDL_GPUBufferBinding* bindings, uint32 num_bindings)");
+
+export function sdlBindGPUVertexBuffers(render_pass: GPURenderPassPtr, first_slot: number, bindings: GPUBufferBinding[]): void {
+    SDL_BindGPUVertexBuffers(render_pass, first_slot, bindings, bindings.length);
+}
+
+export const sdlDrawGPUPrimitives = sdl3.func("void SDL_DrawGPUPrimitives(SDL_GPURenderPass* render_pass, uint32 num_vertices, uint32 num_instances, uint32 first_vertex, uint32 first_instance)") as (render_pass: GPURenderPassPtr, num_vertices: number, num_instances: number, first_vertex: number, first_instance: number) => void;

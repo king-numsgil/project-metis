@@ -1,6 +1,7 @@
 import type { Tagged } from "type-fest";
 
 import type { PropertiesID } from "./properties.ts";
+import { SDL_GPUBufferBinding } from "../c_structs.ts";
 
 export type GPUDevicePtr = Tagged<{}, "SDL_GPUDevice">;
 export type GPUCommandBufferPtr = Tagged<{}, "SDL_GPUCommandBuffer">;
@@ -531,4 +532,9 @@ export interface GPUGraphicsPipelineCreateInfo {
     depth_stencil_state: GPUDepthStencilState;
     target_info: GPUGraphicsPipelineTargetInfo;
     props?: PropertiesID;
+}
+
+export interface GPUBufferBinding {
+    buffer: GPUBufferPtr,
+    offset: number;
 }
