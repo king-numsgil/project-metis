@@ -75,7 +75,7 @@ using fragmentShader = dev.createShader({
     num_uniform_buffers: 0,
 });
 
-const bufferSize = 8 * Float32Array.BYTES_PER_ELEMENT * 3;
+const bufferSize = 5 * Float32Array.BYTES_PER_ELEMENT * 3;
 using buffer = dev.createBuffer({
     usage: GPUBufferUsageFlags.Vertex,
     size: bufferSize,
@@ -88,10 +88,10 @@ using buffer = dev.createBuffer({
     transfer.map(array_buffer => {
         const array = new Float32Array(array_buffer);
         array.set([
-            //x   y   z  w  r  g  b  a
-            -.5, -.5, 0, 1, 1, 0, 0, 1,
-            0.5, -.5, 0, 1, 0, 1, 0, 1,
-            0.5, 0.5, 0, 1, 0, 0, 1, 1,
+            //x   y   r  g  b
+            -.5, -.5, 1, 0, 0,
+            0.5, -.5, 0, 1, 0,
+            0.5, 0.5, 0, 0, 1,
         ]);
     });
 
@@ -119,7 +119,7 @@ using pipeline = dev.createGraphicsPipeline({
         vertex_buffer_descriptions: [
             {
                 slot: 0,
-                pitch: 8 * Float32Array.BYTES_PER_ELEMENT,
+                pitch: 5 * Float32Array.BYTES_PER_ELEMENT,
                 input_rate: GPUVertexInputRate.Vertex,
                 instance_step_rate: 0,
             },
@@ -129,14 +129,14 @@ using pipeline = dev.createGraphicsPipeline({
             {
                 location: 0,
                 buffer_slot: 0,
-                format: GPUVertexElementFormat.FLOAT4,
+                format: GPUVertexElementFormat.FLOAT2,
                 offset: 0,
             },
             {
                 location: 1,
                 buffer_slot: 0,
-                format: GPUVertexElementFormat.FLOAT4,
-                offset: 4 * Float32Array.BYTES_PER_ELEMENT,
+                format: GPUVertexElementFormat.FLOAT3,
+                offset: 2 * Float32Array.BYTES_PER_ELEMENT,
             },
         ],
     },
