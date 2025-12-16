@@ -9,6 +9,7 @@ import {
     GPUCullMode,
     GPUFillMode,
     GPUFrontFace,
+    GPUIndexElementSize,
     GPULoadOp,
     GPUPrimitiveType,
     GPUSampleCount,
@@ -25,7 +26,7 @@ import {
     System,
     Window
 } from "sdl3";
-import { sdlGetError } from "sdl3/ffi";
+import {sdlGetError} from "sdl3/ffi";
 
 import triangle from "./triangle.wgsl";
 
@@ -75,10 +76,16 @@ using fragmentShader = dev.createShader({
     num_uniform_buffers: 0,
 });
 
-const bufferSize = 5 * Float32Array.BYTES_PER_ELEMENT * 6;
+const bufferSize = 5 * Float32Array.BYTES_PER_ELEMENT * 4;
 using buffer = dev.createBuffer({
     usage: GPUBufferUsageFlags.Vertex,
     size: bufferSize,
+});
+
+const indexSize = 6 * Uint16Array.BYTES_PER_ELEMENT;
+using indexBuffer = dev.createBuffer({
+    usage: GPUBufferUsageFlags.Index,
+    size: indexSize,
 });
 {
     using transfer = dev.createTransferBuffer({
@@ -92,10 +99,19 @@ using buffer = dev.createBuffer({
             -.5, -.5, 1, 0, 0,
             0.5, -.5, 0, 1, 0,
             0.5, 0.5, 0, 0, 1,
-
-            -.5, -.5, 1, 0, 0,
-            0.5, 0.5, 0, 0, 1,
             -.5, 0.5, 1, 0, 1,
+        ]);
+    });
+
+    using indexTransfer = dev.createTransferBuffer({
+        usage: GPUTransferBufferUsage.Upload,
+        size: indexSize,
+    });
+    indexTransfer.map(array_buffer => {
+        const array = new Uint16Array(array_buffer);
+        array.set([
+            0, 1, 2,
+            0, 2, 3,
         ]);
     });
 
@@ -108,6 +124,14 @@ using buffer = dev.createBuffer({
         buffer: buffer.raw,
         offset: 0,
         size: bufferSize,
+    });
+    copy.uploadToDeviceBuffer({
+        transfer_buffer: indexTransfer.raw,
+        offset: 0,
+    }, {
+        buffer: indexBuffer.raw,
+        offset: 0,
+        size: indexSize,
     });
     copy.end();
 
@@ -232,7 +256,11 @@ while (running) {
             offset: 0,
         },
     ]);
-    pass.drawPrimitives(6);
+    pass.bindIndexBuffer({
+        buffer: indexBuffer.raw,
+        offset: 0,
+    }, GPUIndexElementSize.Size16Bit);
+    pass.drawIndexedPrimitives(6);
     pass.end();
 
     if (!cb.submit()) {

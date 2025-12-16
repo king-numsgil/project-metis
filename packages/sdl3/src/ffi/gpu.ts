@@ -14,6 +14,7 @@ import {
     type GPUFencePtr,
     type GPUGraphicsPipelineCreateInfo,
     type GPUGraphicsPipelinePtr,
+    GPUIndexElementSize,
     type GPURenderPassPtr,
     type GPUShaderCreateInfo,
     GPUShaderFormat,
@@ -124,4 +125,6 @@ export function sdlBindGPUVertexBuffers(render_pass: GPURenderPassPtr, first_slo
     SDL_BindGPUVertexBuffers(render_pass, first_slot, bindings, bindings.length);
 }
 
+export const sdlBindGPUIndexBuffer = sdl3.func("void SDL_BindGPUIndexBuffer(SDL_GPURenderPass* render_pass, const SDL_GPUBufferBinding* binding, SDL_GPUIndexElementSize index_element_size)") as (render_pass: GPURenderPassPtr, binding: GPUBufferBinding, index_element_size: GPUIndexElementSize) => void;
+export const sdlDrawGPUIndexedPrimitives = sdl3.func("void SDL_DrawGPUIndexedPrimitives(SDL_GPURenderPass* render_pass, uint32 num_indices, uint32 num_instances, uint32 first_index, int32 vertex_offset, uint32 first_instance)") as (render_pass: GPURenderPassPtr, num_indices: number, num_instances: number, first_index: number, vertex_offset: number, first_instance: number) => void;
 export const sdlDrawGPUPrimitives = sdl3.func("void SDL_DrawGPUPrimitives(SDL_GPURenderPass* render_pass, uint32 num_vertices, uint32 num_instances, uint32 first_vertex, uint32 first_instance)") as (render_pass: GPURenderPassPtr, num_vertices: number, num_instances: number, first_vertex: number, first_instance: number) => void;

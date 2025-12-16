@@ -117,6 +117,11 @@ export enum GPUStoreOp {
     ResolveAndStore,
 }
 
+export enum GPUIndexElementSize {
+    Size16Bit,
+    Size32Bit,
+}
+
 export enum GPUFillMode {
     Fill,
     Line,

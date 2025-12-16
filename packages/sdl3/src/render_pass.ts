@@ -1,13 +1,16 @@
 import {
     type GPURenderPassPtr,
     sdlBindGPUGraphicsPipeline,
+    sdlBindGPUIndexBuffer,
     sdlBindGPUVertexBuffers,
+    sdlDrawGPUIndexedPrimitives,
     sdlDrawGPUPrimitives,
     sdlEndGPURenderPass
 } from "./ffi";
 
+import {type GPUBufferBinding, GPUIndexElementSize} from "sdl3";
+
 import { GraphicsPipeline } from "./graphics_pipeline.ts";
-import type { GPUBufferBinding } from "./ffi/types";
 
 export class RenderPass {
     public constructor(private readonly handle: GPURenderPassPtr) {
@@ -29,6 +32,18 @@ export class RenderPass {
     public bindVertexBuffers(bindings: GPUBufferBinding[], first_slot: number): void;
     public bindVertexBuffers(bindings: GPUBufferBinding[], first_slot?: number): void {
         sdlBindGPUVertexBuffers(this.handle, first_slot ?? 0, bindings);
+    }
+
+    public bindIndexBuffer(binding: GPUBufferBinding, index_element_size: GPUIndexElementSize): void {
+        sdlBindGPUIndexBuffer(this.handle, binding, index_element_size);
+    }
+
+    public drawIndexedPrimitives(num_indices: number): void;
+    public drawIndexedPrimitives(num_indices: number, num_instances: number): void;
+    public drawIndexedPrimitives(num_indices: number, num_instances: number, first_index: number, vertex_offset: number): void;
+    public drawIndexedPrimitives(num_indices: number, num_instances: number, first_index: number, vertex_offset: number, first_instance: number): void;
+    public drawIndexedPrimitives(num_indices: number, num_instances?: number, first_index?: number, vertex_offset?: number, first_instance?: number): void {
+        sdlDrawGPUIndexedPrimitives(this.handle, num_indices, num_instances ?? 1, first_index ?? 0, vertex_offset ?? 0, first_instance ?? 0);
     }
 
     public drawPrimitives(num_vertices: number): void

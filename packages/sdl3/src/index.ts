@@ -30,6 +30,7 @@ export {
     GPUFilter,
     GPUSamplerAddressMode,
     GPUSamplerMipmapMode,
+    GPUIndexElementSize,
 } from "./ffi/types";
 
 export type {

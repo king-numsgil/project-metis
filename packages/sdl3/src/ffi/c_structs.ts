@@ -25,6 +25,7 @@ alias("SDL_GPUFrontFace", "int");
 alias("SDL_GPUSampleCount", "int");
 alias("SDL_GPUTextureFormat", "int");
 alias("SDL_GPUPrimitiveType", "int");
+alias("SDL_GPUIndexElementSize", "int");
 opaque("SDL_GPUDevice");
 opaque("SDL_GPUCommandBuffer");
 opaque("SDL_GPUTexture");
