@@ -37,13 +37,13 @@ import {
     sdlWaitForGPUFences,
 } from "./ffi";
 
-import {GraphicsPipeline} from "./graphics_pipeline.ts";
-import {TransferBuffer} from "./transfer_buffer.ts";
-import {CommandBuffer} from "./command_buffer.ts";
-import {DeviceBuffer} from "./device_buffer.ts";
-import type {Window} from "./window.ts";
-import {Shader} from "./shader.ts";
-import {Fence} from "./fence.ts";
+import { GraphicsPipeline } from "./graphics_pipeline.ts";
+import { TransferBuffer } from "./transfer_buffer.ts";
+import { CommandBuffer } from "./command_buffer.ts";
+import { DeviceBuffer } from "./device_buffer.ts";
+import type { Window } from "./window.ts";
+import { Shader } from "./shader.ts";
+import { Fence } from "./fence.ts";
 
 export const DefaultGraphicsPipelineCreateInfo: Readonly<Omit<GPUGraphicsPipelineCreateInfo, "vertex_shader" | "fragment_shader" | "vertex_input_state">> = Object.freeze({
     rasterizer_state: {

@@ -8,7 +8,7 @@ import {
     sdlEndGPURenderPass
 } from "./ffi";
 
-import {type GPUBufferBinding, GPUIndexElementSize} from "sdl3";
+import { type GPUBufferBinding, GPUIndexElementSize } from "sdl3";
 
 import { GraphicsPipeline } from "./graphics_pipeline.ts";
 

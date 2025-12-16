@@ -17,7 +17,7 @@ import {
     System,
     Window
 } from "sdl3";
-import {sdlGetError} from "sdl3/ffi";
+import { sdlGetError } from "sdl3/ffi";
 
 import triangle from "./triangle.wgsl";
 
