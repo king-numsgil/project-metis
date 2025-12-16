@@ -696,3 +696,8 @@ export const SDL_GPUGraphicsPipelineCreateInfo = struct("SDL_GPUGraphicsPipeline
     target_info: SDL_GPUGraphicsPipelineTargetInfo,
     props: "SDL_PropertiesID",
 });
+
+export const SDL_GPUBufferBinding = struct("SDL_GPUBufferBinding", {
+    buffer: "SDL_GPUBuffer*",
+    offset: "uint32",
+});

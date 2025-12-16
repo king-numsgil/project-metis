@@ -15,7 +15,21 @@ export {
     Keycode,
     SDL_WindowFlags,
     VideoTheme,
-    WindowPosition
+    WindowPosition,
+    GPUBlendFactor,
+    GPUStencilOp,
+    GPUColorComponentFlags,
+    GPUFillMode,
+    GPUCullMode,
+    GPUFrontFace,
+    GPUSampleCount,
+    GPUCompareOp,
+    GPUPrimitiveType,
+    GPUTextureFormat,
+    GPUBlendOp,
+    GPUFilter,
+    GPUSamplerAddressMode,
+    GPUSamplerMipmapMode,
 } from "./ffi/types";
 
 export type {
@@ -65,7 +79,20 @@ export type {
     TouchFingerEvent,
     FColor,
     GPUColorTargetInfo,
-    GPUDepthStencilTargetInfo
+    GPUDepthStencilTargetInfo,
+    GPUGraphicsPipelineCreateInfo,
+    GPUShaderCreateInfo,
+    GPUGraphicsPipelineTargetInfo,
+    GPUDepthStencilState,
+    GPUMultisampleState,
+    GPURasterizerState,
+    GPUVertexInputState,
+    GPUColorTargetDescription,
+    GPUColorTargetBlendState,
+    GPUStencilOpState,
+    GPUVertexAttribute,
+    GPUVertexBufferDescription,
+    GPUBufferBinding,
 } from "./ffi/types";
 
 export * from "./system.ts";

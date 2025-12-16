@@ -8,6 +8,8 @@ export type {
     GPUDevicePtr,
     GPURenderPassPtr,
     GPUTexturePtr,
+    GPUGraphicsPipelinePtr,
+    GPUShaderPtr,
 } from "./types";
 
 export * from "./init.ts";
