@@ -75,7 +75,7 @@ using fragmentShader = dev.createShader({
     num_uniform_buffers: 0,
 });
 
-const bufferSize = 5 * Float32Array.BYTES_PER_ELEMENT * 3;
+const bufferSize = 5 * Float32Array.BYTES_PER_ELEMENT * 6;
 using buffer = dev.createBuffer({
     usage: GPUBufferUsageFlags.Vertex,
     size: bufferSize,
@@ -92,6 +92,10 @@ using buffer = dev.createBuffer({
             -.5, -.5, 1, 0, 0,
             0.5, -.5, 0, 1, 0,
             0.5, 0.5, 0, 0, 1,
+
+            -.5, -.5, 1, 0, 0,
+            0.5, 0.5, 0, 0, 1,
+            -.5, 0.5, 1, 0, 1,
         ]);
     });
 
@@ -228,7 +232,7 @@ while (running) {
             offset: 0,
         },
     ]);
-    pass.drawPrimitives(3);
+    pass.drawPrimitives(6);
     pass.end();
 
     if (!cb.submit()) {
