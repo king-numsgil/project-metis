@@ -1,8 +1,18 @@
 import {
+    GPUBlendFactor,
+    GPUBlendOp,
     type GPUBufferCreateInfo,
+    GPUColorComponentFlags,
+    GPUCompareOp,
+    GPUCullMode,
+    GPUFillMode,
+    GPUFrontFace,
     type GPUGraphicsPipelineCreateInfo,
+    GPUPrimitiveType,
+    GPUSampleCount,
     type GPUShaderCreateInfo,
     GPUShaderFormat,
+    GPUStencilOp,
     GPUTextureFormat,
     type GPUTransferBufferCreateInfo
 } from "sdl3";
@@ -27,13 +37,73 @@ import {
     sdlWaitForGPUFences,
 } from "./ffi";
 
-import { GraphicsPipeline } from "./graphics_pipeline.ts";
-import { TransferBuffer } from "./transfer_buffer.ts";
-import { CommandBuffer } from "./command_buffer.ts";
-import { DeviceBuffer } from "./device_buffer.ts";
-import type { Window } from "./window.ts";
-import { Shader } from "./shader.ts";
-import { Fence } from "./fence.ts";
+import {GraphicsPipeline} from "./graphics_pipeline.ts";
+import {TransferBuffer} from "./transfer_buffer.ts";
+import {CommandBuffer} from "./command_buffer.ts";
+import {DeviceBuffer} from "./device_buffer.ts";
+import type {Window} from "./window.ts";
+import {Shader} from "./shader.ts";
+import {Fence} from "./fence.ts";
+
+export const DefaultGraphicsPipelineCreateInfo: Readonly<Omit<GPUGraphicsPipelineCreateInfo, "vertex_shader" | "fragment_shader" | "vertex_input_state">> = Object.freeze({
+    rasterizer_state: {
+        fill_mode: GPUFillMode.Fill,
+        cull_mode: GPUCullMode.None,
+        front_face: GPUFrontFace.CounterClockwise,
+        depth_bias_clamp: 0,
+        depth_bias_constant_factor: 0,
+        depth_bias_slope_factor: 0,
+        enable_depth_bias: false,
+        enable_depth_clip: false,
+    },
+    target_info: {
+        num_color_targets: 1,
+        color_target_descriptions: [
+            {
+                format: GPUTextureFormat.Invalid,
+                blend_state: {
+                    alpha_blend_op: GPUBlendOp.Invalid,
+                    color_blend_op: GPUBlendOp.Invalid,
+                    color_write_mask: GPUColorComponentFlags.R | GPUColorComponentFlags.G | GPUColorComponentFlags.B | GPUColorComponentFlags.A,
+                    dst_alpha_blendfactor: GPUBlendFactor.Invalid,
+                    dst_color_blendfactor: GPUBlendFactor.Invalid,
+                    src_alpha_blendfactor: GPUBlendFactor.Invalid,
+                    src_color_blendfactor: GPUBlendFactor.Invalid,
+                    enable_blend: false,
+                    enable_color_write_mask: false,
+                },
+            },
+        ],
+        depth_stencil_format: GPUTextureFormat.Invalid,
+        has_depth_stencil_target: false,
+    },
+    depth_stencil_state: {
+        back_stencil_state: {
+            compare_op: GPUCompareOp.Invalid,
+            depth_fail_op: GPUStencilOp.Invalid,
+            fail_op: GPUStencilOp.Invalid,
+            pass_op: GPUStencilOp.Invalid,
+        },
+        compare_mask: 0,
+        compare_op: GPUCompareOp.Invalid,
+        enable_depth_test: false,
+        enable_depth_write: false,
+        front_stencil_state: {
+            pass_op: GPUStencilOp.Invalid,
+            fail_op: GPUStencilOp.Invalid,
+            depth_fail_op: GPUStencilOp.Invalid,
+            compare_op: GPUCompareOp.Invalid,
+        },
+        enable_stencil_test: false,
+        write_mask: 0,
+    },
+    multisample_state: {
+        sample_count: GPUSampleCount.One,
+        enable_mask: false,
+        sample_mask: 0,
+    },
+    primitive_type: GPUPrimitiveType.TriangleList,
+});
 
 export class Device {
     private readonly handle: GPUDevicePtr;
