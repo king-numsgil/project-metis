@@ -160,7 +160,7 @@ using pipeline = dev.createGraphicsPipeline({
         num_color_targets: 1,
         color_target_descriptions: [
             {
-                format: dev.getSwapchinFormat(wnd),
+                format: dev.getSwapchainFormat(wnd),
                 blend_state: {
                     alpha_blend_op: GPUBlendOp.Invalid,
                     color_blend_op: GPUBlendOp.Invalid,

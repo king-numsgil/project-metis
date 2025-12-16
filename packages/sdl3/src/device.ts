@@ -86,7 +86,7 @@ export class Device {
         sdlReleaseWindowFromGPUDevice(this.handle, window.raw);
     }
 
-    public getSwapchinFormat(window: Window): GPUTextureFormat {
+    public getSwapchainFormat(window: Window): GPUTextureFormat {
         return sdlGetGPUSwapchainTextureFormat(this.handle, window.raw);
     }
 
