@@ -1,25 +1,38 @@
-import { type GPUBufferCreateInfo, type GPUTransferBufferCreateInfo, GPUShaderFormat } from "sdl3";
+import {
+    type GPUBufferCreateInfo,
+    type GPUGraphicsPipelineCreateInfo,
+    type GPUShaderCreateInfo,
+    GPUShaderFormat,
+    GPUTextureFormat,
+    type GPUTransferBufferCreateInfo
+} from "sdl3";
+
 import {
     type GPUDevicePtr,
     sdlAcquireGPUCommandBuffer,
     sdlClaimWindowForGPUDevice,
     sdlCreateGPUBuffer,
     sdlCreateGPUDevice,
+    sdlCreateGPUGraphicsPipeline,
+    sdlCreateGPUShader,
     sdlCreateGPUTransferBuffer,
     sdlDestroyGPUDevice,
     sdlGetError,
     sdlGetGPUDeviceDriver,
     sdlGetGPUDriver,
     sdlGetGPUShaderFormats,
+    sdlGetGPUSwapchainTextureFormat,
     sdlGetNumGPUDrivers,
     sdlReleaseWindowFromGPUDevice,
     sdlWaitForGPUFences,
 } from "./ffi";
 
+import { GraphicsPipeline } from "./graphics_pipeline.ts";
 import { TransferBuffer } from "./transfer_buffer.ts";
 import { CommandBuffer } from "./command_buffer.ts";
 import { DeviceBuffer } from "./device_buffer.ts";
 import type { Window } from "./window.ts";
+import { Shader } from "./shader.ts";
 import { Fence } from "./fence.ts";
 
 export class Device {
@@ -73,6 +86,10 @@ export class Device {
         sdlReleaseWindowFromGPUDevice(this.handle, window.raw);
     }
 
+    public getSwapchinFormat(window: Window): GPUTextureFormat {
+        return sdlGetGPUSwapchainTextureFormat(this.handle, window.raw);
+    }
+
     public acquireCommandBuffer(): CommandBuffer {
         const cb = sdlAcquireGPUCommandBuffer(this.handle);
         if (!cb) {
@@ -84,6 +101,24 @@ export class Device {
 
     public waitFences(fences: Array<Fence>, wait_all: boolean = true): boolean {
         return sdlWaitForGPUFences(this.handle, wait_all, fences.map(fence => fence.raw));
+    }
+
+    public createShader(create_info: GPUShaderCreateInfo): Shader {
+        const s = sdlCreateGPUShader(this.handle, create_info);
+        if (!s) {
+            throw new Error(`Failed to create Shader : ${sdlGetError()}`);
+        }
+
+        return new Shader(s, this);
+    }
+
+    public createGraphicsPipeline(create_info: GPUGraphicsPipelineCreateInfo): GraphicsPipeline {
+        const gp = sdlCreateGPUGraphicsPipeline(this.handle, create_info);
+        if (!gp) {
+            throw new Error(`Failed to create GraphicsPipeline : ${sdlGetError()}`);
+        }
+
+        return new GraphicsPipeline(gp, this);
     }
 
     public createBuffer(create_info: GPUBufferCreateInfo): DeviceBuffer {
