@@ -76,13 +76,6 @@ using fragmentShader = dev.createShader({
 });
 
 const bufferSize = 8 * Float32Array.BYTES_PER_ELEMENT * 3;
-const vertices = [
-    // x   y   z  w  r  g  b  a
-    [-.5, -.5, 0, 1, 1, 0, 0, 1],
-    [.5, -.5, 0, 1, 0, 1, 0, 1],
-    [.5, .5, 0, 1, 0, 0, 1, 1],
-]
-
 using buffer = dev.createBuffer({
     usage: GPUBufferUsageFlags.Vertex,
     size: bufferSize,
@@ -94,11 +87,12 @@ using buffer = dev.createBuffer({
     });
     transfer.map(array_buffer => {
         const array = new Float32Array(array_buffer);
-        let i = 0;
-        for (const vertex of vertices) {
-            array.set(vertex, i);
-            i += 8;
-        }
+        array.set([
+            //x   y   z  w  r  g  b  a
+            -.5, -.5, 0, 1, 1, 0, 0, 1,
+            0.5, -.5, 0, 1, 0, 1, 0, 1,
+            0.5, 0.5, 0, 1, 0, 0, 1, 1,
+        ]);
     });
 
     const cb = dev.acquireCommandBuffer();
