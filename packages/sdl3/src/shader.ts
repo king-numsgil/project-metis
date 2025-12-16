@@ -1,4 +1,4 @@
-import { sdlReleaseGPUShader, type GPUShaderPtr } from "./ffi";
+import { type GPUShaderPtr, sdlReleaseGPUShader } from "./ffi";
 import { Device } from "./device.ts";
 
 export class Shader {

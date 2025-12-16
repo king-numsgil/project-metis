@@ -1,6 +1,9 @@
 import {
-    type GPURenderPassPtr, sdlBindGPUGraphicsPipeline, sdlBindGPUVertexBuffers,
-    sdlDrawGPUPrimitives, sdlEndGPURenderPass
+    type GPURenderPassPtr,
+    sdlBindGPUGraphicsPipeline,
+    sdlBindGPUVertexBuffers,
+    sdlDrawGPUPrimitives,
+    sdlEndGPURenderPass
 } from "./ffi";
 
 import { GraphicsPipeline } from "./graphics_pipeline.ts";
