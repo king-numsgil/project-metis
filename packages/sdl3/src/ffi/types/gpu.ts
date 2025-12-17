@@ -479,10 +479,10 @@ export interface GPUShaderCreateInfo {
     entrypoint: string;
     format: GPUShaderFormat;
     stage: GPUShaderStage;
-    num_samplers: number;
-    num_storage_textures: number;
-    num_storage_buffers: number;
-    num_uniform_buffers: number;
+    num_samplers?: number;
+    num_storage_textures?: number;
+    num_storage_buffers?: number;
+    num_uniform_buffers?: number;
     props?: PropertiesID;
 }
 

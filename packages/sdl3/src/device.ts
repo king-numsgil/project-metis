@@ -174,7 +174,13 @@ export class Device {
     }
 
     public createShader(create_info: GPUShaderCreateInfo): Shader {
-        const s = sdlCreateGPUShader(this.handle, create_info);
+        const s = sdlCreateGPUShader(this.handle, {
+            num_samplers: 0,
+            num_storage_buffers: 0,
+            num_uniform_buffers: 0,
+            num_storage_textures: 0,
+            ...create_info,
+        });
         if (!s) {
             throw new Error(`Failed to create Shader : ${sdlGetError()}`);
         }

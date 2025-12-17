@@ -49,10 +49,6 @@ using vertexShader = dev.createShader({
     entrypoint: "vs_main",
     format: GPUShaderFormat.SPIRV,
     stage: GPUShaderStage.Vertex,
-    num_samplers: 0,
-    num_storage_buffers: 0,
-    num_storage_textures: 0,
-    num_uniform_buffers: 0,
 });
 
 using fragmentShader = dev.createShader({
@@ -61,10 +57,6 @@ using fragmentShader = dev.createShader({
     entrypoint: "fs_main",
     format: GPUShaderFormat.SPIRV,
     stage: GPUShaderStage.Fragment,
-    num_samplers: 0,
-    num_storage_buffers: 0,
-    num_storage_textures: 0,
-    num_uniform_buffers: 0,
 });
 
 const bufferSize = 5 * Float32Array.BYTES_PER_ELEMENT * 4;
