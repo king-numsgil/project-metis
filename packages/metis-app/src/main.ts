@@ -1,5 +1,5 @@
 import {
-    DefaultGraphicsPipelineCreateInfo,
+    defaultGraphicsPipelineCreateInfo,
     Device,
     EventType,
     GPUBufferUsageFlags,
@@ -123,7 +123,7 @@ using indexBuffer = dev.createBuffer({
 }
 
 using pipeline = dev.createGraphicsPipeline({
-    ...DefaultGraphicsPipelineCreateInfo,
+    ...defaultGraphicsPipelineCreateInfo,
     vertex_shader: vertexShader.raw,
     fragment_shader: fragmentShader.raw,
     vertex_input_state: {
@@ -153,10 +153,10 @@ using pipeline = dev.createGraphicsPipeline({
         ],
     },
     target_info: {
-        ...DefaultGraphicsPipelineCreateInfo.target_info,
+        ...defaultGraphicsPipelineCreateInfo.target_info,
         color_target_descriptions: [
             {
-                ...DefaultGraphicsPipelineCreateInfo.target_info.color_target_descriptions[0]!,
+                ...defaultGraphicsPipelineCreateInfo.target_info.color_target_descriptions[0]!,
                 format: dev.getSwapchainFormat(wnd),
             },
         ],

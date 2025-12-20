@@ -45,7 +45,7 @@ import type { Window } from "./window.ts";
 import { Shader } from "./shader.ts";
 import { Fence } from "./fence.ts";
 
-export const DefaultGraphicsPipelineCreateInfo: Readonly<Omit<GPUGraphicsPipelineCreateInfo, "vertex_shader" | "fragment_shader" | "vertex_input_state">> = Object.freeze({
+export const defaultGraphicsPipelineCreateInfo: Readonly<Omit<GPUGraphicsPipelineCreateInfo, "vertex_shader" | "fragment_shader" | "vertex_input_state">> = Object.freeze({
     rasterizer_state: {
         fill_mode: GPUFillMode.Fill,
         cull_mode: GPUCullMode.None,
