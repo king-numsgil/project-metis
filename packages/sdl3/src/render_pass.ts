@@ -5,7 +5,7 @@ import {
     sdlBindGPUVertexBuffers,
     sdlDrawGPUIndexedPrimitives,
     sdlDrawGPUPrimitives,
-    sdlEndGPURenderPass
+    sdlEndGPURenderPass,
 } from "./ffi";
 
 import { type GPUBufferBinding, GPUIndexElementSize } from "sdl3";

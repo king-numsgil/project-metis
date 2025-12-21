@@ -5,7 +5,7 @@ import {
     sdlCopyGPUBufferToBuffer,
     sdlDownloadFromGPUBuffer,
     sdlEndGPUCopyPass,
-    sdlUploadToGPUBuffer
+    sdlUploadToGPUBuffer,
 } from "./ffi";
 
 export class CopyPass {

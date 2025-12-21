@@ -1,5 +1,5 @@
-import type { Vec2, Vec3, Vec4, Mat3, Mat4, Vec2d, Vec3d, Vec4d, Mat3d, Mat4d } from "wgpu-matrix";
-import { GPUVertexElementFormat, type GPUVertexAttribute } from "sdl3";
+import type { Mat3, Mat3d, Mat4, Mat4d, Vec2, Vec2d, Vec3, Vec3d, Vec4, Vec4d } from "wgpu-matrix";
+import { type GPUVertexAttribute, GPUVertexElementFormat } from "sdl3";
 
 /**
  * Supported attribute types for vertex data.
@@ -176,89 +176,6 @@ export class MeshBuffer<T extends readonly AttributeDescriptor[]> {
     }
 
     /**
-     * Calculates the size in bytes for a given attribute type.
-     * Respects std140/std430 alignment rules (e.g., mat3 is packed as 3 vec4s).
-     */
-    private getAttributeSize(type: AttributeType): number {
-        const sizes: Record<AttributeType, number> = {
-            f32: 4,
-            vec2: 8,
-            vec3: 12,
-            vec4: 16,
-            mat3: 48,      // 3 columns × 16 bytes (vec4 alignment)
-            mat4: 64,
-            f64: 8,
-            vec2d: 16,
-            vec3d: 24,
-            vec4d: 32,
-            mat3d: 96,     // 3 columns × 32 bytes (vec4d alignment)
-            mat4d: 128,
-        };
-        return sizes[type];
-    }
-
-    /**
-     * Returns the number of components (floats/doubles) for a given attribute type.
-     * For mat3/mat3d, returns 12 (not 9) to account for std140/std430 padding.
-     */
-    private getComponentCount(type: AttributeType): number {
-        const counts: Record<AttributeType, number> = {
-            f32: 1,
-            vec2: 2,
-            vec3: 3,
-            vec4: 4,
-            mat3: 12,      // 3 columns × 4 components (padded to vec4)
-            mat4: 16,
-            f64: 1,
-            vec2d: 2,
-            vec3d: 3,
-            vec4d: 4,
-            mat3d: 12,     // 3 columns × 4 components (padded to vec4d)
-            mat4d: 16,
-        };
-        return counts[type];
-    }
-
-    /**
-     * Checks if an attribute type uses double precision (Float64Array).
-     */
-    private isDoublePrecision(type: AttributeType): boolean {
-        return type === "f64" || type === "vec2d" || type === "vec3d" || type === "vec4d" || type === "mat3d" || type === "mat4d";
-    }
-
-    /**
-     * Maps attribute types to SDL3 GPUVertexElementFormat.
-     * For matrices, returns the format for a single column.
-     */
-    private getVertexElementFormat(type: AttributeType): GPUVertexElementFormat {
-        const formats: Record<AttributeType, GPUVertexElementFormat> = {
-            f32: GPUVertexElementFormat.FLOAT,
-            vec2: GPUVertexElementFormat.FLOAT2,
-            vec3: GPUVertexElementFormat.FLOAT3,
-            vec4: GPUVertexElementFormat.FLOAT4,
-            mat3: GPUVertexElementFormat.FLOAT4,  // Each column as FLOAT4
-            mat4: GPUVertexElementFormat.FLOAT4,  // Each column as FLOAT4
-            f64: GPUVertexElementFormat.FLOAT,  // SDL3 doesn't have double formats, use float
-            vec2d: GPUVertexElementFormat.FLOAT2,
-            vec3d: GPUVertexElementFormat.FLOAT3,
-            vec4d: GPUVertexElementFormat.FLOAT4,
-            mat3d: GPUVertexElementFormat.FLOAT4,
-            mat4d: GPUVertexElementFormat.FLOAT4,
-        };
-        return formats[type];
-    }
-
-    /**
-     * Returns the number of vertex attribute locations needed for a type.
-     * Vectors and scalars use 1 location, matrices use multiple (3 for mat3, 4 for mat4).
-     */
-    private getAttributeLocationCount(type: AttributeType): number {
-        if (type === "mat3" || type === "mat3d") return 3;
-        if (type === "mat4" || type === "mat4d") return 4;
-        return 1;
-    }
-
-    /**
      * Get a typed array view for a specific vertex attribute.
      * This is a direct view into the buffer - modifications affect the underlying data.
      *
@@ -282,7 +199,7 @@ export class MeshBuffer<T extends readonly AttributeDescriptor[]> {
      */
     getVertexAttribute<K extends T[number]["name"]>(
         vertexIndex: number,
-        attributeName: K
+        attributeName: K,
     ): AttributeTypeMap[Extract<T[number], { name: K }>["type"]] {
         if (vertexIndex < 0 || vertexIndex >= this.vertexCount) {
             throw new Error(`Vertex index ${vertexIndex} out of bounds`);
@@ -306,13 +223,13 @@ export class MeshBuffer<T extends readonly AttributeDescriptor[]> {
             return new Float64Array(
                 this.vertexBuffer,
                 byteOffset,
-                componentCount
+                componentCount,
             ) as AttributeTypeMap[Extract<T[number], { name: K }>["type"]];
         } else {
             return new Float32Array(
                 this.vertexBuffer,
                 byteOffset,
-                componentCount
+                componentCount,
             ) as AttributeTypeMap[Extract<T[number], { name: K }>["type"]];
         }
     }
@@ -348,10 +265,14 @@ export class MeshBuffer<T extends readonly AttributeDescriptor[]> {
 
         for (const [name, value] of Object.entries(data)) {
             const offset = this.attributeOffsets.get(name);
-            if (offset === undefined) continue;
+            if (offset === undefined) {
+                continue;
+            }
 
             const attr = this.layout.find((a) => a.name === name);
-            if (!attr) continue;
+            if (!attr) {
+                continue;
+            }
 
             const componentCount = this.getComponentCount(attr.type);
             const byteOffset = vertexIndex * this.vertexSize + offset;
@@ -400,7 +321,9 @@ export class MeshBuffer<T extends readonly AttributeDescriptor[]> {
 
         for (const attr of this.layout) {
             const offset = this.attributeOffsets.get(attr.name);
-            if (offset === undefined) continue;
+            if (offset === undefined) {
+                continue;
+            }
 
             const componentCount = this.getComponentCount(attr.type);
             const byteOffset = vertexIndex * this.vertexSize + offset;
@@ -532,7 +455,9 @@ export class MeshBuffer<T extends readonly AttributeDescriptor[]> {
 
         for (const attr of this.layout) {
             const offset = this.attributeOffsets.get(attr.name);
-            if (offset === undefined) continue;
+            if (offset === undefined) {
+                continue;
+            }
 
             const format = this.getVertexElementFormat(attr.type);
             const locationCount = this.getAttributeLocationCount(attr.type);
@@ -708,5 +633,92 @@ export class MeshBuffer<T extends readonly AttributeDescriptor[]> {
      */
     getLayout(): readonly AttributeDescriptor[] {
         return this.layout;
+    }
+
+    /**
+     * Calculates the size in bytes for a given attribute type.
+     * Respects std140/std430 alignment rules (e.g., mat3 is packed as 3 vec4s).
+     */
+    private getAttributeSize(type: AttributeType): number {
+        const sizes: Record<AttributeType, number> = {
+            f32: 4,
+            vec2: 8,
+            vec3: 12,
+            vec4: 16,
+            mat3: 48,      // 3 columns × 16 bytes (vec4 alignment)
+            mat4: 64,
+            f64: 8,
+            vec2d: 16,
+            vec3d: 24,
+            vec4d: 32,
+            mat3d: 96,     // 3 columns × 32 bytes (vec4d alignment)
+            mat4d: 128,
+        };
+        return sizes[type];
+    }
+
+    /**
+     * Returns the number of components (floats/doubles) for a given attribute type.
+     * For mat3/mat3d, returns 12 (not 9) to account for std140/std430 padding.
+     */
+    private getComponentCount(type: AttributeType): number {
+        const counts: Record<AttributeType, number> = {
+            f32: 1,
+            vec2: 2,
+            vec3: 3,
+            vec4: 4,
+            mat3: 12,      // 3 columns × 4 components (padded to vec4)
+            mat4: 16,
+            f64: 1,
+            vec2d: 2,
+            vec3d: 3,
+            vec4d: 4,
+            mat3d: 12,     // 3 columns × 4 components (padded to vec4d)
+            mat4d: 16,
+        };
+        return counts[type];
+    }
+
+    /**
+     * Checks if an attribute type uses double precision (Float64Array).
+     */
+    private isDoublePrecision(type: AttributeType): boolean {
+        return type === "f64" || type === "vec2d" || type === "vec3d" || type === "vec4d" || type === "mat3d" || type === "mat4d";
+    }
+
+    /**
+     * Maps attribute types to SDL3 GPUVertexElementFormat.
+     * For matrices, returns the format for a single column.
+     */
+    private getVertexElementFormat(type: AttributeType): GPUVertexElementFormat {
+        const formats: Record<AttributeType, GPUVertexElementFormat> = {
+            f32: GPUVertexElementFormat.FLOAT,
+            vec2: GPUVertexElementFormat.FLOAT2,
+            vec3: GPUVertexElementFormat.FLOAT3,
+            vec4: GPUVertexElementFormat.FLOAT4,
+            mat3: GPUVertexElementFormat.FLOAT4,  // Each column as FLOAT4
+            mat4: GPUVertexElementFormat.FLOAT4,  // Each column as FLOAT4
+            f64: GPUVertexElementFormat.FLOAT,  // SDL3 doesn't have double formats, use float
+            vec2d: GPUVertexElementFormat.FLOAT2,
+            vec3d: GPUVertexElementFormat.FLOAT3,
+            vec4d: GPUVertexElementFormat.FLOAT4,
+            mat3d: GPUVertexElementFormat.FLOAT4,
+            mat4d: GPUVertexElementFormat.FLOAT4,
+        };
+        return formats[type];
+    }
+
+    /**
+     * Returns the number of vertex attribute locations needed for a type.
+     * Vectors and scalars use 1 location, matrices use multiple (3 for mat3, 4 for mat4).
+     */
+    private getAttributeLocationCount(type: AttributeType): number {
+        if (type === "mat3" || type === "mat3d") {
+            return 3;
+        }
+        if (type === "mat4" || type === "mat4d") {
+            return 4;
+        }
+        return 1;
     }
 }

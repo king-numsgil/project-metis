@@ -3,7 +3,7 @@ import {
     sdlGetError,
     sdlMapGPUTransferBuffer,
     sdlReleaseGPUTransferBuffer,
-    sdlUnmapGPUTransferBuffer
+    sdlUnmapGPUTransferBuffer,
 } from "./ffi";
 
 import { Device } from "./device.ts";

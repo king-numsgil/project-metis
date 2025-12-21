@@ -14,7 +14,7 @@ import {
     GPUShaderFormat,
     GPUStencilOp,
     GPUTextureFormat,
-    type GPUTransferBufferCreateInfo
+    type GPUTransferBufferCreateInfo,
 } from "sdl3";
 
 import {

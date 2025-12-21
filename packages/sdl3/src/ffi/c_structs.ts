@@ -55,7 +55,7 @@ export const SDL_FRect = struct("SDL_FRect", {
 export const SDL_CommonEvent = struct("SDL_CommonEvent", {
     type: "uint32",
     reserved: "uint32",
-    timestamp: "uint64"
+    timestamp: "uint64",
 });
 
 // Display event
@@ -65,7 +65,7 @@ export const SDL_DisplayEvent = struct("SDL_DisplayEvent", {
     timestamp: "uint64",
     displayID: "uint32",
     data1: "int32",
-    data2: "int32"
+    data2: "int32",
 });
 
 // Window event
@@ -75,7 +75,7 @@ export const SDL_WindowEvent = struct("SDL_WindowEvent", {
     timestamp: "uint64",
     windowID: "uint32",
     data1: "int32",
-    data2: "int32"
+    data2: "int32",
 });
 
 // Keyboard device event
@@ -83,7 +83,7 @@ export const SDL_KeyboardDeviceEvent = struct("SDL_KeyboardDeviceEvent", {
     type: "uint32",
     reserved: "uint32",
     timestamp: "uint64",
-    which: "uint32"
+    which: "uint32",
 });
 
 // Keyboard event
@@ -98,7 +98,7 @@ export const SDL_KeyboardEvent = struct("SDL_KeyboardEvent", {
     mod: "uint16",
     raw: "uint16",
     down: "bool",
-    repeat: "bool"
+    repeat: "bool",
 });
 
 // Text editing event
@@ -109,7 +109,7 @@ export const SDL_TextEditingEvent = struct("SDL_TextEditingEvent", {
     windowID: "uint32",
     text: "const char*",
     start: "int32",
-    length: "int32"
+    length: "int32",
 });
 
 // Text editing candidates event
@@ -124,7 +124,7 @@ export const SDL_TextEditingCandidatesEvent = struct("SDL_TextEditingCandidatesE
     horizontal: "bool",
     padding1: "uint8",
     padding2: "uint8",
-    padding3: "uint8"
+    padding3: "uint8",
 });
 
 // Text input event
@@ -133,7 +133,7 @@ export const SDL_TextInputEvent = struct("SDL_TextInputEvent", {
     reserved: "uint32",
     timestamp: "uint64",
     windowID: "uint32",
-    text: "const char*"
+    text: "const char*",
 });
 
 // Mouse device event
@@ -141,7 +141,7 @@ export const SDL_MouseDeviceEvent = struct("SDL_MouseDeviceEvent", {
     type: "uint32",
     reserved: "uint32",
     timestamp: "uint64",
-    which: "uint32"
+    which: "uint32",
 });
 
 // Mouse motion event
@@ -155,7 +155,7 @@ export const SDL_MouseMotionEvent = struct("SDL_MouseMotionEvent", {
     x: "float",
     y: "float",
     xrel: "float",
-    yrel: "float"
+    yrel: "float",
 });
 
 // Mouse button event
@@ -170,7 +170,7 @@ export const SDL_MouseButtonEvent = struct("SDL_MouseButtonEvent", {
     clicks: "uint8",
     padding: "uint8",
     x: "float",
-    y: "float"
+    y: "float",
 });
 
 // Mouse wheel event
@@ -186,7 +186,7 @@ export const SDL_MouseWheelEvent = struct("SDL_MouseWheelEvent", {
     mouse_x: "float",
     mouse_y: "float",
     integer_x: "int32",
-    integer_y: "int32"
+    integer_y: "int32",
 });
 
 // Joystick axis event
@@ -200,7 +200,7 @@ export const SDL_JoyAxisEvent = struct("SDL_JoyAxisEvent", {
     padding2: "uint8",
     padding3: "uint8",
     value: "int16",
-    padding4: "uint16"
+    padding4: "uint16",
 });
 
 // Joystick ball event
@@ -214,7 +214,7 @@ export const SDL_JoyBallEvent = struct("SDL_JoyBallEvent", {
     padding2: "uint8",
     padding3: "uint8",
     xrel: "int16",
-    yrel: "int16"
+    yrel: "int16",
 });
 
 // Joystick hat event
@@ -226,7 +226,7 @@ export const SDL_JoyHatEvent = struct("SDL_JoyHatEvent", {
     hat: "uint8",
     value: "uint8",
     padding1: "uint8",
-    padding2: "uint8"
+    padding2: "uint8",
 });
 
 // Joystick button event
@@ -238,7 +238,7 @@ export const SDL_JoyButtonEvent = struct("SDL_JoyButtonEvent", {
     button: "uint8",
     down: "bool",
     padding1: "uint8",
-    padding2: "uint8"
+    padding2: "uint8",
 });
 
 // Joystick device event
@@ -246,7 +246,7 @@ export const SDL_JoyDeviceEvent = struct("SDL_JoyDeviceEvent", {
     type: "uint32",
     reserved: "uint32",
     timestamp: "uint64",
-    which: "uint32"
+    which: "uint32",
 });
 
 // Joystick battery event
@@ -256,7 +256,7 @@ export const SDL_JoyBatteryEvent = struct("SDL_JoyBatteryEvent", {
     timestamp: "uint64",
     which: "uint32",
     state: "int32",
-    percent: "int32"
+    percent: "int32",
 });
 
 // Gamepad axis event
@@ -270,7 +270,7 @@ export const SDL_GamepadAxisEvent = struct("SDL_GamepadAxisEvent", {
     padding2: "uint8",
     padding3: "uint8",
     value: "int16",
-    padding4: "uint16"
+    padding4: "uint16",
 });
 
 // Gamepad button event
@@ -282,7 +282,7 @@ export const SDL_GamepadButtonEvent = struct("SDL_GamepadButtonEvent", {
     button: "uint8",
     down: "bool",
     padding1: "uint8",
-    padding2: "uint8"
+    padding2: "uint8",
 });
 
 // Gamepad device event
@@ -290,7 +290,7 @@ export const SDL_GamepadDeviceEvent = struct("SDL_GamepadDeviceEvent", {
     type: "uint32",
     reserved: "uint32",
     timestamp: "uint64",
-    which: "uint32"
+    which: "uint32",
 });
 
 // Gamepad touchpad event
@@ -303,7 +303,7 @@ export const SDL_GamepadTouchpadEvent = struct("SDL_GamepadTouchpadEvent", {
     finger: "int32",
     x: "float",
     y: "float",
-    pressure: "float"
+    pressure: "float",
 });
 
 // Gamepad sensor event
@@ -314,7 +314,7 @@ export const SDL_GamepadSensorEvent = struct("SDL_GamepadSensorEvent", {
     which: "uint32",
     sensor: "int32",
     data: array("float", 3),
-    sensor_timestamp: "uint64"
+    sensor_timestamp: "uint64",
 });
 
 // Audio device event
@@ -326,7 +326,7 @@ export const SDL_AudioDeviceEvent = struct("SDL_AudioDeviceEvent", {
     recording: "bool",
     padding1: "uint8",
     padding2: "uint8",
-    padding3: "uint8"
+    padding3: "uint8",
 });
 
 // Camera device event
@@ -334,7 +334,7 @@ export const SDL_CameraDeviceEvent = struct("SDL_CameraDeviceEvent", {
     type: "uint32",
     reserved: "uint32",
     timestamp: "uint64",
-    which: "uint32"
+    which: "uint32",
 });
 
 // Render event
@@ -342,7 +342,7 @@ export const SDL_RenderEvent = struct("SDL_RenderEvent", {
     type: "uint32",
     reserved: "uint32",
     timestamp: "uint64",
-    windowID: "uint32"
+    windowID: "uint32",
 });
 
 // Touch finger event
@@ -357,7 +357,7 @@ export const SDL_TouchFingerEvent = struct("SDL_TouchFingerEvent", {
     dx: "float",
     dy: "float",
     pressure: "float",
-    windowID: "uint32"
+    windowID: "uint32",
 });
 
 // Pen proximity event
@@ -366,7 +366,7 @@ export const SDL_PenProximityEvent = struct("SDL_PenProximityEvent", {
     reserved: "uint32",
     timestamp: "uint64",
     windowID: "uint32",
-    which: "uint32"
+    which: "uint32",
 });
 
 // Pen motion event
@@ -378,7 +378,7 @@ export const SDL_PenMotionEvent = struct("SDL_PenMotionEvent", {
     which: "uint32",
     pen_state: "uint32",
     x: "float",
-    y: "float"
+    y: "float",
 });
 
 // Pen touch event
@@ -392,7 +392,7 @@ export const SDL_PenTouchEvent = struct("SDL_PenTouchEvent", {
     x: "float",
     y: "float",
     eraser: "bool",
-    down: "bool"
+    down: "bool",
 });
 
 // Pen button event
@@ -406,7 +406,7 @@ export const SDL_PenButtonEvent = struct("SDL_PenButtonEvent", {
     x: "float",
     y: "float",
     button: "uint8",
-    down: "bool"
+    down: "bool",
 });
 
 // Pen axis event
@@ -420,7 +420,7 @@ export const SDL_PenAxisEvent = struct("SDL_PenAxisEvent", {
     x: "float",
     y: "float",
     axis: "int32",
-    value: "float"
+    value: "float",
 });
 
 // Drop event
@@ -432,7 +432,7 @@ export const SDL_DropEvent = struct("SDL_DropEvent", {
     x: "float",
     y: "float",
     source: "const char*",
-    data: "const char*"
+    data: "const char*",
 });
 
 // Clipboard event
@@ -442,7 +442,7 @@ export const SDL_ClipboardEvent = struct("SDL_ClipboardEvent", {
     timestamp: "uint64",
     owner: "bool",
     num_mime_types: "int32",
-    mime_types: "const char**"
+    mime_types: "const char**",
 });
 
 // Sensor event
@@ -452,14 +452,14 @@ export const SDL_SensorEvent = struct("SDL_SensorEvent", {
     timestamp: "uint64",
     which: "uint32",
     data: array("float", 6),
-    sensor_timestamp: "uint64"
+    sensor_timestamp: "uint64",
 });
 
 // Quit event
 export const SDL_QuitEvent = struct("SDL_QuitEvent", {
     type: "uint32",
     reserved: "uint32",
-    timestamp: "uint64"
+    timestamp: "uint64",
 });
 
 // User event
@@ -470,7 +470,7 @@ export const SDL_UserEvent = struct("SDL_UserEvent", {
     windowID: "uint32",
     code: "int32",
     data1: "void*",
-    data2: "void*"
+    data2: "void*",
 });
 
 // Main event union
@@ -513,7 +513,7 @@ export const SDL_Event = union("SDL_Event", {
     render: SDL_RenderEvent,
     drop: SDL_DropEvent,
     clipboard: SDL_ClipboardEvent,
-    padding: array("uint8", 128)
+    padding: array("uint8", 128),
 });
 
 export const SDL_FColor = struct("SDL_FColor", {
