@@ -1,4 +1,4 @@
-import {vec2, vec3} from "wgpu-matrix";
+import { vec2, vec3 } from "wgpu-matrix";
 
 import {
     defaultGraphicsPipelineCreateInfo,
@@ -12,11 +12,11 @@ import {
     GPUShaderStage,
     GPUStoreOp,
     GPUTransferBufferUsage,
-    GPUVertexElementFormat,
     GPUVertexInputRate,
     Keymod,
+    MeshBuffer,
     Scancode,
-    System, VertexBuffer,
+    System,
     Window
 } from "sdl3";
 import { sdlGetError } from "sdl3/ffi";
@@ -61,16 +61,10 @@ using fragmentShader = dev.createShader({
     stage: GPUShaderStage.Fragment,
 });
 
-const quadBuffer = new VertexBuffer([
-    {
-        name: "position",
-        type: "vec2",
-    },
-    {
-        name: "color",
-        type: "vec3",
-    },
-], 4);
+const quadBuffer = new MeshBuffer([
+    {name: "position", type: "vec2"},
+    {name: "color", type: "vec3"},
+], 4, 6);
 quadBuffer.setVertex(0, {
     position: vec2.create(-.5, -.5),
     color: vec3.create(1, 0, 0),
@@ -87,37 +81,32 @@ quadBuffer.setVertex(3, {
     position: vec2.create(-.5, 0.5),
     color: vec3.create(1, 0, 1),
 });
+quadBuffer.setIndices([0, 1, 2, 0, 2, 3]);
 
-const bufferSize = 5 * Float32Array.BYTES_PER_ELEMENT * 4;
 using buffer = dev.createBuffer({
     usage: GPUBufferUsageFlags.Vertex,
-    size: bufferSize,
+    size: quadBuffer.getVertexBufferSize(),
 });
 
-const indexSize = 6 * Uint16Array.BYTES_PER_ELEMENT;
 using indexBuffer = dev.createBuffer({
     usage: GPUBufferUsageFlags.Index,
-    size: indexSize,
+    size: quadBuffer.getIndexBufferSize(),
 });
 {
     using transfer = dev.createTransferBuffer({
         usage: GPUTransferBufferUsage.Upload,
-        size: bufferSize,
+        size: quadBuffer.getVertexBufferSize(),
     });
     transfer.map(array_buffer => {
-        quadBuffer.copyToArrayBuffer(array_buffer);
+        quadBuffer.copyVertexBufferTo(array_buffer);
     });
 
     using indexTransfer = dev.createTransferBuffer({
         usage: GPUTransferBufferUsage.Upload,
-        size: indexSize,
+        size: quadBuffer.getIndexBufferSize(),
     });
     indexTransfer.map(array_buffer => {
-        const array = new Uint16Array(array_buffer);
-        array.set([
-            0, 1, 2,
-            0, 2, 3,
-        ]);
+        quadBuffer.copyIndexBufferTo(array_buffer);
     });
 
     const cb = dev.acquireCommandBuffer();
@@ -128,7 +117,7 @@ using indexBuffer = dev.createBuffer({
     }, {
         buffer: buffer.raw,
         offset: 0,
-        size: bufferSize,
+        size: quadBuffer.getVertexBufferSize(),
     });
     copy.uploadToDeviceBuffer({
         transfer_buffer: indexTransfer.raw,
@@ -136,7 +125,7 @@ using indexBuffer = dev.createBuffer({
     }, {
         buffer: indexBuffer.raw,
         offset: 0,
-        size: indexSize,
+        size: quadBuffer.getIndexBufferSize(),
     });
     copy.end();
 
@@ -159,20 +148,7 @@ using pipeline = dev.createGraphicsPipeline({
             },
         ],
         num_vertex_attributes: 2,
-        vertex_attributes: [
-            {
-                location: 0,
-                buffer_slot: 0,
-                format: GPUVertexElementFormat.FLOAT2,
-                offset: 0,
-            },
-            {
-                location: 1,
-                buffer_slot: 0,
-                format: GPUVertexElementFormat.FLOAT3,
-                offset: 2 * Float32Array.BYTES_PER_ELEMENT,
-            },
-        ],
+        vertex_attributes: quadBuffer.getVertexAttributes(0),
     },
     target_info: {
         ...defaultGraphicsPipelineCreateInfo.target_info,
