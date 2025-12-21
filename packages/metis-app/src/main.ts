@@ -85,17 +85,17 @@ quadBuffer.setIndices([0, 1, 2, 0, 2, 3]);
 
 using buffer = dev.createBuffer({
     usage: GPUBufferUsageFlags.Vertex,
-    size: quadBuffer.getVertexBufferSize(),
+    size: quadBuffer.vertexBufferSize,
 });
 
 using indexBuffer = dev.createBuffer({
     usage: GPUBufferUsageFlags.Index,
-    size: quadBuffer.getIndexBufferSize(),
+    size: quadBuffer.indexBufferSize,
 });
 {
     using transfer = dev.createTransferBuffer({
         usage: GPUTransferBufferUsage.Upload,
-        size: quadBuffer.getVertexBufferSize(),
+        size: quadBuffer.vertexBufferSize,
     });
     transfer.map(array_buffer => {
         quadBuffer.copyVertexBufferTo(array_buffer);
@@ -103,7 +103,7 @@ using indexBuffer = dev.createBuffer({
 
     using indexTransfer = dev.createTransferBuffer({
         usage: GPUTransferBufferUsage.Upload,
-        size: quadBuffer.getIndexBufferSize(),
+        size: quadBuffer.indexBufferSize,
     });
     indexTransfer.map(array_buffer => {
         quadBuffer.copyIndexBufferTo(array_buffer);
@@ -117,7 +117,7 @@ using indexBuffer = dev.createBuffer({
     }, {
         buffer: buffer.raw,
         offset: 0,
-        size: quadBuffer.getVertexBufferSize(),
+        size: quadBuffer.vertexBufferSize,
     });
     copy.uploadToDeviceBuffer({
         transfer_buffer: indexTransfer.raw,
@@ -125,7 +125,7 @@ using indexBuffer = dev.createBuffer({
     }, {
         buffer: indexBuffer.raw,
         offset: 0,
-        size: quadBuffer.getIndexBufferSize(),
+        size: quadBuffer.indexBufferSize,
     });
     copy.end();
 

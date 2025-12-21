@@ -102,25 +102,22 @@ type VertexData<T extends readonly AttributeDescriptor[]> = {
  */
 export class MeshBuffer<T extends readonly AttributeDescriptor[]> {
     /** The underlying ArrayBuffer storing all vertex data */
-    private readonly vertexBuffer: ArrayBuffer;
-
-    /** DataView for low-level vertex buffer access */
-    private vertexView: DataView;
+    private readonly _vertexBuffer: ArrayBuffer;
 
     /** The underlying ArrayBuffer storing all index data */
-    private readonly indexBuffer: ArrayBuffer;
+    private readonly _indexBuffer: ArrayBuffer;
 
     /** The vertex attribute layout definition */
     private readonly layout: T;
 
     /** Total number of vertices in the buffer */
-    private readonly vertexCount: number;
+    private readonly _vertexCount: number;
 
     /** Total number of indices in the buffer */
-    private readonly indexCount: number;
+    private readonly _indexCount: number;
 
     /** Size of a single vertex in bytes */
-    private readonly vertexSize: number;
+    private readonly _vertexSize: number;
 
     /** Byte offset for each attribute within a vertex */
     private attributeOffsets: Map<string, number>;
@@ -129,7 +126,7 @@ export class MeshBuffer<T extends readonly AttributeDescriptor[]> {
     private attributeSizes: Map<string, number>;
 
     /** The index element type (uint16 or uint32) */
-    private readonly indexType: IndexType;
+    private readonly _indexType: IndexType;
 
     /**
      * Creates a new mesh buffer with the specified layout and capacity.
@@ -150,9 +147,9 @@ export class MeshBuffer<T extends readonly AttributeDescriptor[]> {
      */
     constructor(layout: T, vertexCount: number, indexCount: number = 0, indexType: IndexType = "uint16") {
         this.layout = layout;
-        this.vertexCount = vertexCount;
-        this.indexCount = indexCount;
-        this.indexType = indexType;
+        this._vertexCount = vertexCount;
+        this._indexCount = indexCount;
+        this._indexType = indexType;
         this.attributeOffsets = new Map();
         this.attributeSizes = new Map();
 
@@ -164,15 +161,83 @@ export class MeshBuffer<T extends readonly AttributeDescriptor[]> {
             this.attributeSizes.set(attr.name, size);
             offset += size;
         }
-        this.vertexSize = offset;
+        this._vertexSize = offset;
 
         // Allocate vertex buffer
-        this.vertexBuffer = new ArrayBuffer(this.vertexSize * vertexCount);
-        this.vertexView = new DataView(this.vertexBuffer);
+        this._vertexBuffer = new ArrayBuffer(this._vertexSize * vertexCount);
 
         // Allocate index buffer
         const indexElementSize = indexType === "uint16" ? 2 : 4;
-        this.indexBuffer = new ArrayBuffer(indexElementSize * indexCount);
+        this._indexBuffer = new ArrayBuffer(indexElementSize * indexCount);
+    }
+
+    /**
+     * Get the total number of vertices in this buffer.
+     */
+    get vertexCount(): number {
+        return this._vertexCount;
+    }
+
+    /**
+     * Get the total number of indices in this buffer.
+     */
+    get indexCount(): number {
+        return this._indexCount;
+    }
+
+    /**
+     * Get the size of a single vertex in bytes.
+     */
+    get vertexSize(): number {
+        return this._vertexSize;
+    }
+
+    /**
+     * Get the total vertex buffer size in bytes.
+     */
+    get vertexBufferSize(): number {
+        return this._vertexBuffer.byteLength;
+    }
+
+    /**
+     * Get the total index buffer size in bytes.
+     */
+    get indexBufferSize(): number {
+        return this._indexBuffer.byteLength;
+    }
+
+    /**
+     * Get the index element type.
+     */
+    get indexType(): IndexType {
+        return this._indexType;
+    }
+
+    /**
+     * Get the underlying vertex ArrayBuffer.
+     *
+     * This is the most efficient way to upload to GPU - it's a direct reference
+     * to the backing buffer with no copying involved.
+     *
+     * @returns The raw ArrayBuffer containing all vertex data
+     *
+     * @example
+     * ```typescript
+     * const vertexData = mesh.getVertexBuffer();
+     * // Upload to SDL3 GPU buffer using transfer buffer...
+     * ```
+     */
+    get vertexBuffer(): ArrayBuffer {
+        return this._vertexBuffer;
+    }
+
+    /**
+     * Get the underlying index ArrayBuffer.
+     *
+     * @returns The raw ArrayBuffer containing all index data
+     */
+    get indexBuffer(): ArrayBuffer {
+        return this._indexBuffer;
     }
 
     /**
@@ -201,7 +266,7 @@ export class MeshBuffer<T extends readonly AttributeDescriptor[]> {
         vertexIndex: number,
         attributeName: K,
     ): AttributeTypeMap[Extract<T[number], { name: K }>["type"]] {
-        if (vertexIndex < 0 || vertexIndex >= this.vertexCount) {
+        if (vertexIndex < 0 || vertexIndex >= this._vertexCount) {
             throw new Error(`Vertex index ${vertexIndex} out of bounds`);
         }
 
@@ -216,18 +281,18 @@ export class MeshBuffer<T extends readonly AttributeDescriptor[]> {
         }
 
         const componentCount = this.getComponentCount(attr.type);
-        const byteOffset = vertexIndex * this.vertexSize + offset;
+        const byteOffset = vertexIndex * this._vertexSize + offset;
         const isDouble = this.isDoublePrecision(attr.type);
 
         if (isDouble) {
             return new Float64Array(
-                this.vertexBuffer,
+                this._vertexBuffer,
                 byteOffset,
                 componentCount,
             ) as AttributeTypeMap[Extract<T[number], { name: K }>["type"]];
         } else {
             return new Float32Array(
-                this.vertexBuffer,
+                this._vertexBuffer,
                 byteOffset,
                 componentCount,
             ) as AttributeTypeMap[Extract<T[number], { name: K }>["type"]];
@@ -259,7 +324,7 @@ export class MeshBuffer<T extends readonly AttributeDescriptor[]> {
      * ```
      */
     setVertex(vertexIndex: number, data: Partial<VertexData<T>>): void {
-        if (vertexIndex < 0 || vertexIndex >= this.vertexCount) {
+        if (vertexIndex < 0 || vertexIndex >= this._vertexCount) {
             throw new Error(`Vertex index ${vertexIndex} out of bounds`);
         }
 
@@ -275,18 +340,18 @@ export class MeshBuffer<T extends readonly AttributeDescriptor[]> {
             }
 
             const componentCount = this.getComponentCount(attr.type);
-            const byteOffset = vertexIndex * this.vertexSize + offset;
+            const byteOffset = vertexIndex * this._vertexSize + offset;
             const isDouble = this.isDoublePrecision(attr.type);
 
             if (isDouble) {
-                const target = new Float64Array(this.vertexBuffer, byteOffset, componentCount);
+                const target = new Float64Array(this._vertexBuffer, byteOffset, componentCount);
                 if (value instanceof Float64Array) {
                     target.set(value);
                 } else if (typeof value === "number") {
                     target[0] = value;
                 }
             } else {
-                const target = new Float32Array(this.vertexBuffer, byteOffset, componentCount);
+                const target = new Float32Array(this._vertexBuffer, byteOffset, componentCount);
                 if (value instanceof Float32Array) {
                     target.set(value);
                 } else if (typeof value === "number") {
@@ -313,7 +378,7 @@ export class MeshBuffer<T extends readonly AttributeDescriptor[]> {
      * ```
      */
     getVertex(vertexIndex: number): VertexData<T> {
-        if (vertexIndex < 0 || vertexIndex >= this.vertexCount) {
+        if (vertexIndex < 0 || vertexIndex >= this._vertexCount) {
             throw new Error(`Vertex index ${vertexIndex} out of bounds`);
         }
 
@@ -326,15 +391,15 @@ export class MeshBuffer<T extends readonly AttributeDescriptor[]> {
             }
 
             const componentCount = this.getComponentCount(attr.type);
-            const byteOffset = vertexIndex * this.vertexSize + offset;
+            const byteOffset = vertexIndex * this._vertexSize + offset;
             const isDouble = this.isDoublePrecision(attr.type);
 
             // Create a copy of the data
             if (isDouble) {
-                const source = new Float64Array(this.vertexBuffer, byteOffset, componentCount);
+                const source = new Float64Array(this._vertexBuffer, byteOffset, componentCount);
                 (vertex as Record<string, Float64Array | Float32Array>)[attr.name] = new Float64Array(source);
             } else {
-                const source = new Float32Array(this.vertexBuffer, byteOffset, componentCount);
+                const source = new Float32Array(this._vertexBuffer, byteOffset, componentCount);
                 (vertex as Record<string, Float64Array | Float32Array>)[attr.name] = new Float32Array(source);
             }
         }
@@ -353,15 +418,15 @@ export class MeshBuffer<T extends readonly AttributeDescriptor[]> {
      * ```
      */
     setIndices(indices: number[]): void {
-        if (indices.length > this.indexCount) {
-            throw new Error(`Index array length ${indices.length} exceeds buffer capacity ${this.indexCount}`);
+        if (indices.length > this._indexCount) {
+            throw new Error(`Index array length ${indices.length} exceeds buffer capacity ${this._indexCount}`);
         }
 
-        if (this.indexType === "uint16") {
-            const view = new Uint16Array(this.indexBuffer);
+        if (this._indexType === "uint16") {
+            const view = new Uint16Array(this._indexBuffer);
             view.set(indices);
         } else {
-            const view = new Uint32Array(this.indexBuffer);
+            const view = new Uint32Array(this._indexBuffer);
             view.set(indices);
         }
     }
@@ -378,15 +443,15 @@ export class MeshBuffer<T extends readonly AttributeDescriptor[]> {
      * ```
      */
     setIndex(index: number, value: number): void {
-        if (index < 0 || index >= this.indexCount) {
+        if (index < 0 || index >= this._indexCount) {
             throw new Error(`Index ${index} out of bounds`);
         }
 
-        if (this.indexType === "uint16") {
-            const view = new Uint16Array(this.indexBuffer);
+        if (this._indexType === "uint16") {
+            const view = new Uint16Array(this._indexBuffer);
             view[index] = value;
         } else {
-            const view = new Uint32Array(this.indexBuffer);
+            const view = new Uint32Array(this._indexBuffer);
             view[index] = value;
         }
     }
@@ -398,15 +463,15 @@ export class MeshBuffer<T extends readonly AttributeDescriptor[]> {
      * @returns The vertex index value
      */
     getIndex(index: number): number {
-        if (index < 0 || index >= this.indexCount) {
+        if (index < 0 || index >= this._indexCount) {
             throw new Error(`Index ${index} out of bounds`);
         }
 
-        if (this.indexType === "uint16") {
-            const view = new Uint16Array(this.indexBuffer);
+        if (this._indexType === "uint16") {
+            const view = new Uint16Array(this._indexBuffer);
             return view[index]!;
         } else {
-            const view = new Uint32Array(this.indexBuffer);
+            const view = new Uint32Array(this._indexBuffer);
             return view[index]!;
         }
     }
@@ -418,10 +483,10 @@ export class MeshBuffer<T extends readonly AttributeDescriptor[]> {
      * @returns Uint16Array or Uint32Array view of the index buffer
      */
     getIndices(): Uint16Array | Uint32Array {
-        if (this.indexType === "uint16") {
-            return new Uint16Array(this.indexBuffer);
+        if (this._indexType === "uint16") {
+            return new Uint16Array(this._indexBuffer);
         } else {
-            return new Uint32Array(this.indexBuffer);
+            return new Uint32Array(this._indexBuffer);
         }
     }
 
@@ -478,75 +543,6 @@ export class MeshBuffer<T extends readonly AttributeDescriptor[]> {
     }
 
     /**
-     * Get the total number of vertices in this buffer.
-     */
-    getVertexCount(): number {
-        return this.vertexCount;
-    }
-
-    /**
-     * Get the total number of indices in this buffer.
-     */
-    getIndexCount(): number {
-        return this.indexCount;
-    }
-
-    /**
-     * Get the size of a single vertex in bytes.
-     */
-    getVertexSize(): number {
-        return this.vertexSize;
-    }
-
-    /**
-     * Get the total vertex buffer size in bytes.
-     */
-    getVertexBufferSize(): number {
-        return this.vertexBuffer.byteLength;
-    }
-
-    /**
-     * Get the total index buffer size in bytes.
-     */
-    getIndexBufferSize(): number {
-        return this.indexBuffer.byteLength;
-    }
-
-    /**
-     * Get the index element type.
-     */
-    getIndexType(): IndexType {
-        return this.indexType;
-    }
-
-    /**
-     * Get the underlying vertex ArrayBuffer.
-     *
-     * This is the most efficient way to upload to GPU - it's a direct reference
-     * to the backing buffer with no copying involved.
-     *
-     * @returns The raw ArrayBuffer containing all vertex data
-     *
-     * @example
-     * ```typescript
-     * const vertexData = mesh.getVertexBuffer();
-     * // Upload to SDL3 GPU buffer using transfer buffer...
-     * ```
-     */
-    getVertexBuffer(): ArrayBuffer {
-        return this.vertexBuffer;
-    }
-
-    /**
-     * Get the underlying index ArrayBuffer.
-     *
-     * @returns The raw ArrayBuffer containing all index data
-     */
-    getIndexBuffer(): ArrayBuffer {
-        return this.indexBuffer;
-    }
-
-    /**
      * Copy vertex data to an existing ArrayBuffer.
      *
      * Useful when you need to write into a pre-allocated buffer or when
@@ -562,12 +558,12 @@ export class MeshBuffer<T extends readonly AttributeDescriptor[]> {
      * ```
      */
     copyVertexBufferTo(target: ArrayBuffer, targetOffset: number = 0): void {
-        if (targetOffset + this.vertexBuffer.byteLength > target.byteLength) {
+        if (targetOffset + this._vertexBuffer.byteLength > target.byteLength) {
             throw new Error("Target buffer is too small");
         }
 
-        const targetView = new Uint8Array(target, targetOffset, this.vertexBuffer.byteLength);
-        const sourceView = new Uint8Array(this.vertexBuffer);
+        const targetView = new Uint8Array(target, targetOffset, this._vertexBuffer.byteLength);
+        const sourceView = new Uint8Array(this._vertexBuffer);
         targetView.set(sourceView);
     }
 
@@ -578,12 +574,12 @@ export class MeshBuffer<T extends readonly AttributeDescriptor[]> {
      * @param targetOffset - Byte offset in the target buffer (default: 0)
      */
     copyIndexBufferTo(target: ArrayBuffer, targetOffset: number = 0): void {
-        if (targetOffset + this.indexBuffer.byteLength > target.byteLength) {
+        if (targetOffset + this._indexBuffer.byteLength > target.byteLength) {
             throw new Error("Target buffer is too small");
         }
 
-        const targetView = new Uint8Array(target, targetOffset, this.indexBuffer.byteLength);
-        const sourceView = new Uint8Array(this.indexBuffer);
+        const targetView = new Uint8Array(target, targetOffset, this._indexBuffer.byteLength);
+        const sourceView = new Uint8Array(this._indexBuffer);
         targetView.set(sourceView);
     }
 
@@ -597,7 +593,7 @@ export class MeshBuffer<T extends readonly AttributeDescriptor[]> {
      * @returns A Float32Array view of the entire vertex buffer
      */
     asFloat32Array(): Float32Array {
-        return new Float32Array(this.vertexBuffer);
+        return new Float32Array(this._vertexBuffer);
     }
 
     /**
@@ -606,7 +602,7 @@ export class MeshBuffer<T extends readonly AttributeDescriptor[]> {
      * This is a fast operation that resets the entire vertex buffer.
      */
     clearVertices(): void {
-        const view = new Uint8Array(this.vertexBuffer);
+        const view = new Uint8Array(this._vertexBuffer);
         view.fill(0);
     }
 
@@ -616,7 +612,7 @@ export class MeshBuffer<T extends readonly AttributeDescriptor[]> {
      * This is a fast operation that resets the entire index buffer.
      */
     clearIndices(): void {
-        const view = new Uint8Array(this.indexBuffer);
+        const view = new Uint8Array(this._indexBuffer);
         view.fill(0);
     }
 
