@@ -19,6 +19,7 @@
       "dependencies": {
         "naga": "workspace:*",
         "sdl3": "workspace:*",
+        "wgpu-matrix": "^3.4.0",
       },
       "devDependencies": {
         "@types/bun": "latest",
@@ -36,6 +37,7 @@
       "dependencies": {
         "koffi": "^2.14.1",
         "type-fest": "^5.3.1",
+        "wgpu-matrix": "^3.4.0",
       },
       "devDependencies": {
         "@types/bun": "latest",
@@ -67,5 +69,7 @@
     "typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
 
     "undici-types": ["undici-types@7.16.0", "", {}, "sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw=="],
+
+    "wgpu-matrix": ["wgpu-matrix@3.4.0", "", {}, "sha512-kXHrbAPKEn9A32Wf4wVldyx9MmnzwhuB5p8GCqoJP3ItU5+iDT4J3aTQwPZWkfb153hwGtqZtUwR2M+ipJKadg=="],
   }
 }

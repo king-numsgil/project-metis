@@ -10,7 +10,8 @@
     "typescript": "^5"
   },
   "dependencies": {
-	  "sdl3": "workspace:*",
-      "naga": "workspace:*"
+    "naga": "workspace:*",
+    "sdl3": "workspace:*",
+    "wgpu-matrix": "^3.4.0"
   }
 }
