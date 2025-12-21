@@ -1,3 +1,5 @@
+import {vec2, vec3} from "wgpu-matrix";
+
 import {
     defaultGraphicsPipelineCreateInfo,
     Device,
@@ -14,7 +16,7 @@ import {
     GPUVertexInputRate,
     Keymod,
     Scancode,
-    System,
+    System, VertexBuffer,
     Window
 } from "sdl3";
 import { sdlGetError } from "sdl3/ffi";
@@ -59,6 +61,33 @@ using fragmentShader = dev.createShader({
     stage: GPUShaderStage.Fragment,
 });
 
+const quadBuffer = new VertexBuffer([
+    {
+        name: "position",
+        type: "vec2",
+    },
+    {
+        name: "color",
+        type: "vec3",
+    },
+], 4);
+quadBuffer.setVertex(0, {
+    position: vec2.create(-.5, -.5),
+    color: vec3.create(1, 0, 0),
+});
+quadBuffer.setVertex(1, {
+    position: vec2.create(0.5, -.5),
+    color: vec3.create(0, 1, 0),
+});
+quadBuffer.setVertex(2, {
+    position: vec2.create(0.5, 0.5),
+    color: vec3.create(0, 0, 1),
+});
+quadBuffer.setVertex(3, {
+    position: vec2.create(-.5, 0.5),
+    color: vec3.create(1, 0, 1),
+});
+
 const bufferSize = 5 * Float32Array.BYTES_PER_ELEMENT * 4;
 using buffer = dev.createBuffer({
     usage: GPUBufferUsageFlags.Vertex,
@@ -76,14 +105,7 @@ using indexBuffer = dev.createBuffer({
         size: bufferSize,
     });
     transfer.map(array_buffer => {
-        const array = new Float32Array(array_buffer);
-        array.set([
-            //x   y   r  g  b
-            -.5, -.5, 1, 0, 0,
-            0.5, -.5, 0, 1, 0,
-            0.5, 0.5, 0, 0, 1,
-            -.5, 0.5, 1, 0, 1,
-        ]);
+        quadBuffer.copyToArrayBuffer(array_buffer);
     });
 
     using indexTransfer = dev.createTransferBuffer({
