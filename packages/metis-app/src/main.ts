@@ -129,7 +129,7 @@ using indexBuffer = dev.createBuffer({
     });
     copy.end();
 
-    using fence = cb.submitWithFence(dev);
+    using fence = cb.submitWithFence();
     fence.wait();
 }
 

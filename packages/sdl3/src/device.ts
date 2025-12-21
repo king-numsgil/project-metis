@@ -45,7 +45,10 @@ import type { Window } from "./window.ts";
 import { Shader } from "./shader.ts";
 import { Fence } from "./fence.ts";
 
-export const defaultGraphicsPipelineCreateInfo: Readonly<Omit<GPUGraphicsPipelineCreateInfo, "vertex_shader" | "fragment_shader" | "vertex_input_state">> = Object.freeze({
+export const defaultGraphicsPipelineCreateInfo: Readonly<Omit<
+    GPUGraphicsPipelineCreateInfo,
+    "vertex_shader" | "fragment_shader" | "vertex_input_state"
+>> = Object.freeze({
     rasterizer_state: {
         fill_mode: GPUFillMode.Fill,
         cull_mode: GPUCullMode.None,
@@ -166,7 +169,7 @@ export class Device {
             throw new Error(`Failed to acquire CommandBuffer : ${sdlGetError()}`);
         }
 
-        return new CommandBuffer(cb);
+        return new CommandBuffer(cb, this);
     }
 
     public waitFences(fences: Array<Fence>, wait_all: boolean = true): boolean {

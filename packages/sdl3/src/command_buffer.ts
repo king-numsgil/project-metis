@@ -17,7 +17,7 @@ import { CopyPass } from "./copy_pass.ts";
 import { Fence } from "./fence.ts";
 
 export class CommandBuffer {
-    public constructor(private readonly handle: GPUCommandBufferPtr) {
+    public constructor(private readonly handle: GPUCommandBufferPtr, private readonly device: Device) {
     }
 
     public get raw(): GPUCommandBufferPtr {
@@ -45,12 +45,12 @@ export class CommandBuffer {
         return sdlSubmitGPUCommandBuffer(this.handle);
     }
 
-    public submitWithFence(device: Device): Fence {
+    public submitWithFence(): Fence {
         const fence = sdlSubmitGPUCommandBufferAndAcquireFence(this.handle);
         if (!fence) {
             throw new Error(`Failed to submitWithFence: ${sdlGetError()}`);
         }
 
-        return new Fence(device, fence);
+        return new Fence(this.device, fence);
     }
 }
