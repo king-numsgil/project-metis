@@ -105,4 +105,4 @@ export * from "./device_buffer.ts";
 export * from "./transfer_buffer.ts";
 export * from "./fence.ts";
 export * from "./copy_pass.ts";
-export * from "./mesh_buffer.ts";
+export * from "./mesh.ts";

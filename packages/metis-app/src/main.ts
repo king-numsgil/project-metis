@@ -14,7 +14,7 @@ import {
     GPUTransferBufferUsage,
     GPUVertexInputRate,
     Keymod,
-    MeshBuffer,
+    Mesh,
     Scancode,
     System,
     Window
@@ -61,7 +61,7 @@ using fragmentShader = dev.createShader({
     stage: GPUShaderStage.Fragment,
 });
 
-const quadBuffer = new MeshBuffer([
+const quadBuffer = new Mesh([
     {name: "position", type: "vec2"},
     {name: "color", type: "vec3"},
 ], 4, 6);

@@ -100,7 +100,7 @@ type VertexData<T extends readonly AttributeDescriptor[]> = {
  * const indexData = mesh.getIndexBuffer();
  * ```
  */
-export class MeshBuffer<T extends readonly AttributeDescriptor[]> {
+export class Mesh<T extends readonly AttributeDescriptor[]> {
     /** The underlying ArrayBuffer storing all vertex data */
     private readonly _vertexBuffer: ArrayBuffer;
 
