@@ -4,14 +4,12 @@ import {
     defaultGraphicsPipelineCreateInfo,
     Device,
     EventType,
-    GPUBufferUsageFlags,
     GPUIndexElementSize,
     GPULoadOp,
     GPUPrimitiveType,
     GPUShaderFormat,
     GPUShaderStage,
     GPUStoreOp,
-    GPUTransferBufferUsage,
     GPUVertexInputRate,
     Keymod,
     Mesh,
@@ -83,55 +81,8 @@ quadBuffer.setVertex(3, {
 });
 quadBuffer.setIndices([0, 1, 2, 0, 2, 3]);
 
-using buffer = dev.createBuffer({
-    usage: GPUBufferUsageFlags.Vertex,
-    size: quadBuffer.vertexBufferSize,
-});
-
-using indexBuffer = dev.createBuffer({
-    usage: GPUBufferUsageFlags.Index,
-    size: quadBuffer.indexBufferSize,
-});
-{
-    using transfer = dev.createTransferBuffer({
-        usage: GPUTransferBufferUsage.Upload,
-        size: quadBuffer.vertexBufferSize,
-    });
-    transfer.map(array_buffer => {
-        quadBuffer.copyVertexBufferTo(array_buffer);
-    });
-
-    using indexTransfer = dev.createTransferBuffer({
-        usage: GPUTransferBufferUsage.Upload,
-        size: quadBuffer.indexBufferSize,
-    });
-    indexTransfer.map(array_buffer => {
-        quadBuffer.copyIndexBufferTo(array_buffer);
-    });
-
-    const cb = dev.acquireCommandBuffer();
-    const copy = cb.beginCopyPass();
-    copy.uploadToDeviceBuffer({
-        transfer_buffer: transfer.raw,
-        offset: 0,
-    }, {
-        buffer: buffer.raw,
-        offset: 0,
-        size: quadBuffer.vertexBufferSize,
-    });
-    copy.uploadToDeviceBuffer({
-        transfer_buffer: indexTransfer.raw,
-        offset: 0,
-    }, {
-        buffer: indexBuffer.raw,
-        offset: 0,
-        size: quadBuffer.indexBufferSize,
-    });
-    copy.end();
-
-    using fence = cb.submitWithFence();
-    fence.wait();
-}
+using vertexBuffer = quadBuffer.createVertexDeviceBuffer(dev);
+using indexBuffer = quadBuffer.createIndexDeviceBuffer(dev);
 
 using pipeline = dev.createGraphicsPipeline({
     ...defaultGraphicsPipelineCreateInfo,
@@ -187,7 +138,7 @@ while (running) {
     pass.bindGraphicsPipeline(pipeline);
     pass.bindVertexBuffers([
         {
-            buffer: buffer.raw,
+            buffer: vertexBuffer.raw,
             offset: 0,
         },
     ]);

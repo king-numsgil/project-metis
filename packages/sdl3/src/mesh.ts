@@ -1,5 +1,12 @@
 import type { Vec2, Vec2d, Vec3, Vec3d, Vec4, Vec4d } from "wgpu-matrix";
-import { type GPUVertexAttribute, GPUVertexElementFormat } from "sdl3";
+import {
+    Device,
+    DeviceBuffer,
+    GPUBufferUsageFlags,
+    GPUTransferBufferUsage,
+    type GPUVertexAttribute,
+    GPUVertexElementFormat,
+} from "sdl3";
 
 /**
  * Supported attribute types for vertex data.
@@ -602,6 +609,72 @@ export class Mesh<T extends readonly AttributeDescriptor[]> {
      */
     getLayout(): readonly AttributeDescriptor[] {
         return this.layout;
+    }
+
+    createVertexDeviceBuffer(device: Device): DeviceBuffer {
+        const buffer = device.createBuffer({
+            usage: GPUBufferUsageFlags.Vertex,
+            size: this.vertexBufferSize,
+        });
+
+        using transfer = device.createTransferBuffer({
+            usage: GPUTransferBufferUsage.Upload,
+            size: this.vertexBufferSize,
+        });
+
+        transfer.map(array_buffer => {
+            this.copyVertexBufferTo(array_buffer);
+        });
+
+        const cb = device.acquireCommandBuffer();
+        const copy = cb.beginCopyPass();
+        copy.uploadToDeviceBuffer({
+            transfer_buffer: transfer.raw,
+            offset: 0,
+        }, {
+            buffer: buffer.raw,
+            offset: 0,
+            size: this.vertexBufferSize,
+        });
+        copy.end();
+
+        using fence = cb.submitWithFence();
+        fence.wait();
+
+        return buffer;
+    }
+
+    createIndexDeviceBuffer(device: Device): DeviceBuffer {
+        const buffer = device.createBuffer({
+            usage: GPUBufferUsageFlags.Vertex,
+            size: this.indexBufferSize,
+        });
+
+        using transfer = device.createTransferBuffer({
+            usage: GPUTransferBufferUsage.Upload,
+            size: this.indexBufferSize,
+        });
+
+        transfer.map(array_buffer => {
+            this.copyIndexBufferTo(array_buffer);
+        });
+
+        const cb = device.acquireCommandBuffer();
+        const copy = cb.beginCopyPass();
+        copy.uploadToDeviceBuffer({
+            transfer_buffer: transfer.raw,
+            offset: 0,
+        }, {
+            buffer: buffer.raw,
+            offset: 0,
+            size: this.indexBufferSize,
+        });
+        copy.end();
+
+        using fence = cb.submitWithFence();
+        fence.wait();
+
+        return buffer;
     }
 
     /**
