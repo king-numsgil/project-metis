@@ -29,6 +29,18 @@
         "typescript": "^5",
       },
     },
+    "packages/metis-data": {
+      "name": "metis-data",
+      "dependencies": {
+        "type-fest": "^5.3.1",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
     "packages/naga": {
       "name": "naga",
       "version": "0.1.0",
@@ -58,6 +70,8 @@
     "koffi": ["koffi@2.15.0", "", {}, "sha512-174BTuWK7L42Om7nDWy9YOTXj6Dkm14veuFf5yhVS5VU6GjtOI1Wjf+K16Z0JvSuZ3/NpkVzFBjE1oKbthTIEA=="],
 
     "metis-app": ["metis-app@workspace:packages/metis-app"],
+
+    "metis-data": ["metis-data@workspace:packages/metis-data"],
 
     "naga": ["naga@workspace:packages/naga"],
 
