@@ -10,6 +10,7 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "metis-data": "workspace:*",
     "naga": "workspace:*",
     "sdl3": "workspace:*",
     "wgpu-matrix": "^3.4.0"

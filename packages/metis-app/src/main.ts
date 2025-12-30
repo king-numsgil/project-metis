@@ -15,7 +15,7 @@ import {
     Mesh,
     Scancode,
     System,
-    Window
+    Window,
 } from "sdl3";
 import { sdlGetError } from "sdl3/ffi";
 

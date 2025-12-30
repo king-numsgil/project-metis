@@ -18,6 +18,7 @@
     "packages/metis-app": {
       "name": "metis-app",
       "dependencies": {
+        "metis-data": "workspace:*",
         "naga": "workspace:*",
         "sdl3": "workspace:*",
         "wgpu-matrix": "^3.4.0",
@@ -32,6 +33,7 @@
     "packages/metis-data": {
       "name": "metis-data",
       "dependencies": {
+        "sdl3": "workspace:*",
         "type-fest": "^5.3.1",
       },
       "devDependencies": {

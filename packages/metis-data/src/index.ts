@@ -1,1 +1,42 @@
-console.log("Hello via Bun!");
+export {
+    type Descriptor,
+    type DescriptorTypedArray,
+    PackingType,
+    type StructDescriptor,
+    Vec,
+    type ScalarDescriptor,
+    type ArrayDescriptor,
+    type F32Descriptor,
+    F32,
+    U32,
+    type MatDescriptor,
+    type VecDescriptor,
+    I32,
+    type BoolDescriptor,
+    Mat,
+    ArrayOf,
+    F64,
+    F16,
+    StructOf,
+    Bool,
+    type F16Descriptor,
+    type I32Descriptor,
+    type F64Descriptor,
+    type U32Descriptor,
+} from "./descriptors";
+
+export {
+    allocate,
+    wrap,
+    type MemoryBuffer,
+    type ArrayMemoryBuffer,
+    type StructMemoryBuffer,
+    type VecMemoryBuffer,
+    type ScalarMemoryBuffer,
+    type BoolMemoryBuffer,
+    type MatMemoryBuffer,
+} from "./memory";
+
+export {
+    createDeviceBuffer,
+} from "./utils.ts";
