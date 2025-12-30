@@ -196,12 +196,12 @@ export interface MatDescriptor<
 }
 
 export interface ArrayDescriptor<
-    ScalarType extends Descriptor<MemoryType>,
+    ItemType extends Descriptor<MemoryType>,
     N extends number,
-    MemoryType extends DescriptorTypedArray = DescriptorMemoryType<ScalarType>,
+    MemoryType extends DescriptorTypedArray = DescriptorMemoryType<ItemType>,
 > extends Descriptor<MemoryType> {
     readonly type: typeof GPU_ARRAY;
-    readonly item: ScalarType;
+    readonly item: ItemType;
     readonly length: N;
     readonly byteSize: number;
     readonly alignment: number;
