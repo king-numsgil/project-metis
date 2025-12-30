@@ -4,7 +4,9 @@ import {
     type MatDescriptor,
     type MatrixTypeSelector,
     PackingType,
-    type ScalarDescriptor, Vec, type VecDescriptor,
+    type ScalarDescriptor,
+    Vec,
+    type VecDescriptor,
 } from "./index.ts";
 
 type TypedArrayConstructor =
