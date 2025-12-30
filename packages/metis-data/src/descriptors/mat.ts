@@ -86,6 +86,10 @@ export class MatDescriptorImpl<
         return this._arrayPitch;
     }
 
+    public get length(): number {
+        return this._n * this._n;
+    }
+
     public toString(): string {
         return `${this._type}<${this._scalarDescriptor.type}>`;
     }

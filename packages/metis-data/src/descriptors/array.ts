@@ -1,6 +1,22 @@
-import { GPU_ARRAY, GPU_BOOL, GPU_F16, GPU_F32, GPU_F64, GPU_I32, GPU_STRUCT, GPU_U32 } from "./constants.ts";
-import type { ArrayDescriptor, Descriptor, DescriptorTypedArray } from "./index.ts";
 import type { IntRange } from "type-fest";
+
+import type { ArrayDescriptor, Descriptor, DescriptorMemoryType, DescriptorTypedArray } from "./index.ts";
+import {
+    GPU_ARRAY,
+    GPU_BOOL,
+    GPU_F16,
+    GPU_F32,
+    GPU_F64,
+    GPU_I32,
+    GPU_MAT2,
+    GPU_MAT3,
+    GPU_MAT4,
+    GPU_STRUCT,
+    GPU_U32,
+    GPU_VEC2,
+    GPU_VEC3,
+    GPU_VEC4,
+} from "./constants.ts";
 
 type TypedArrayConstructor =
     | typeof Float16Array
@@ -23,7 +39,7 @@ const TYPED_ARRAY_CONSTRUCTORS: Record<string, TypedArrayConstructor> = {
 export class ArrayDescriptorImpl<
     ItemType extends Descriptor<MemoryType>,
     N extends number,
-    MemoryType extends DescriptorTypedArray,
+    MemoryType extends DescriptorTypedArray = DescriptorMemoryType<ItemType>,
 > implements ArrayDescriptor<ItemType, N, MemoryType> {
     private readonly _itemDescriptor: ItemType;
     private readonly _length: N;
@@ -79,8 +95,17 @@ export class ArrayDescriptorImpl<
             return new Uint8Array(buffer, offset, this._byteSize) as MemoryType;
         }
 
-        const TypedArrayConstructor = TYPED_ARRAY_CONSTRUCTORS[this._itemDescriptor.type]!;
-        const elementCount = (this._byteSize / this._itemDescriptor.byteSize);
+        let itemType = this._itemDescriptor.type;
+        let elementCount = (this._byteSize / this._itemDescriptor.byteSize);
+        if (this._itemDescriptor.type === GPU_VEC2 || this._itemDescriptor.type === GPU_VEC3 || this._itemDescriptor.type === GPU_VEC4) {
+            itemType = (this._itemDescriptor as any).scalar.type;
+            elementCount = (this._itemDescriptor as any).length * this._length;
+        } else if (this._itemDescriptor.type === GPU_MAT2 || this._itemDescriptor.type === GPU_MAT3 || this._itemDescriptor.type === GPU_MAT4) {
+            itemType = (this._itemDescriptor as any).scalar.type;
+            elementCount = (this._itemDescriptor as any).length * this._length;
+        }
+
+        const TypedArrayConstructor = TYPED_ARRAY_CONSTRUCTORS[itemType]!;
         return new TypedArrayConstructor(buffer, offset, elementCount) as MemoryType;
     }
 

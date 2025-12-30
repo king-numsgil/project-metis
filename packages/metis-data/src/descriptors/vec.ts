@@ -83,6 +83,10 @@ export class VecDescriptorImpl<
         return this._arrayPitch;
     }
 
+    public get length(): N {
+        return this._n;
+    }
+
     public toString(): string {
         return `${this._type}<${this._scalarDescriptor.type}>`;
     }

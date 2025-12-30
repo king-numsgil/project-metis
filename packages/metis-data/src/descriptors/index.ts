@@ -71,30 +71,30 @@ export function Vec<
     scalarDescriptor: ScalarType,
     n: N,
     packingType: PackingType = PackingType.Dense,
-): VecDescriptor<ScalarType, N> {
-    return new VecDescriptorImpl(scalarDescriptor, n, packingType);
+): VecDescriptor<ScalarType, N, NoInfer<DescriptorMemoryType<ScalarType>>> {
+    return new VecDescriptorImpl<ScalarType, N>(scalarDescriptor, n, packingType);
 }
 
 export function Mat<
     ScalarType extends ScalarDescriptor,
-    N extends 2 | 3 | 4
+    N extends 2 | 3 | 4,
 >(
     scalarDescriptor: ScalarType,
     n: N,
     packingType: PackingType = PackingType.Dense,
-): MatDescriptor<ScalarType, N> {
-    return new MatDescriptorImpl(scalarDescriptor, n, packingType);
+): MatDescriptor<ScalarType, N, NoInfer<DescriptorMemoryType<ScalarType>>> {
+    return new MatDescriptorImpl<ScalarType, N>(scalarDescriptor, n, packingType);
 }
 
 export function ArrayOf<
     ItemType extends Descriptor<MemoryType>,
     N extends number,
-    MemoryType extends DescriptorTypedArray,
+    MemoryType extends DescriptorTypedArray = DescriptorMemoryType<ItemType>,
 >(
     itemDescriptor: ItemType,
     length: N,
-): ArrayDescriptor<ItemType, N, MemoryType> {
-    return new ArrayDescriptorImpl(itemDescriptor, length);
+): ArrayDescriptor<ItemType, N, NoInfer<MemoryType>> {
+    return new ArrayDescriptorImpl<ItemType, N, MemoryType>(itemDescriptor, length);
 }
 
 export function StructOf<
@@ -103,7 +103,7 @@ export function StructOf<
     members: Members,
     packingType: PackingType = PackingType.Dense,
 ): StructDescriptor<Members> {
-    return new StructDescriptorImpl(members, packingType);
+    return new StructDescriptorImpl<Members>(members, packingType);
 }
 
 export interface BoolDescriptor extends Descriptor<Uint32Array> {
@@ -171,6 +171,7 @@ export interface VecDescriptor<
     readonly byteSize: number;
     readonly alignment: number;
     readonly arrayPitch: number;
+    readonly length: N;
 }
 
 export type MatrixTypeSelector<N extends number = 2 | 3 | 4> =
@@ -191,6 +192,7 @@ export interface MatDescriptor<
     readonly byteSize: number;
     readonly alignment: number;
     readonly arrayPitch: number;
+    readonly length: number;
 
     col(buffer: ArrayBuffer, offset: number, index: IntRange<0, N>): MemoryType;
 }
