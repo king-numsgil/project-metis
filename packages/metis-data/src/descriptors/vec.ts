@@ -1,4 +1,4 @@
-import { GPU_BOOL, GPU_F16, GPU_F32, GPU_F64, GPU_I32, GPU_U32, GPU_VEC2, GPU_VEC3, GPU_VEC4 } from "./constants.ts";
+import { GPU_F16, GPU_F32, GPU_F64, GPU_I32, GPU_U32, GPU_VEC2, GPU_VEC3, GPU_VEC4 } from "./constants.ts";
 import {
     type DescriptorMemoryType,
     PackingType,
@@ -20,7 +20,6 @@ const TYPED_ARRAY_CONSTRUCTORS: Record<string, TypedArrayConstructor> = {
     [GPU_F64]: Float64Array,
     [GPU_I32]: Int32Array,
     [GPU_U32]: Uint32Array,
-    [GPU_BOOL]: Uint32Array,
 };
 
 export class VecDescriptorImpl<
@@ -68,8 +67,8 @@ export class VecDescriptorImpl<
         return this._type;
     }
 
-    public get scalarType(): ScalarType["type"] {
-        return this._scalarDescriptor.type;
+    public get scalar(): ScalarType {
+        return this._scalarDescriptor;
     }
 
     public get byteSize(): number {

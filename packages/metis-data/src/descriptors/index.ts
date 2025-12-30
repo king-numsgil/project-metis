@@ -149,7 +149,6 @@ export interface F64Descriptor extends Descriptor<Float64Array> {
 }
 
 export type ScalarDescriptor =
-    | BoolDescriptor
     | I32Descriptor
     | U32Descriptor
     | F16Descriptor
@@ -168,7 +167,7 @@ export interface VecDescriptor<
     MemoryType extends DescriptorTypedArray = DescriptorMemoryType<ScalarType>,
 > extends Descriptor<MemoryType> {
     readonly type: VectorTypeSelector<N>;
-    readonly scalarType: ScalarType["type"];
+    readonly scalar: ScalarType;
     readonly byteSize: number;
     readonly alignment: number;
     readonly arrayPitch: number;
@@ -186,7 +185,9 @@ export interface MatDescriptor<
     MemoryType extends DescriptorTypedArray = DescriptorMemoryType<ScalarType>,
 > extends Descriptor<MemoryType> {
     readonly type: MatrixTypeSelector<N>;
-    readonly scalarType: ScalarType["type"];
+    readonly scalar: ScalarType;
+    readonly column: VecDescriptor<ScalarType, N>;
+    readonly columnStride: number;
     readonly byteSize: number;
     readonly alignment: number;
     readonly arrayPitch: number;

@@ -1,10 +1,10 @@
-import { GPU_BOOL, GPU_F16, GPU_F32, GPU_F64, GPU_I32, GPU_MAT2, GPU_MAT3, GPU_MAT4, GPU_U32 } from "./constants.ts";
+import { GPU_F16, GPU_F32, GPU_F64, GPU_I32, GPU_MAT2, GPU_MAT3, GPU_MAT4, GPU_U32 } from "./constants.ts";
 import {
     type DescriptorMemoryType,
     type MatDescriptor,
     type MatrixTypeSelector,
     PackingType,
-    type ScalarDescriptor,
+    type ScalarDescriptor, Vec, type VecDescriptor,
 } from "./index.ts";
 
 type TypedArrayConstructor =
@@ -20,7 +20,6 @@ const TYPED_ARRAY_CONSTRUCTORS: Record<string, TypedArrayConstructor> = {
     [GPU_F64]: Float64Array,
     [GPU_I32]: Int32Array,
     [GPU_U32]: Uint32Array,
-    [GPU_BOOL]: Uint32Array,
 };
 
 export class MatDescriptorImpl<
@@ -28,6 +27,7 @@ export class MatDescriptorImpl<
     N extends 2 | 3 | 4
 > implements MatDescriptor<ScalarType, N> {
     private readonly _scalarDescriptor: ScalarType;
+    private readonly _colDescriptor: VecDescriptor<ScalarType, N>;
     private readonly _n: N;
     private readonly _type: MatrixTypeSelector<N>;
     private readonly _byteSize: number;
@@ -36,6 +36,7 @@ export class MatDescriptorImpl<
     private readonly _columnStride: number;
 
     constructor(scalarDescriptor: ScalarType, n: N, packingType: PackingType = PackingType.Dense) {
+        this._colDescriptor = Vec(scalarDescriptor, n, packingType);
         this._scalarDescriptor = scalarDescriptor;
         this._n = n;
         this._type = (n === 2 ? GPU_MAT2 : n === 3 ? GPU_MAT3 : GPU_MAT4) as MatrixTypeSelector<N>;
@@ -61,8 +62,16 @@ export class MatDescriptorImpl<
         return this._type;
     }
 
-    public get scalarType(): ScalarType["type"] {
-        return this._scalarDescriptor.type;
+    public get scalar(): ScalarType {
+        return this._scalarDescriptor;
+    }
+
+    public get column(): VecDescriptor<ScalarType, N> {
+        return this._colDescriptor;
+    }
+
+    public get columnStride(): number {
+        return this._columnStride;
     }
 
     public get byteSize(): number {
