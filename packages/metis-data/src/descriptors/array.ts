@@ -37,10 +37,9 @@ const TYPED_ARRAY_CONSTRUCTORS: Record<string, TypedArrayConstructor> = {
 };
 
 export class ArrayDescriptorImpl<
-    ItemType extends Descriptor<MemoryType>,
+    ItemType extends Descriptor<DescriptorTypedArray>,
     N extends number,
-    MemoryType extends DescriptorTypedArray = DescriptorMemoryType<ItemType>,
-> implements ArrayDescriptor<ItemType, N, MemoryType> {
+> implements ArrayDescriptor<ItemType, N> {
     private readonly _itemDescriptor: ItemType;
     private readonly _length: N;
     private readonly _byteSize: number;
@@ -90,9 +89,9 @@ export class ArrayDescriptorImpl<
         return index * this._arrayPitch;
     }
 
-    public view(buffer: ArrayBuffer, offset: number): MemoryType {
+    public view(buffer: ArrayBuffer, offset: number): DescriptorMemoryType<ItemType> {
         if (this._itemDescriptor.type === GPU_STRUCT) {
-            return new Uint8Array(buffer, offset, this._byteSize) as MemoryType;
+            return new Uint8Array(buffer, offset, this._byteSize) as DescriptorMemoryType<ItemType>;
         }
 
         let itemType = this._itemDescriptor.type;
@@ -106,11 +105,11 @@ export class ArrayDescriptorImpl<
         }
 
         const TypedArrayConstructor = TYPED_ARRAY_CONSTRUCTORS[itemType]!;
-        return new TypedArrayConstructor(buffer, offset, elementCount) as MemoryType;
+        return new TypedArrayConstructor(buffer, offset, elementCount) as DescriptorMemoryType<ItemType>;
     }
 
-    public at(buffer: ArrayBuffer, offset: number, index: IntRange<0, N>): MemoryType {
+    public at(buffer: ArrayBuffer, offset: number, index: IntRange<0, N>): DescriptorMemoryType<ItemType> {
         const elementByteOffset = offset + this.offsetAt(index);
-        return this._itemDescriptor.view(buffer, elementByteOffset);
+        return this._itemDescriptor.view(buffer, elementByteOffset) as DescriptorMemoryType<ItemType>;
     }
 }

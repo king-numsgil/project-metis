@@ -71,7 +71,7 @@ export function Vec<
     scalarDescriptor: ScalarType,
     n: N,
     packingType: PackingType = PackingType.Dense,
-): VecDescriptor<ScalarType, N, NoInfer<DescriptorMemoryType<ScalarType>>> {
+): VecDescriptor<ScalarType, N> {
     return new VecDescriptorImpl<ScalarType, N>(scalarDescriptor, n, packingType);
 }
 
@@ -82,19 +82,18 @@ export function Mat<
     scalarDescriptor: ScalarType,
     n: N,
     packingType: PackingType = PackingType.Dense,
-): MatDescriptor<ScalarType, N, NoInfer<DescriptorMemoryType<ScalarType>>> {
+): MatDescriptor<ScalarType, N> {
     return new MatDescriptorImpl<ScalarType, N>(scalarDescriptor, n, packingType);
 }
 
 export function ArrayOf<
-    ItemType extends Descriptor<MemoryType>,
+    ItemType extends Descriptor<DescriptorTypedArray>,
     N extends number,
-    MemoryType extends DescriptorTypedArray = DescriptorMemoryType<ItemType>,
 >(
     itemDescriptor: ItemType,
     length: N,
-): ArrayDescriptor<ItemType, N, NoInfer<MemoryType>> {
-    return new ArrayDescriptorImpl<ItemType, N, MemoryType>(itemDescriptor, length);
+): ArrayDescriptor<ItemType, N> {
+    return new ArrayDescriptorImpl<ItemType, N>(itemDescriptor, length);
 }
 
 export function StructOf<
@@ -164,8 +163,7 @@ export type VectorTypeSelector<N extends number = 2 | 3 | 4> =
 export interface VecDescriptor<
     ScalarType extends ScalarDescriptor,
     N extends 2 | 3 | 4,
-    MemoryType extends DescriptorTypedArray = DescriptorMemoryType<ScalarType>,
-> extends Descriptor<MemoryType> {
+> extends Descriptor<DescriptorMemoryType<ScalarType>> {
     readonly type: VectorTypeSelector<N>;
     readonly scalar: ScalarType;
     readonly byteSize: number;
@@ -183,8 +181,7 @@ export type MatrixTypeSelector<N extends number = 2 | 3 | 4> =
 export interface MatDescriptor<
     ScalarType extends ScalarDescriptor,
     N extends 2 | 3 | 4,
-    MemoryType extends DescriptorTypedArray = DescriptorMemoryType<ScalarType>,
-> extends Descriptor<MemoryType> {
+> extends Descriptor<DescriptorMemoryType<ScalarType>> {
     readonly type: MatrixTypeSelector<N>;
     readonly scalar: ScalarType;
     readonly column: VecDescriptor<ScalarType, N>;
@@ -194,14 +191,13 @@ export interface MatDescriptor<
     readonly arrayPitch: number;
     readonly length: number;
 
-    col(buffer: ArrayBuffer, offset: number, index: IntRange<0, N>): MemoryType;
+    col(buffer: ArrayBuffer, offset: number, index: IntRange<0, N>): DescriptorMemoryType<ScalarType>;
 }
 
 export interface ArrayDescriptor<
-    ItemType extends Descriptor<MemoryType>,
+    ItemType extends Descriptor<DescriptorTypedArray>,
     N extends number,
-    MemoryType extends DescriptorTypedArray = DescriptorMemoryType<ItemType>,
-> extends Descriptor<MemoryType> {
+> extends Descriptor<DescriptorMemoryType<ItemType>> {
     readonly type: typeof GPU_ARRAY;
     readonly item: ItemType;
     readonly length: N;
@@ -211,7 +207,7 @@ export interface ArrayDescriptor<
 
     offsetAt(index: IntRange<0, N>): number;
 
-    at(buffer: ArrayBuffer, offset: number, index: IntRange<0, N>): MemoryType;
+    at(buffer: ArrayBuffer, offset: number, index: IntRange<0, N>): DescriptorMemoryType<ItemType>;
 }
 
 export interface StructDescriptor<
