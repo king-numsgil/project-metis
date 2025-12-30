@@ -42,8 +42,8 @@ export class ArrayDescriptorImpl<
         return GPU_ARRAY;
     }
 
-    public get itemType(): ItemType["type"] {
-        return this._itemDescriptor.type;
+    public get item(): ItemType {
+        return this._itemDescriptor;
     }
 
     public get length(): N {
