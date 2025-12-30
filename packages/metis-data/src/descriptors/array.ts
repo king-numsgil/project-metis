@@ -1,5 +1,6 @@
 import { GPU_ARRAY, GPU_BOOL, GPU_F16, GPU_F32, GPU_F64, GPU_I32, GPU_STRUCT, GPU_U32 } from "./constants.ts";
 import type { ArrayDescriptor, Descriptor, DescriptorTypedArray } from "./index.ts";
+import type { IntRange } from "type-fest";
 
 type TypedArrayConstructor =
     | typeof Float16Array
@@ -66,7 +67,7 @@ export class ArrayDescriptorImpl<
         return `${GPU_ARRAY}<${this._itemDescriptor.toString()}, ${this._length}>`;
     }
 
-    public offsetAt(index: number): number {
+    public offsetAt(index: IntRange<0, N>): number {
         if (index < 0 || index >= this._length) {
             throw new RangeError(`Array index ${index} out of range [0, ${this._length})`);
         }
@@ -83,7 +84,7 @@ export class ArrayDescriptorImpl<
         return new TypedArrayConstructor(buffer, offset, elementCount) as MemoryType;
     }
 
-    public at(buffer: ArrayBuffer, offset: number, index: number): MemoryType {
+    public at(buffer: ArrayBuffer, offset: number, index: IntRange<0, N>): MemoryType {
         const elementByteOffset = offset + this.offsetAt(index);
         return this._itemDescriptor.view(buffer, elementByteOffset);
     }

@@ -53,6 +53,10 @@ export interface Descriptor<MemoryType extends DescriptorTypedArray> {
     view(buffer: ArrayBuffer, offset: number): MemoryType;
 }
 
+export type DescriptorMemoryType<T> = T extends Descriptor<infer MemoryType>
+    ? MemoryType
+    : never;
+
 export const Bool: BoolDescriptor = new BoolDescriptorImpl();
 export const I32: I32Descriptor = new I32DescriptorImpl();
 export const U32: U32Descriptor = new U32DescriptorImpl();
@@ -101,10 +105,6 @@ export function StructOf<
 ): StructDescriptor<Members> {
     return new StructDescriptorImpl(members, packingType);
 }
-
-export type DescriptorMemoryType<T> = T extends Descriptor<infer MemoryType>
-    ? MemoryType
-    : never;
 
 export interface BoolDescriptor extends Descriptor<Uint32Array> {
     readonly type: typeof GPU_BOOL;
