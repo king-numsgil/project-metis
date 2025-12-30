@@ -1,4 +1,5 @@
 import { ArrayOf, F32, StructOf, Vec } from "./descriptors";
+import { allocate } from "./memory";
 
 const Position = StructOf({
     position: Vec(F32, 2),
@@ -14,7 +15,7 @@ console.log(`position alignment: ${Position.members.position.alignment}`);
 console.log(`color alignment:    ${Position.members.color.alignment}`);
 console.log(`${Quad.toString()} = ${Quad.byteSize} bytes`);
 
-const data = new ArrayBuffer(Quad.byteSize);
+/*const data = new ArrayBuffer(Quad.byteSize);
 Position.members.position.view(data, Quad.offsetAt(0) + Position.offsetOf("position")).set([1, 2]);
 Position.members.position.view(data, Quad.offsetAt(1) + Position.offsetOf("position")).set([3, 4]);
 Position.members.position.view(data, Quad.offsetAt(2) + Position.offsetOf("position")).set([5, 6]);
@@ -23,6 +24,17 @@ Position.members.position.view(data, Quad.offsetAt(3) + Position.offsetOf("posit
 Position.members.color.view(data, Quad.offsetAt(0) + Position.offsetOf("color")).set([1, 2, 1]);
 Position.members.color.view(data, Quad.offsetAt(1) + Position.offsetOf("color")).set([3, 4, 3]);
 Position.members.color.view(data, Quad.offsetAt(2) + Position.offsetOf("color")).set([5, 6, 5]);
-Position.members.color.view(data, Quad.offsetAt(3) + Position.offsetOf("color")).set([7, 8, 7]);
+Position.members.color.view(data, Quad.offsetAt(3) + Position.offsetOf("color")).set([7, 8, 7]);*/
 
-console.log(Quad.view(data, 0));
+const data = allocate(Quad);
+data.at(0).get("position").set([1, 2]);
+data.at(1).get("position").set([3, 4]);
+data.at(2).get("position").set([5, 6]);
+data.at(3).get("position").set([7, 8]);
+
+data.at(0).get("color").set([1, 2, 1]);
+data.at(1).get("color").set([3, 4, 3]);
+data.at(2).get("color").set([5, 6, 5]);
+data.at(3).get("color").set([7, 8, 7]);
+
+console.log(Quad.view(data.buffer, 0));
