@@ -22,10 +22,6 @@ export class ArrayMemoryBufferImpl<
     }
 
     public at(index: IntRange<0, N>): DescriptorToMemoryBuffer<ItemType> {
-        if (index < 0 || index >= this.type.length) {
-            throw new RangeError(`Array index ${index} out of range [0, ${this.type.length})`);
-        }
-
         const itemOffset = this.offset + this.type.offsetAt(index);
         return wrap(this.type.item, this.buffer, itemOffset);
     }
