@@ -49,6 +49,15 @@ export type DescriptorToMemoryBuffer<T extends Descriptor<DescriptorTypedArray>>
                         T extends StructDescriptor<infer Members> ? StructMemoryBuffer<Members> :
                             never;
 
+export type DescriptorValueType<T extends Descriptor<DescriptorTypedArray>> =
+    T extends BoolDescriptor ? boolean :
+        T extends ScalarDescriptor ? number :
+            T extends VecDescriptor<ScalarDescriptor, infer N> ? TupleOf<N, number> :
+                T extends MatDescriptor<ScalarDescriptor, infer N> ? TupleOf<N, TupleOf<N, number>> :
+                    T extends ArrayDescriptor<infer Item, infer N> ? TupleOf<N, DescriptorValueType<Item>> :
+                        T extends StructDescriptor<infer Members> ? { [K in keyof Members]: DescriptorValueType<Members[K]> } :
+                            never;
+
 export interface ScalarMemoryBuffer<
     ScalarType extends ScalarDescriptor,
 > extends MemoryBuffer<ScalarType> {
@@ -100,6 +109,8 @@ export interface StructMemoryBuffer<
     readonly members: Members;
 
     get<K extends keyof Members>(name: K): DescriptorToMemoryBuffer<Members[K]>;
+
+    set(value: { [K in keyof Members]: DescriptorValueType<Members[K]> }): void;
 }
 
 export function allocate(descriptor: BoolDescriptor): BoolMemoryBuffer;

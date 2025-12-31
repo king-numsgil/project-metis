@@ -27,14 +27,21 @@ Position.members.color.view(data, Quad.offsetAt(2) + Position.offsetOf("color"))
 Position.members.color.view(data, Quad.offsetAt(3) + Position.offsetOf("color")).set([7, 8, 7]);*/
 
 const data = allocate(Quad);
-data.at(0).get("position").set([1, 2]);
-data.at(1).get("position").set([3, 4]);
-data.at(2).get("position").set([5, 6]);
-data.at(3).get("position").set([7, 8]);
-
-data.at(0).get("color").set([1, 2, 1]);
-data.at(1).get("color").set([3, 4, 3]);
-data.at(2).get("color").set([5, 6, 5]);
-data.at(3).get("color").set([7, 8, 7]);
+data.at(0).set({
+    position: [1, 2],
+    color: [1, 2, 1],
+});
+data.at(1).set({
+    position: [3, 4],
+    color: [3, 4, 3],
+});
+data.at(2).set({
+    position: [5, 6],
+    color: [5, 6, 5],
+});
+data.at(3).set({
+    position: [7, 8],
+    color: [7, 8, 7],
+});
 
 console.log(Quad.view(data.buffer, 0));
