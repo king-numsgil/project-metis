@@ -1,3 +1,5 @@
+import { type DescriptorToMemoryBuffer, type DescriptorValueType, type StructMemoryBuffer, wrap } from "./index.ts";
+import type { Descriptor, DescriptorTypedArray, StructDescriptor } from "../descriptors";
 import {
     GPU_ARRAY,
     GPU_MAT2,
@@ -5,8 +7,6 @@ import {
     GPU_MAT4,
     GPU_STRUCT,
 } from "../descriptors/constants.ts";
-import type { Descriptor, DescriptorTypedArray, StructDescriptor } from "../descriptors";
-import { type DescriptorToMemoryBuffer, type DescriptorValueType, type StructMemoryBuffer, wrap } from "./index.ts";
 
 export class StructMemoryBufferImpl<
     Members extends Record<string, Descriptor<DescriptorTypedArray>>,

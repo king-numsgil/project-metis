@@ -24,11 +24,11 @@ import type {
 } from "../descriptors";
 
 import { ScalarMemoryBufferImpl } from "./scalar.ts";
+import { StructMemoryBufferImpl } from "./struct.ts";
+import { ArrayMemoryBufferImpl } from "./array.ts";
 import { BoolMemoryBufferImpl } from "./bool.ts";
 import { VecMemoryBufferImpl } from "./vec.ts";
 import { MatMemoryBufferImpl } from "./mat.ts";
-import { ArrayMemoryBufferImpl } from "./array.ts";
-import { StructMemoryBufferImpl } from "./struct.ts";
 
 export interface MemoryBuffer<
     Type extends Descriptor<DescriptorTypedArray>,
@@ -101,6 +101,8 @@ export interface ArrayMemoryBuffer<
     view(): DescriptorMemoryType<ItemType>;
 
     at(index: IntRange<0, N>): DescriptorToMemoryBuffer<ItemType>;
+
+    [Symbol.iterator](): Iterator<DescriptorToMemoryBuffer<ItemType>>;
 }
 
 export interface StructMemoryBuffer<

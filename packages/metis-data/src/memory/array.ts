@@ -25,4 +25,20 @@ export class ArrayMemoryBufferImpl<
         const itemOffset = this.offset + this.type.offsetAt(index);
         return wrap(this.type.item, this.buffer, itemOffset);
     }
+
+    public [Symbol.iterator](): Iterator<DescriptorToMemoryBuffer<ItemType>> {
+        let index = 0;
+        const length = this.type.length;
+
+        return {
+            next: (): IteratorResult<DescriptorToMemoryBuffer<ItemType>> => {
+                if (index < length) {
+                    const value = this.at(index as IntRange<0, N>);
+                    index++;
+                    return { value, done: false };
+                }
+                return { value: undefined, done: true };
+            }
+        };
+    }
 }
