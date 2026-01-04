@@ -1,5 +1,3 @@
-import type { IntRange } from "type-fest";
-
 import type { ArrayDescriptor, Descriptor, DescriptorMemoryType, DescriptorTypedArray } from "../descriptors";
 import { type ArrayMemoryBuffer, type DescriptorToMemoryBuffer, wrap } from "./index.ts";
 
@@ -21,7 +19,7 @@ export class ArrayMemoryBufferImpl<
         return this.type.view(this.buffer, this.offset);
     }
 
-    public at(index: IntRange<0, N>): DescriptorToMemoryBuffer<ItemType> {
+    public at(index: number): DescriptorToMemoryBuffer<ItemType> {
         const itemOffset = this.offset + this.type.offsetAt(index);
         return wrap(this.type.item, this.buffer, itemOffset);
     }
@@ -33,12 +31,12 @@ export class ArrayMemoryBufferImpl<
         return {
             next: (): IteratorResult<DescriptorToMemoryBuffer<ItemType>> => {
                 if (index < length) {
-                    const value = this.at(index as IntRange<0, N>);
+                    const value = this.at(index);
                     index++;
-                    return { value, done: false };
+                    return {value, done: false};
                 }
-                return { value: undefined, done: true };
-            }
+                return {value: undefined, done: true};
+            },
         };
     }
 }

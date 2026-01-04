@@ -1,12 +1,6 @@
 import { type DescriptorToMemoryBuffer, type DescriptorValueType, type StructMemoryBuffer, wrap } from "./index.ts";
 import type { Descriptor, DescriptorTypedArray, StructDescriptor } from "../descriptors";
-import {
-    GPU_ARRAY,
-    GPU_MAT2,
-    GPU_MAT3,
-    GPU_MAT4,
-    GPU_STRUCT,
-} from "../descriptors/constants.ts";
+import { GPU_ARRAY, GPU_MAT2, GPU_MAT3, GPU_MAT4, GPU_STRUCT } from "../descriptors/constants.ts";
 
 export class StructMemoryBufferImpl<
     Members extends Record<string, Descriptor<DescriptorTypedArray>>,
@@ -47,7 +41,10 @@ export class StructMemoryBufferImpl<
                 (buffer as StructMemoryBuffer<Record<string, Descriptor<DescriptorTypedArray>>>).set(value as never);
                 break;
             case GPU_ARRAY: {
-                const arrayBuffer = buffer as unknown as { at: (index: number) => DescriptorToMemoryBuffer<T>; type: { length: number } };
+                const arrayBuffer = buffer as unknown as {
+                    at: (index: number) => DescriptorToMemoryBuffer<T>;
+                    type: { length: number }
+                };
                 const arrayValue = value as unknown[];
                 for (let i = 0; i < arrayBuffer.type.length; i++) {
                     this.setBufferValue(arrayBuffer.at(i), arrayValue[i]);

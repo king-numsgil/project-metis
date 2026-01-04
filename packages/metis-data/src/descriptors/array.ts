@@ -1,5 +1,3 @@
-import type { IntRange } from "type-fest";
-
 import type { ArrayDescriptor, Descriptor, DescriptorMemoryType, DescriptorTypedArray } from "./index.ts";
 import {
     GPU_ARRAY,
@@ -82,7 +80,7 @@ export class ArrayDescriptorImpl<
         return `${GPU_ARRAY}<${this._itemDescriptor.toString()}, ${this._length}>`;
     }
 
-    public offsetAt(index: IntRange<0, N>): number {
+    public offsetAt(index: number): number {
         if (index < 0 || index >= this._length) {
             throw new RangeError(`Array index ${index} out of range [0, ${this._length})`);
         }
@@ -108,7 +106,7 @@ export class ArrayDescriptorImpl<
         return new TypedArrayConstructor(buffer, offset, elementCount) as DescriptorMemoryType<ItemType>;
     }
 
-    public at(buffer: ArrayBuffer, offset: number, index: IntRange<0, N>): DescriptorMemoryType<ItemType> {
+    public at(buffer: ArrayBuffer, offset: number, index: number): DescriptorMemoryType<ItemType> {
         const elementByteOffset = offset + this.offsetAt(index);
         return this._itemDescriptor.view(buffer, elementByteOffset) as DescriptorMemoryType<ItemType>;
     }

@@ -1,4 +1,4 @@
-import type { ArrayIndices, IntRange, TupleOf } from "type-fest";
+import type { ArrayIndices, TupleOf } from "type-fest";
 
 import {
     GPU_ARRAY,
@@ -100,7 +100,7 @@ export interface ArrayMemoryBuffer<
 > extends MemoryBuffer<ArrayDescriptor<ItemType, N>> {
     view(): DescriptorMemoryType<ItemType>;
 
-    at(index: IntRange<0, N>): DescriptorToMemoryBuffer<ItemType>;
+    at(index: number): DescriptorToMemoryBuffer<ItemType>;
 
     [Symbol.iterator](): Iterator<DescriptorToMemoryBuffer<ItemType>>;
 }

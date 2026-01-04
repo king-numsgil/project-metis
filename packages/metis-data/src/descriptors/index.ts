@@ -205,9 +205,9 @@ export interface ArrayDescriptor<
     readonly alignment: number;
     readonly arrayPitch: number;
 
-    offsetAt(index: IntRange<0, N>): number;
+    offsetAt(index: number): number;
 
-    at(buffer: ArrayBuffer, offset: number, index: IntRange<0, N>): DescriptorMemoryType<ItemType>;
+    at(buffer: ArrayBuffer, offset: number, index: number): DescriptorMemoryType<ItemType>;
 }
 
 export interface StructDescriptor<
