@@ -9,7 +9,6 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "type-fest": "^5.3.1",
-    "sdl3": "workspace:*"
+    "type-fest": "^5.3.1"
   }
 }

@@ -36,7 +36,3 @@ export {
     type BoolMemoryBuffer,
     type MatMemoryBuffer,
 } from "./memory";
-
-export {
-    createDeviceBuffer,
-} from "./utils.ts";

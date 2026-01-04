@@ -33,7 +33,6 @@
     "packages/metis-data": {
       "name": "metis-data",
       "dependencies": {
-        "sdl3": "workspace:*",
         "type-fest": "^5.3.1",
       },
       "devDependencies": {
