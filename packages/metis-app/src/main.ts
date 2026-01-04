@@ -1,5 +1,3 @@
-import { vec2, vec3 } from "wgpu-matrix";
-
 import {
     defaultGraphicsPipelineCreateInfo,
     Device,
@@ -17,6 +15,7 @@ import {
     System,
     Window,
 } from "sdl3";
+import { ArrayOf, F32, StructOf, Vec } from "metis-data";
 import { sdlGetError } from "sdl3/ffi";
 
 import triangle from "./triangle.wgsl";
@@ -59,25 +58,27 @@ using fragmentShader = dev.createShader({
     stage: GPUShaderStage.Fragment,
 });
 
-const quadBuffer = new Mesh([
-    {name: "position", type: "vec2"},
-    {name: "color", type: "vec3"},
-], 4, 6);
-quadBuffer.setVertex(0, {
-    position: vec2.create(-.5, -.5),
-    color: vec3.create(1, 0, 0),
+const count = 4 * 4;
+
+const quadBuffer = new Mesh(ArrayOf(StructOf({
+    position: Vec(F32, 2),
+    color: Vec(F32, 3),
+}), count), 6);
+quadBuffer.vertices.at(0).set({
+    position: [-.5, -.5],
+    color: [1, 0, 0],
 });
-quadBuffer.setVertex(1, {
-    position: vec2.create(0.5, -.5),
-    color: vec3.create(0, 1, 0),
+quadBuffer.vertices.at(1).set({
+    position: [0.5, -.5],
+    color: [0, 1, 0],
 });
-quadBuffer.setVertex(2, {
-    position: vec2.create(0.5, 0.5),
-    color: vec3.create(0, 0, 1),
+quadBuffer.vertices.at(2).set({
+    position: [0.5, 0.5],
+    color: [0, 0, 1],
 });
-quadBuffer.setVertex(3, {
-    position: vec2.create(-.5, 0.5),
-    color: vec3.create(1, 0, 1),
+quadBuffer.vertices.at(3).set({
+    position: [-.5, 0.5],
+    color: [1, 0, 1],
 });
 quadBuffer.setIndices([0, 1, 2, 0, 2, 3]);
 

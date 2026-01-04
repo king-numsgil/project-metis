@@ -15,6 +15,7 @@
   "dependencies": {
     "koffi": "^2.15.0",
     "type-fest": "^5.3.1",
-    "wgpu-matrix": "^3.4.0"
+    "wgpu-matrix": "^3.4.0",
+    "metis-data": "workspace:*"
   }
 }
