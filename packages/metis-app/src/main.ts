@@ -94,7 +94,7 @@ using pipeline = dev.createGraphicsPipeline({
         vertex_buffer_descriptions: [
             {
                 slot: 0,
-                pitch: 5 * Float32Array.BYTES_PER_ELEMENT,
+                pitch: quadBuffer.vertices.type.arrayPitch,
                 input_rate: GPUVertexInputRate.Vertex,
                 instance_step_rate: 0,
             },
