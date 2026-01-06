@@ -42,21 +42,8 @@ dev.claimWindow(wnd);
 console.log(`Device Driver : ${dev.driver}`);
 console.log(`Device Shader Format : ${GPUShaderFormat[dev.shader_formats]}`);
 
-using vertexShader = dev.createShader({
-    code: triangle.vertex!.spirv,
-    code_size: triangle.vertex!.spirv.length,
-    entrypoint: "vs_main",
-    format: GPUShaderFormat.SPIRV,
-    stage: GPUShaderStage.Vertex,
-});
-
-using fragmentShader = dev.createShader({
-    code: triangle.fragment!.spirv,
-    code_size: triangle.fragment!.spirv.length,
-    entrypoint: "fs_main",
-    format: GPUShaderFormat.SPIRV,
-    stage: GPUShaderStage.Fragment,
-});
+using vertexShader = dev.createShader(triangle.vertex!);
+using fragmentShader = dev.createShader(triangle.fragment!);
 
 const count = 4 * 4;
 
