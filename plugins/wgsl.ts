@@ -1,11 +1,6 @@
 import { type OnLoadResultSourceCode, plugin, type PluginBuilder } from "bun";
 
-import { reflectWgsl, wgslToSpirvBin, wgslToMsl } from "naga";
-import {
-    type GPUShaderCreateInfo,
-    GPUShaderFormat,
-    GPUShaderStage,
-} from "sdl3";
+import { reflectWgsl, wgslToSpirvBin } from "naga";
 
 plugin({
     name: "wgslLoader",
@@ -79,19 +74,14 @@ plugin({
                     }
 
                     const spirv = wgslToSpirvBin(source, entrypoint);
-                    const msl = Buffer.from(wgslToMsl(source, entrypoint));
                     const counts = bindingCounts.get(entrypoint)!;
-
-                    const format = process.platform === "darwin" ? GPUShaderFormat.MSL : GPUShaderFormat.SPIRV;
-
-                    const code = process.platform === "darwin" ? msl : spirv;
-                    const codeBase64 = Buffer.from(code).toString("base64");
+                    const codeBase64 = Buffer.from(spirv).toString("base64");
 
                     return `{
-        code_size: ${code.byteLength},
+        code_size: ${spirv.byteLength},
         code: Buffer.from("${codeBase64}", "base64"),
         entrypoint: "${entrypoint}",
-        format: ${format === GPUShaderFormat.MSL ? "GPUShaderFormat.MSL" : "GPUShaderFormat.SPIRV"},
+        format: GPUShaderFormat.SPIRV,
         stage: ${stage === "vertex" ? "GPUShaderStage.Vertex" : stage === "fragment" ? "GPUShaderStage.Fragment" : "GPUShaderStage.Compute"},
         num_samplers: ${counts.num_samplers},
         num_storage_textures: ${counts.num_storage_textures},

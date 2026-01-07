@@ -6,7 +6,6 @@ import {
     GPULoadOp,
     GPUPrimitiveType,
     GPUShaderFormat,
-    GPUShaderStage,
     GPUStoreOp,
     GPUVertexInputRate,
     Keymod,
@@ -41,7 +40,7 @@ console.log(`WindowID: ${wnd.windowID}`);
 
 console.log("Supported GPU drivers :", Device.listSupportedDrivers());
 
-using dev = new Device(GPUShaderFormat.SPIRV | GPUShaderFormat.MSL, true);
+using dev = new Device(GPUShaderFormat.SPIRV, true);
 dev.claimWindow(wnd);
 console.log(`Device Driver : ${dev.driver}`);
 console.log(`Device Shader Format : ${GPUShaderFormat[dev.shader_formats]}`);
