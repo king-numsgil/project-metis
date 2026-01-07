@@ -29,6 +29,10 @@ function decodeKeymods(mod: Keymod): string[] {
         });
 }
 
+if (!triangle.vertex || !triangle.fragment) {
+    throw new Error("Failed loading compiled shader");
+}
+
 using sys = new System();
 console.log(`Platform: ${sys.platform}`);
 
@@ -42,8 +46,8 @@ dev.claimWindow(wnd);
 console.log(`Device Driver : ${dev.driver}`);
 console.log(`Device Shader Format : ${GPUShaderFormat[dev.shader_formats]}`);
 
-using vertexShader = dev.createShader(triangle.vertex!);
-using fragmentShader = dev.createShader(triangle.fragment!);
+using vertexShader = dev.createShader(triangle.vertex);
+using fragmentShader = dev.createShader(triangle.fragment);
 
 const count = 4 * 4;
 
