@@ -6,7 +6,8 @@
     },
     "dependencies": {
         "koffi": "^2.15.0",
-        "naga": "workspace:*"
+        "naga": "workspace:*",
+        "type-fest": "^5.4.0"
     },
     "devDependencies": {
         "@types/bun": "latest"
