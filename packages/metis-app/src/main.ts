@@ -49,7 +49,7 @@ console.log(`Device Shader Format : ${GPUShaderFormat[dev.shader_formats]}`);
 using vertexShader = dev.createShader(triangle.vertex);
 using fragmentShader = dev.createShader(triangle.fragment);
 
-const count = 4 * 4;
+const count = Number(4);
 
 const quadBuffer = new Mesh(ArrayOf(StructOf({
     position: Vec(F32, 2),
