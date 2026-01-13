@@ -132,20 +132,17 @@ export const sdlDrawGPUPrimitives = sdl3.func("void SDL_DrawGPUPrimitives(SDL_GP
 const SDL_PushGPUVertexUniformData = sdl3.func("void SDL_PushGPUVertexUniformData(SDL_GPUCommandBuffer* command_buffer, uint32 slot_index, const void* data, uint32 length)");
 
 export function sdlPushGPUVertexUniformData(command_buffer: GPUCommandBufferPtr, slot_index: number, data: ArrayBuffer): void {
-    const buffer = new Uint8Array(data);
-    SDL_PushGPUVertexUniformData(command_buffer, slot_index, buffer, buffer.byteLength);
+    SDL_PushGPUVertexUniformData(command_buffer, slot_index, data, data.byteLength);
 }
 
 const SDL_PushGPUFragmentUniformData = sdl3.func("void SDL_PushGPUFragmentUniformData(SDL_GPUCommandBuffer* command_buffer, uint32 slot_index, const void* data, uint32 length)");
 
 export function sdlPushGPUFragmentUniformData(command_buffer: GPUCommandBufferPtr, slot_index: number, data: ArrayBuffer): void {
-    const buffer = new Uint8Array(data);
-    SDL_PushGPUFragmentUniformData(command_buffer, slot_index, buffer, buffer.byteLength);
+    SDL_PushGPUFragmentUniformData(command_buffer, slot_index, data, data.byteLength);
 }
 
 const SDL_PushGPUComputeUniformData = sdl3.func("void SDL_PushGPUComputeUniformData(SDL_GPUCommandBuffer* command_buffer, uint32 slot_index, const void* data, uint32 length)");
 
 export function sdlPushGPUComputeUniformData(command_buffer: GPUCommandBufferPtr, slot_index: number, data: ArrayBuffer): void {
-    const buffer = new Uint8Array(data);
-    SDL_PushGPUComputeUniformData(command_buffer, slot_index, buffer, buffer.byteLength);
+    SDL_PushGPUComputeUniformData(command_buffer, slot_index, data, data.byteLength);
 }
