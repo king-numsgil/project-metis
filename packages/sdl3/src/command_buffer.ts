@@ -4,7 +4,7 @@ import {
     type GPUTexturePtr,
     sdlBeginGPUCopyPass,
     sdlBeginGPURenderPass,
-    sdlGetError,
+    sdlGetError, sdlPushGPUComputeUniformData, sdlPushGPUFragmentUniformData, sdlPushGPUVertexUniformData,
     sdlSubmitGPUCommandBuffer,
     sdlSubmitGPUCommandBufferAndAcquireFence,
     sdlWaitAndAcquireGPUSwapchainTexture,
@@ -31,6 +31,18 @@ export class CommandBuffer {
         }
 
         return result;
+    }
+
+    public pushVertexUniformData(slot_index: number, data: ArrayBuffer): void {
+        sdlPushGPUVertexUniformData(this.handle, slot_index, data);
+    }
+
+    public pushFragmentUniformData(slot_index: number, data: ArrayBuffer): void {
+        sdlPushGPUFragmentUniformData(this.handle, slot_index, data);
+    }
+
+    public pushComputeUniformData(slot_index: number, data: ArrayBuffer): void {
+        sdlPushGPUComputeUniformData(this.handle, slot_index, data);
     }
 
     public beginRenderPass(colorTargets: GPUColorTargetInfo[], depthSencil: GPUDepthStencilTargetInfo | null): RenderPass {

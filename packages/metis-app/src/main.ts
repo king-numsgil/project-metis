@@ -14,7 +14,7 @@ import {
     System,
     Window,
 } from "sdl3";
-import { ArrayOf, F32, StructOf, Vec } from "metis-data";
+import {allocate, ArrayOf, F32, StructOf, Vec} from "metis-data";
 import { sdlGetError } from "sdl3/ffi";
 
 import triangle from "./triangle.wgsl";
@@ -31,6 +31,7 @@ function decodeKeymods(mod: Keymod): string[] {
 if (!triangle.vertex || !triangle.fragment) {
     throw new Error("Failed loading compiled shader");
 }
+triangle.fragment.num_uniform_buffers = 1; // HACK, Naga reflection doesn't seem to support a vec4 uniform (my code's bad, okay?)
 
 using sys = new System();
 console.log(`Platform: ${sys.platform}`);
@@ -104,6 +105,9 @@ using pipeline = dev.createGraphicsPipeline({
     primitive_type: GPUPrimitiveType.TriangleList,
 });
 
+const colorUniform = allocate(Vec(F32, 4));
+colorUniform.set([0, 1, 0, 1]);
+
 let running = true;
 while (running) {
     for (const e of sys.events()) {
@@ -120,6 +124,8 @@ while (running) {
 
     const cb = dev.acquireCommandBuffer();
     const swapchain = cb.waitAndAcquireSwapchainTexture(wnd);
+
+    cb.pushFragmentUniformData(0, colorUniform.buffer);
     const pass = cb.beginRenderPass([{
         texture: swapchain.texture,
         clear_color: {r: 0.3, g: 0.4, b: 0.5, a: 1.0},

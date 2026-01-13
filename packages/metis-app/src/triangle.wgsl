@@ -3,6 +3,8 @@ struct VertexOutput {
     @location(0) color: vec3f,
 }
 
+@group(3) @binding(0) var<uniform> quad_color: vec4<f32>;
+
 @vertex
 fn vs_main(@location(0) position: vec2f, @location(1) color: vec3f) -> VertexOutput {
     var output: VertexOutput;
@@ -13,5 +15,5 @@ fn vs_main(@location(0) position: vec2f, @location(1) color: vec3f) -> VertexOut
 
 @fragment
 fn fs_main(@location(0) color: vec3f) -> @location(0) vec4f {
-    return vec4f(color, 1.0);
+    return quad_color;
 }
