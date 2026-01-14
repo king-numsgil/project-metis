@@ -31,7 +31,6 @@ function decodeKeymods(mod: Keymod): string[] {
 if (!triangle.vertex || !triangle.fragment) {
     throw new Error("Failed loading compiled shader");
 }
-triangle.fragment.num_uniform_buffers = 1; // HACK, Naga reflection doesn't seem to support a vec4 uniform (my code's bad, okay?)
 
 using sys = new System();
 console.log(`Platform: ${sys.platform}`);

@@ -336,18 +336,7 @@ pub fn reflect_wgsl(wgsl: &str) -> Result<ReflectionData, JsValue> {
                 if entry.function.expressions.iter().any(
                     |(_, expr)| matches!(expr, naga::Expression::GlobalVariable(h) if *h == handle),
                 ) {
-                    let resource_type = match module.types[var.ty].inner {
-                        naga::TypeInner::Struct { .. } => match var.space {
-                            naga::AddressSpace::Uniform => "uniform",
-                            naga::AddressSpace::Storage { .. } => "storage",
-                            _ => "unknown",
-                        },
-                        naga::TypeInner::Image { .. } => "texture",
-                        naga::TypeInner::Sampler { .. } => "sampler",
-                        _ => "unknown",
-                    };
-
-                    let type_name = get_type_name(&module, var.ty);
+                    let (resource_type, type_name) = classify_binding(&module, var);
 
                     bindings.push(BindingInfo {
                         name: var.name.clone().unwrap_or_else(|| {
@@ -355,7 +344,7 @@ pub fn reflect_wgsl(wgsl: &str) -> Result<ReflectionData, JsValue> {
                         }),
                         group: binding.group,
                         binding: binding.binding,
-                        resource_type: resource_type.to_string(),
+                        resource_type,
                         type_name,
                     });
                 }
@@ -461,19 +450,85 @@ pub fn reflect_wgsl(wgsl: &str) -> Result<ReflectionData, JsValue> {
     })
 }
 
+/// Classify a binding's resource type and get its type name
+fn classify_binding(
+    module: &Module,
+    var: &naga::GlobalVariable,
+) -> (String, Option<String>) {
+    use naga::TypeInner;
+
+    let ty = &module.types[var.ty];
+    let type_name = get_type_name(module, var.ty);
+
+    let resource_type = match ty.inner {
+        // Uniform buffer
+        TypeInner::Struct { .. } if var.space == naga::AddressSpace::Uniform => "uniform",
+
+        // Storage buffer
+        TypeInner::Struct { .. } if matches!(var.space, naga::AddressSpace::Storage { .. }) => "storage",
+
+        // Texture types
+        TypeInner::Image { .. } => "texture",
+
+        // Sampler
+        TypeInner::Sampler { .. } => "sampler",
+
+        // Atomic types
+        TypeInner::Atomic { .. } => "atomic",
+
+        // Scalar types (e.g., var<uniform> quad_color: vec4<f32>)
+        TypeInner::Scalar { .. } if var.space == naga::AddressSpace::Uniform => "uniform",
+        TypeInner::Scalar { .. } if matches!(var.space, naga::AddressSpace::Storage { .. }) => "storage",
+
+        // Vector types (e.g., var<uniform> quad_color: vec4<f32>)
+        TypeInner::Vector { .. } if var.space == naga::AddressSpace::Uniform => "uniform",
+        TypeInner::Vector { .. } if matches!(var.space, naga::AddressSpace::Storage { .. }) => "storage",
+
+        // Matrix types
+        TypeInner::Matrix { .. } if var.space == naga::AddressSpace::Uniform => "uniform",
+        TypeInner::Matrix { .. } if matches!(var.space, naga::AddressSpace::Storage { .. }) => "storage",
+
+        // Array types
+        TypeInner::Array { .. } if var.space == naga::AddressSpace::Uniform => "uniform",
+        TypeInner::Array { .. } if matches!(var.space, naga::AddressSpace::Storage { .. }) => "storage",
+
+        // Binding arrays (arrays of textures, samplers, etc.)
+        TypeInner::BindingArray { .. } => "binding_array",
+
+        // Acceleration structures (for ray tracing)
+        TypeInner::AccelerationStructure { .. } => "acceleration_structure",
+
+        // Ray queries
+        TypeInner::RayQuery { .. } => "ray_query",
+
+        // Pointer types (shouldn't normally appear in bindings, but handle them)
+        TypeInner::Pointer { .. } => "pointer",
+
+        // Fallback
+        _ => "unknown",
+    };
+
+    (resource_type.to_string(), type_name)
+}
+
+/// Get a complete type name for any Naga type
 fn get_type_name(module: &Module, handle: naga::Handle<naga::Type>) -> Option<String> {
     let ty = &module.types[handle];
 
+    // If the type has an explicit name, use it
     if let Some(ref name) = ty.name {
         return Some(name.clone());
     }
 
+    // Otherwise, generate a descriptive name based on the TypeInner variant
     Some(match ty.inner {
         naga::TypeInner::Scalar(scalar) => format_scalar(scalar),
+
         naga::TypeInner::Vector { size, scalar } => {
             let scalar_suffix = scalar_suffix(scalar);
             format!("vec{}{}", size as u8, scalar_suffix)
         }
+
         naga::TypeInner::Matrix {
             columns,
             rows,
@@ -482,15 +537,66 @@ fn get_type_name(module: &Module, handle: naga::Handle<naga::Type>) -> Option<St
             let scalar_suffix = scalar_suffix(scalar);
             format!("mat{}x{}{}", columns as u8, rows as u8, scalar_suffix)
         }
+
+        naga::TypeInner::Atomic(scalar) => {
+            format!("atomic<{}>", format_scalar(scalar))
+        }
+
+        naga::TypeInner::Pointer { base, space } => {
+            let base_name = get_type_name(module, base)?;
+            let space_name = match space {
+                naga::AddressSpace::Function => "function",
+                naga::AddressSpace::Private => "private",
+                naga::AddressSpace::WorkGroup => "workgroup",
+                naga::AddressSpace::Uniform => "uniform",
+                naga::AddressSpace::Storage { .. } => "storage",
+                naga::AddressSpace::Handle => "handle",
+                naga::AddressSpace::PushConstant => "push_constant",
+            };
+            format!("ptr<{}, {}>", space_name, base_name)
+        }
+
+        naga::TypeInner::ValuePointer {
+            size,
+            scalar,
+            space,
+        } => {
+            let space_name = match space {
+                naga::AddressSpace::Function => "function",
+                naga::AddressSpace::Private => "private",
+                naga::AddressSpace::WorkGroup => "workgroup",
+                naga::AddressSpace::Uniform => "uniform",
+                naga::AddressSpace::Storage { .. } => "storage",
+                naga::AddressSpace::Handle => "handle",
+                naga::AddressSpace::PushConstant => "push_constant",
+            };
+            let scalar_suffix = scalar_suffix(scalar);
+            match size {
+                Some(vec_size) => {
+                    format!("ptr<{}, vec{}{}>", space_name, vec_size as u8, scalar_suffix)
+                }
+                None => {
+                    format!("ptr<{}, {}>", space_name, format_scalar(scalar))
+                }
+            }
+        }
+
         naga::TypeInner::Array { base, size, .. } => {
             let base_name = get_type_name(module, base)?;
             match size {
-                naga::ArraySize::Constant(size) => format!("array<{}, {}>", base_name, size),
+                naga::ArraySize::Constant(size_val) => {
+                    format!("array<{}, {}>", base_name, size_val.get())
+                }
+                naga::ArraySize::Pending(_) => {
+                    // Override-based size - can't determine at compile time
+                    format!("array<{}>", base_name)
+                }
                 naga::ArraySize::Dynamic => format!("array<{}>", base_name),
-                naga::ArraySize::Pending(_) => format!("array<{}, ?>", base_name),
             }
         }
+
         naga::TypeInner::Struct { .. } => "struct".to_string(),
+
         naga::TypeInner::Image {
             dim,
             arrayed,
@@ -511,11 +617,40 @@ fn get_type_name(module: &Module, handle: naga::Handle<naga::Type>) -> Option<St
             };
             format!("texture_{}{}{}", dim_str, array_str, class_str)
         }
-        naga::TypeInner::Sampler { .. } => "sampler".to_string(),
-        _ => return None,
+
+        naga::TypeInner::Sampler { comparison } => {
+            if comparison {
+                "sampler_comparison".to_string()
+            } else {
+                "sampler".to_string()
+            }
+        }
+
+        naga::TypeInner::AccelerationStructure { .. } => {
+            "acceleration_structure".to_string()
+        }
+
+        naga::TypeInner::RayQuery { .. } => {
+            "ray_query".to_string()
+        }
+
+        naga::TypeInner::BindingArray { base, size } => {
+            let base_name = get_type_name(module, base)?;
+            match size {
+                naga::ArraySize::Constant(size_val) => {
+                    format!("binding_array<{}, {}>", base_name, size_val.get())
+                }
+                naga::ArraySize::Pending(_) => {
+                    // Override-based size - can't determine at compile time
+                    format!("binding_array<{}>", base_name)
+                }
+                naga::ArraySize::Dynamic => format!("binding_array<{}>", base_name),
+            }
+        }
     })
 }
 
+/// Get the scalar type suffix for WGSL syntax
 fn scalar_suffix(scalar: naga::Scalar) -> &'static str {
     match (scalar.kind, scalar.width) {
         (naga::ScalarKind::Float, 4) => "f",
@@ -527,13 +662,17 @@ fn scalar_suffix(scalar: naga::Scalar) -> &'static str {
     }
 }
 
+/// Format a scalar type as its WGSL representation
 fn format_scalar(scalar: naga::Scalar) -> String {
     match (scalar.kind, scalar.width) {
         (naga::ScalarKind::Float, 4) => "f32".to_string(),
         (naga::ScalarKind::Float, 8) => "f64".to_string(),
+        (naga::ScalarKind::Float, 2) => "f16".to_string(),
         (naga::ScalarKind::Sint, 4) => "i32".to_string(),
         (naga::ScalarKind::Uint, 4) => "u32".to_string(),
         (naga::ScalarKind::Bool, _) => "bool".to_string(),
+        (naga::ScalarKind::AbstractInt, _) => "abstract_int".to_string(),
+        (naga::ScalarKind::AbstractFloat, _) => "abstract_float".to_string(),
         _ => format!("{:?}", scalar),
     }
 }
