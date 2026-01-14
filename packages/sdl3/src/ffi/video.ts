@@ -50,7 +50,7 @@ export const sdlGetDisplayContentScale = sdl3.func("float SDL_GetDisplayContentS
 export const sdlCreateWindow = sdl3.func("SDL_Window* SDL_CreateWindow(const char* title, int w, int h, SDL_WindowFlags flags)") as (title: string, w: number, h: number, flags: SDL_WindowFlags) => WindowPtr | null;
 export const sdlDestroyWindow = sdl3.func("void SDL_DestroyWindow(SDL_Window* window)") as (window: WindowPtr) => void;
 export const sdlGetWindowID = sdl3.func("SDL_WindowID SDL_GetWindowID(SDL_Window* window)") as (window: WindowPtr) => WindowID;
-export const sdlGetWindowFromID = sdl3.func("SDL_Window* SDL_GetWindowID(SDL_WindowID id)") as (id: WindowID) => WindowPtr | null;
+export const sdlGetWindowFromID = sdl3.func("SDL_Window* SDL_GetWindowFromID(SDL_WindowID id)") as (id: WindowID) => WindowPtr | null;
 export const sdlSetWindowTitle = sdl3.func("bool SDL_SetWindowTitle(SDL_Window* window, const char* title)") as (window: WindowPtr, title: string) => boolean;
 export const sdlGetWindowTitle = sdl3.func("const char* SDL_GetWindowTitle(SDL_Window* window)") as (window: WindowPtr) => string;
 export const sdlSetWindowPosition = sdl3.func("bool SDL_SetWindowPosition(SDL_Window* window, int x, int y)") as (window: WindowPtr, x: number | WindowPosition, y: number | WindowPosition) => boolean;
