@@ -92,8 +92,9 @@ export function ArrayOf<
 >(
     itemDescriptor: ItemType,
     length: N,
+    packingType: PackingType = PackingType.Dense,
 ): ArrayDescriptor<ItemType, N> {
-    return new ArrayDescriptorImpl<ItemType, N>(itemDescriptor, length);
+    return new ArrayDescriptorImpl<ItemType, N>(itemDescriptor, length, packingType);
 }
 
 export function StructOf<

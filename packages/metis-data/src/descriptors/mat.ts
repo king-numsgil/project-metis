@@ -24,6 +24,13 @@ const TYPED_ARRAY_CONSTRUCTORS: Record<string, TypedArrayConstructor> = {
     [GPU_U32]: Uint32Array,
 };
 
+function alignTo(value: number, alignment: number): number {
+    if (!Number.isFinite(value) || !Number.isFinite(alignment) || alignment <= 0) {
+        throw new RangeError(`Invalid alignment request: value=${value}, alignment=${alignment}`);
+    }
+    return Math.ceil(value / alignment) * alignment;
+}
+
 export class MatDescriptorImpl<
     ScalarType extends ScalarDescriptor,
     N extends 2 | 3 | 4
@@ -43,20 +50,21 @@ export class MatDescriptorImpl<
         this._n = n;
         this._type = (n === 2 ? GPU_MAT2 : n === 3 ? GPU_MAT3 : GPU_MAT4) as MatrixTypeSelector<N>;
 
-        const scalarSize = scalarDescriptor.byteSize;
-
         if (packingType === PackingType.Dense) {
             // Dense packing: scalar alignment
+            const scalarSize = scalarDescriptor.byteSize;
+
             this._alignment = scalarSize;
             this._columnStride = n * scalarSize;
             this._byteSize = n * this._columnStride;
             this._arrayPitch = this._byteSize;
         } else {
-            // std140: each column is aligned as a vec4 (16-byte aligned)
-            this._alignment = Math.max(16, 4 * scalarSize);
-            this._columnStride = Math.max(16, 4 * scalarSize);
+            // std140-like packing: a matrix is an array of column vectors.
+            // Arrays round their element stride up to 16 bytes.
+            this._alignment = alignTo(this._colDescriptor.alignment, 16);
+            this._columnStride = alignTo(this._colDescriptor.byteSize, 16);
             this._byteSize = n * this._columnStride;
-            this._arrayPitch = Math.max(16, this._byteSize);
+            this._arrayPitch = alignTo(this._byteSize, 16);
         }
     }
 

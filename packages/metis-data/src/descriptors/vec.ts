@@ -22,6 +22,13 @@ const TYPED_ARRAY_CONSTRUCTORS: Record<string, TypedArrayConstructor> = {
     [GPU_U32]: Uint32Array,
 };
 
+function alignTo(value: number, alignment: number): number {
+    if (!Number.isFinite(value) || !Number.isFinite(alignment) || alignment <= 0) {
+        throw new RangeError(`Invalid alignment request: value=${value}, alignment=${alignment}`);
+    }
+    return Math.ceil(value / alignment) * alignment;
+}
+
 export class VecDescriptorImpl<
     ScalarType extends ScalarDescriptor,
     N extends 2 | 3 | 4
@@ -39,28 +46,29 @@ export class VecDescriptorImpl<
         this._type = (n === 2 ? GPU_VEC2 : n === 3 ? GPU_VEC3 : GPU_VEC4) as VectorTypeSelector<N>;
 
         const scalarSize = scalarDescriptor.byteSize;
-
-        this._byteSize = n * scalarSize;
+        const rawByteSize = n * scalarSize;
 
         if (packingType === PackingType.Dense) {
+            // Dense packing: tightly packed scalars.
             this._alignment = scalarSize;
-            this._arrayPitch = this._byteSize;
-        } else {
-            if (n === 2) {
-                this._alignment = Math.max(8, 2 * scalarSize);
-            } else {
-                this._alignment = Math.max(16, 4 * scalarSize);
-            }
+            this._byteSize = rawByteSize;
+            this._arrayPitch = alignTo(this._byteSize, this._alignment);
+            return;
         }
 
-        if (packingType === PackingType.Dense) {
-            this._arrayPitch = Math.ceil(this._byteSize / this._alignment) * this._alignment;
+        // std140-like packing:
+        // - vec2 base alignment = 2N (but at least 8)
+        // - vec3/vec4 base alignment = 4N (but at least 16)
+        if (n === 2) {
+            this._alignment = Math.max(8, 2 * scalarSize);
         } else {
-            this._arrayPitch = Math.max(
-                16,
-                Math.ceil(this._byteSize / this._alignment) * this._alignment,
-            );
+            this._alignment = Math.max(16, 4 * scalarSize);
         }
+
+        // In std140, a vec3 occupies the same space as a vec4 (i.e. it is padded to its alignment).
+        this._byteSize = alignTo(rawByteSize, this._alignment);
+        // Arrays round their element stride up to 16 bytes.
+        this._arrayPitch = alignTo(this._byteSize, 16);
     }
 
     public get type(): VectorTypeSelector<N> {

@@ -7,6 +7,13 @@ import {
     type StructDescriptor,
 } from "./index.ts";
 
+function alignTo(value: number, alignment: number): number {
+    if (!Number.isFinite(value) || !Number.isFinite(alignment) || alignment <= 0) {
+        throw new RangeError(`Invalid alignment request: value=${value}, alignment=${alignment}`);
+    }
+    return Math.ceil(value / alignment) * alignment;
+}
+
 export class StructDescriptorImpl<
     Members extends Record<string, Descriptor<DescriptorTypedArray>>,
 > implements StructDescriptor<Members> {
@@ -23,27 +30,28 @@ export class StructDescriptorImpl<
         let currentOffset = 0;
         let maxAlignment = 0;
 
-        // Calculate offsets for each member according to std140 rules
+        // Calculate offsets for each member.
         for (const key of Object.keys(members) as Array<keyof Members>) {
             const member = members[key]!;
             const memberAlignment = member.alignment;
 
             maxAlignment = Math.max(maxAlignment, memberAlignment);
-            currentOffset = Math.ceil(currentOffset / memberAlignment) * memberAlignment;
+            currentOffset = alignTo(currentOffset, memberAlignment);
             this._offsets[key] = currentOffset;
             currentOffset += member.byteSize;
         }
 
-        this._alignment = maxAlignment;
-        this._byteSize = Math.ceil(currentOffset / this._alignment) * this._alignment;
+        // Dense packing behaves like a C struct.
+        // std140-like packing requires the struct itself to have at least 16-byte alignment.
+        const safeMaxAlignment = Math.max(1, maxAlignment);
+        this._alignment = packingType === PackingType.Uniform
+            ? alignTo(safeMaxAlignment, 16)
+            : safeMaxAlignment;
 
-        if (packingType === PackingType.Dense) {
-            // Array pitch: round up to alignment
-            this._arrayPitch = this._byteSize;
-        } else {
-            // Array pitch for std140: round up to next multiple of 16 bytes
-            this._arrayPitch = Math.max(16, Math.ceil(this._byteSize / 16) * 16);
-        }
+        this._byteSize = alignTo(currentOffset, this._alignment);
+        this._arrayPitch = packingType === PackingType.Uniform
+            ? alignTo(this._byteSize, 16)
+            : this._byteSize;
     }
 
     public get type(): typeof GPU_STRUCT {

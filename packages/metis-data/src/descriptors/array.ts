@@ -1,4 +1,4 @@
-import type { ArrayDescriptor, Descriptor, DescriptorMemoryType, DescriptorTypedArray } from "./index.ts";
+import { PackingType, type ArrayDescriptor, type Descriptor, type DescriptorMemoryType, type DescriptorTypedArray } from "./index.ts";
 import {
     GPU_ARRAY,
     GPU_BOOL,
@@ -34,6 +34,13 @@ const TYPED_ARRAY_CONSTRUCTORS: Record<string, TypedArrayConstructor> = {
     [GPU_STRUCT]: Uint8Array,
 };
 
+function alignTo(value: number, alignment: number): number {
+    if (!Number.isFinite(value) || !Number.isFinite(alignment) || alignment <= 0) {
+        throw new RangeError(`Invalid alignment request: value=${value}, alignment=${alignment}`);
+    }
+    return Math.ceil(value / alignment) * alignment;
+}
+
 export class ArrayDescriptorImpl<
     ItemType extends Descriptor<DescriptorTypedArray>,
     N extends number,
@@ -44,11 +51,17 @@ export class ArrayDescriptorImpl<
     private readonly _alignment: number;
     private readonly _arrayPitch: number;
 
-    constructor(itemDescriptor: ItemType, length: N) {
+    constructor(itemDescriptor: ItemType, length: N, packingType: PackingType = PackingType.Dense) {
         this._itemDescriptor = itemDescriptor;
         this._length = length;
-        this._alignment = itemDescriptor.alignment;
-        this._arrayPitch = itemDescriptor.arrayPitch;
+        if (packingType === PackingType.Dense) {
+            this._alignment = itemDescriptor.alignment;
+            this._arrayPitch = itemDescriptor.arrayPitch;
+        } else {
+            // std140-like arrays: base alignment and stride are rounded up to a multiple of 16.
+            this._alignment = alignTo(itemDescriptor.alignment, 16);
+            this._arrayPitch = alignTo(itemDescriptor.byteSize, 16);
+        }
         this._byteSize = length * this._arrayPitch;
     }
 
