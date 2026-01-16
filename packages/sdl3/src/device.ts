@@ -11,9 +11,11 @@ import {
     type GPUGraphicsPipelineCreateInfo,
     GPUPrimitiveType,
     GPUSampleCount,
+    type GPUSamplerCreateInfo,
     type GPUShaderCreateInfo,
     GPUShaderFormat,
     GPUStencilOp,
+    type GPUTextureCreateInfo,
     GPUTextureFormat,
     type GPUTransferBufferCreateInfo,
 } from "sdl3";
@@ -26,7 +28,9 @@ import {
     sdlCreateGPUComputePipeline,
     sdlCreateGPUDevice,
     sdlCreateGPUGraphicsPipeline,
+    sdlCreateGPUSampler,
     sdlCreateGPUShader,
+    sdlCreateGPUTexture,
     sdlCreateGPUTransferBuffer,
     sdlDestroyGPUDevice,
     sdlGetError,
@@ -45,6 +49,8 @@ import { TransferBuffer } from "./transfer_buffer.ts";
 import { CommandBuffer } from "./command_buffer.ts";
 import { DeviceBuffer } from "./device_buffer.ts";
 import type { Window } from "./window.ts";
+import { Texture } from "./texture.ts";
+import { Sampler } from "./sampler.ts";
 import { Shader } from "./shader.ts";
 import { Fence } from "./fence.ts";
 
@@ -194,6 +200,24 @@ export class Device {
         return new Shader(s, this);
     }
 
+    public createTexture(create_info: GPUTextureCreateInfo): Texture {
+        const tex = sdlCreateGPUTexture(this.handle, create_info);
+        if (!tex) {
+            throw new Error(`Failed to create Texture : ${sdlGetError()}`);
+        }
+
+        return new Texture(tex, this);
+    }
+
+    public createSampler(create_info: GPUSamplerCreateInfo): Sampler {
+        const samp = sdlCreateGPUSampler(this.handle, create_info);
+        if (!samp) {
+            throw new Error(`Failed to create Sampler : ${sdlGetError()}`);
+        }
+
+        return new Sampler(samp, this);
+    }
+
     public createGraphicsPipeline(create_info: GPUGraphicsPipelineCreateInfo): GraphicsPipeline {
         const gp = sdlCreateGPUGraphicsPipeline(this.handle, create_info);
         if (!gp) {
@@ -206,7 +230,7 @@ export class Device {
     public createComputePipeline(create_info: GPUComputePipelineCreateInfo): ComputePipeline {
         const cp = sdlCreateGPUComputePipeline(this.handle, create_info);
         if (!cp) {
-            throw new Error(`Failed to create GraphicsPipeline : ${sdlGetError()}`);
+            throw new Error(`Failed to create ComputePipeline : ${sdlGetError()}`);
         }
 
         return new ComputePipeline(cp, this);

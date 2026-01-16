@@ -1,7 +1,13 @@
-import type { GPUColorTargetInfo, GPUDepthStencilTargetInfo } from "sdl3";
+import type {
+    GPUColorTargetInfo,
+    GPUDepthStencilTargetInfo,
+    GPUStorageBufferReadWriteBinding,
+    GPUStorageTextureReadWriteBinding,
+} from "sdl3";
 import {
     type GPUCommandBufferPtr,
     type GPUTexturePtr,
+    sdlBeginGPUComputePass,
     sdlBeginGPUCopyPass,
     sdlBeginGPURenderPass,
     sdlGetError,
@@ -13,6 +19,7 @@ import {
     sdlWaitAndAcquireGPUSwapchainTexture,
 } from "./ffi";
 
+import { ComputePass } from "./compute_pass.ts";
 import { RenderPass } from "./render_pass.ts";
 import type { Window } from "./window.ts";
 import type { Device } from "./device.ts";
@@ -54,6 +61,10 @@ export class CommandBuffer {
 
     public beginCopyPass(): CopyPass {
         return new CopyPass(sdlBeginGPUCopyPass(this.handle));
+    }
+
+    public beginComputePass(storage_texture_bindings?: GPUStorageTextureReadWriteBinding[] | null, storage_buffer_bindings?: GPUStorageBufferReadWriteBinding[] | null): ComputePass {
+        return new ComputePass(sdlBeginGPUComputePass(this.handle, storage_texture_bindings, storage_buffer_bindings));
     }
 
     public submit(): boolean {

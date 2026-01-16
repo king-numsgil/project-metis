@@ -116,3 +116,7 @@ export * from "./transfer_buffer.ts";
 export * from "./fence.ts";
 export * from "./copy_pass.ts";
 export * from "./mesh.ts";
+export * from "./texture.ts";
+export * from "./sampler.ts";
+export * from "./compute_pipeline.ts";
+export * from "./compute_pass.ts";

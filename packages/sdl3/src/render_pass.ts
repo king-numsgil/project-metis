@@ -1,18 +1,23 @@
 import {
     type GPURenderPassPtr,
+    sdlBindGPUFragmentSamplers,
     sdlBindGPUFragmentStorageBuffers,
+    sdlBindGPUFragmentStorageTextures,
     sdlBindGPUGraphicsPipeline,
     sdlBindGPUIndexBuffer,
     sdlBindGPUVertexBuffers,
+    sdlBindGPUVertexSamplers,
     sdlBindGPUVertexStorageBuffers,
+    sdlBindGPUVertexStorageTextures,
     sdlDrawGPUIndexedPrimitives,
     sdlDrawGPUPrimitives,
     sdlEndGPURenderPass,
 } from "./ffi";
 
-import { DeviceBuffer, type GPUBufferBinding, GPUIndexElementSize } from "sdl3";
+import { DeviceBuffer, type GPUBufferBinding, GPUIndexElementSize, type GPUTextureSamplerBinding } from "sdl3";
 
 import { GraphicsPipeline } from "./graphics_pipeline.ts";
+import type { Texture } from "./texture.ts";
 
 export class RenderPass {
     public constructor(private readonly handle: GPURenderPassPtr) {
@@ -40,10 +45,34 @@ export class RenderPass {
         sdlBindGPUIndexBuffer(this.handle, binding, index_element_size);
     }
 
+    public bindVertexSamplers(bindings: GPUTextureSamplerBinding[]): void;
+    public bindVertexSamplers(bindings: GPUTextureSamplerBinding[], first_slot: number): void;
+    public bindVertexSamplers(bindings: GPUTextureSamplerBinding[], first_slot?: number): void {
+        sdlBindGPUVertexSamplers(this.handle, first_slot ?? 0, bindings);
+    }
+
+    public bindVertexStorageTextures(bindings: Texture[]): void;
+    public bindVertexStorageTextures(bindings: Texture[], first_slot: number): void;
+    public bindVertexStorageTextures(bindings: Texture[], first_slot?: number): void {
+        sdlBindGPUVertexStorageTextures(this.handle, first_slot ?? 0, bindings.map(db => db.raw));
+    }
+
     public bindVertexStorageBuffers(bindings: DeviceBuffer[]): void;
     public bindVertexStorageBuffers(bindings: DeviceBuffer[], first_slot: number): void;
     public bindVertexStorageBuffers(bindings: DeviceBuffer[], first_slot?: number): void {
         sdlBindGPUVertexStorageBuffers(this.handle, first_slot ?? 0, bindings.map(db => db.raw));
+    }
+
+    public bindFragmentSamplers(bindings: GPUTextureSamplerBinding[]): void;
+    public bindFragmentSamplers(bindings: GPUTextureSamplerBinding[], first_slot: number): void;
+    public bindFragmentSamplers(bindings: GPUTextureSamplerBinding[], first_slot?: number): void {
+        sdlBindGPUFragmentSamplers(this.handle, first_slot ?? 0, bindings);
+    }
+
+    public bindFragmentStorageTextures(bindings: Texture[]): void;
+    public bindFragmentStorageTextures(bindings: Texture[], first_slot: number): void;
+    public bindFragmentStorageTextures(bindings: Texture[], first_slot?: number): void {
+        sdlBindGPUFragmentStorageTextures(this.handle, first_slot ?? 0, bindings.map(db => db.raw));
     }
 
     public bindFragmentStorageBuffers(bindings: DeviceBuffer[]): void;
