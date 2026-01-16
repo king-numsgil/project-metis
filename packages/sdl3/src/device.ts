@@ -4,6 +4,7 @@ import {
     type GPUBufferCreateInfo,
     GPUColorComponentFlags,
     GPUCompareOp,
+    type GPUComputePipelineCreateInfo,
     GPUCullMode,
     GPUFillMode,
     GPUFrontFace,
@@ -22,6 +23,7 @@ import {
     sdlAcquireGPUCommandBuffer,
     sdlClaimWindowForGPUDevice,
     sdlCreateGPUBuffer,
+    sdlCreateGPUComputePipeline,
     sdlCreateGPUDevice,
     sdlCreateGPUGraphicsPipeline,
     sdlCreateGPUShader,
@@ -38,6 +40,7 @@ import {
 } from "./ffi";
 
 import { GraphicsPipeline } from "./graphics_pipeline.ts";
+import { ComputePipeline } from "./compute_pipeline.ts";
 import { TransferBuffer } from "./transfer_buffer.ts";
 import { CommandBuffer } from "./command_buffer.ts";
 import { DeviceBuffer } from "./device_buffer.ts";
@@ -198,6 +201,15 @@ export class Device {
         }
 
         return new GraphicsPipeline(gp, this);
+    }
+
+    public createComputePipeline(create_info: GPUComputePipelineCreateInfo): ComputePipeline {
+        const cp = sdlCreateGPUComputePipeline(this.handle, create_info);
+        if (!cp) {
+            throw new Error(`Failed to create GraphicsPipeline : ${sdlGetError()}`);
+        }
+
+        return new ComputePipeline(cp, this);
     }
 
     public createBuffer(create_info: GPUBufferCreateInfo): DeviceBuffer {
