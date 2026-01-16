@@ -11,6 +11,7 @@ alias("SDL_GPUShaderStage", "uint32");
 alias("SDL_GPULoadOp", "int");
 alias("SDL_GPUStoreOp", "int");
 alias("SDL_GPUBufferUsageFlags", "uint32");
+alias("SDL_GPUTextureUsageFlags", "uint32");
 alias("SDL_GPUTransferBufferUsage", "int");
 alias("SDL_GPUFillMode", "int");
 alias("SDL_GPUVertexInputRate", "int");
@@ -24,11 +25,16 @@ alias("SDL_GPUCullMode", "int");
 alias("SDL_GPUFrontFace", "int");
 alias("SDL_GPUSampleCount", "int");
 alias("SDL_GPUTextureFormat", "int");
+alias("SDL_GPUTextureType", "int");
 alias("SDL_GPUPrimitiveType", "int");
 alias("SDL_GPUIndexElementSize", "int");
+alias("SDL_GPUFilter", "int");
+alias("SDL_GPUSamplerMipmapMode", "int");
+alias("SDL_GPUSamplerAddressMode", "int");
 opaque("SDL_GPUDevice");
 opaque("SDL_GPUCommandBuffer");
 opaque("SDL_GPUTexture");
+opaque("SDL_GPUSampler");
 opaque("SDL_GPURenderPass");
 opaque("SDL_GPUBuffer");
 opaque("SDL_GPUTransferBuffer");
@@ -37,6 +43,7 @@ opaque("SDL_GPUCopyPass");
 opaque("SDL_GPUShader");
 opaque("SDL_GPUGraphicsPipeline");
 opaque("SDL_GPUComputePipeline");
+opaque("SDL_GPUComputePass");
 
 export const SDL_Rect = struct("SDL_Rect", {
     x: "int",
@@ -719,4 +726,58 @@ export const SDL_GPUComputePipelineCreateInfo = struct("SDL_GPUComputePipelineCr
     threadcount_y: "uint32",
     threadcount_z: "uint32",
     props: "SDL_PropertiesID",
+});
+
+export const SDL_GPUTextureCreateInfo = struct("SDL_GPUTextureCreateInfo", {
+    type: "SDL_GPUTextureType",
+    format: "SDL_GPUTextureFormat",
+    usage: "SDL_GPUTextureUsageFlags",
+    width: "uint32",
+    height: "uint32",
+    layer_count_or_depth: "uint32",
+    num_levels: "uint32",
+    sample_count: "SDL_GPUSampleCount",
+    props: "SDL_PropertiesID",
+});
+
+export const SDL_GPUSamplerCreateInfo = struct("SDL_GPUSamplerCreateInfo", {
+    min_filter: "SDL_GPUFilter",
+    mag_filter: "SDL_GPUFilter",
+    mipmap_mode: "SDL_GPUSamplerMipmapMode",
+    address_mode_u: "SDL_GPUSamplerAddressMode",
+    address_mode_v: "SDL_GPUSamplerAddressMode",
+    address_mode_w: "SDL_GPUSamplerAddressMode",
+    mip_lod_bias: "float",
+    max_anisotropy: "float",
+    compare_op: "SDL_GPUCompareOp",
+    min_lod: "float",
+    max_lod: "float",
+    enable_anisotropy: "bool",
+    enable_compare: "bool",
+    padding1: "uint8",
+    padding2: "uint8",
+    props: "SDL_PropertiesID",
+});
+
+export const SDL_GPUTextureSamplerBinding = struct("SDL_GPUTextureSamplerBinding", {
+    texture: "SDL_GPUTexture*",
+    sampler: "SDL_GPUSampler*",
+});
+
+export const SDL_GPUStorageTextureReadWriteBinding = struct("SDL_GPUStorageTextureReadWriteBinding", {
+    texture: "SDL_GPUTexture*",
+    mip_level: "uint32",
+    layer: "uint32",
+    cycle: "bool",
+    padding1: "uint8",
+    padding2: "uint8",
+    padding3: "uint8",
+});
+
+export const SDL_GPUStorageBufferReadWriteBinding = struct("SDL_GPUStorageBufferReadWriteBinding", {
+    buffer: "SDL_GPUBuffer*",
+    cycle: "bool",
+    padding1: "uint8",
+    padding2: "uint8",
+    padding3: "uint8",
 });

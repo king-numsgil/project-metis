@@ -31,6 +31,8 @@ export {
     GPUSamplerAddressMode,
     GPUSamplerMipmapMode,
     GPUIndexElementSize,
+    GPUTextureUsageFlags,
+    GPUTextureType,
 } from "./ffi/types";
 
 export type {
@@ -95,6 +97,13 @@ export type {
     GPUVertexAttribute,
     GPUVertexBufferDescription,
     GPUBufferBinding,
+    GPUTextureCreateInfo,
+    GPUSamplerCreateInfo,
+    GPUTextureSamplerBinding,
+    GPUViewport,
+    SDLRect,
+    GPUStorageTextureReadWriteBinding,
+    GPUStorageBufferReadWriteBinding,
 } from "./ffi/types";
 
 export * from "./system.ts";

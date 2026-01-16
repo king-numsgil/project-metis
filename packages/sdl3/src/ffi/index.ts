@@ -11,6 +11,8 @@ export type {
     GPUGraphicsPipelinePtr,
     GPUShaderPtr,
     GPUComputePipelinePtr,
+    GPUSamplerPtr,
+    GPUComputePassPtr,
 } from "./types";
 
 export * from "./init.ts";

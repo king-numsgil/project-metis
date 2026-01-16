@@ -5,6 +5,7 @@ import type { PropertiesID } from "./properties.ts";
 export type GPUDevicePtr = Tagged<{}, "SDL_GPUDevice">;
 export type GPUCommandBufferPtr = Tagged<{}, "SDL_GPUCommandBuffer">;
 export type GPUTexturePtr = Tagged<{}, "SDL_GPUTexture">;
+export type GPUSamplerPtr = Tagged<{}, "SDL_GPUSampler">;
 export type GPURenderPassPtr = Tagged<{}, "SDL_GPURenderPass">;
 export type GPUBufferPtr = Tagged<{}, "SDL_GPUBuffer">;
 export type GPUTransferBufferPtr = Tagged<{}, "SDL_GPUTransferBuffer">;
@@ -13,6 +14,7 @@ export type GPUCopyPassPtr = Tagged<{}, "SDL_GPUCopyPass">;
 export type GPUShaderPtr = Tagged<{}, "SDL_GPUShader">;
 export type GPUGraphicsPipelinePtr = Tagged<{}, "SDL_GPUGraphicsPipeline">;
 export type GPUComputePipelinePtr = Tagged<{}, "SDL_GPUComputePipeline">;
+export type GPUComputePassPtr = Tagged<{}, "SDL_GPUComputePass">;
 
 export enum GPUShaderFormat {
     Invalid = 0,
@@ -357,6 +359,24 @@ export enum GPUTextureFormat {
     Astc12x12Float,
 }
 
+export enum GPUTextureType {
+    TwoD,
+    TwoDArray,
+    ThreeD,
+    Cube,
+    CubeArray,
+}
+
+export enum GPUTextureUsageFlags {
+    Sampler = 1 << 0,
+    ColorTarget = 1 << 1,
+    DepthStencilTarget = 1 << 2,
+    GraphicsStorageRead = 1 << 3,
+    ComputeStorageRead = 1 << 4,
+    ComputeStorageWrite = 1 << 5,
+    ComputeStorageSimultaneousReadWrite = 1 << 6,
+}
+
 export enum GPUPrimitiveType {
     TriangleList,
     TriangleStrip,
@@ -559,4 +579,50 @@ export interface GPUComputePipelineCreateInfo {
     threadcount_y?: number,
     threadcount_z?: number,
     props?: PropertiesID;
+}
+
+export interface GPUTextureCreateInfo {
+    type: GPUTextureType;
+    format: GPUTextureFormat;
+    usage: GPUTextureUsageFlags;
+    width: number;
+    height: number;
+    layer_count_or_depth: number;
+    num_levels: number;
+    sample_count: GPUSampleCount;
+    props?: PropertiesID;
+}
+
+export interface GPUSamplerCreateInfo {
+    min_filter: GPUFilter;
+    mag_filter: GPUFilter;
+    mipmap_mode: GPUSamplerMipmapMode;
+    address_mode_u: GPUSamplerAddressMode;
+    address_mode_v: GPUSamplerAddressMode;
+    address_mode_w: GPUSamplerAddressMode;
+    mip_lod_bias: number;
+    max_anisotropy: number;
+    compare_op: GPUCompareOp;
+    min_lod: number;
+    max_lod: number;
+    enable_anisotropy: boolean;
+    enable_compare: boolean;
+    props?: PropertiesID;
+}
+
+export interface GPUTextureSamplerBinding {
+    texture: GPUTexturePtr;
+    sampler: GPUSamplerPtr;
+}
+
+export interface GPUStorageTextureReadWriteBinding {
+    texture: GPUTexturePtr;
+    mip_level: number;
+    layer: number;
+    cycle: boolean;
+}
+
+export interface GPUStorageBufferReadWriteBinding {
+    buffer: GPUBufferPtr;
+    cycle: boolean;
 }

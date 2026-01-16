@@ -8,6 +8,7 @@ import {
     type GPUBufferRegion,
     type GPUColorTargetInfo,
     type GPUCommandBufferPtr,
+    type GPUComputePassPtr,
     type GPUComputePipelineCreateInfo,
     type GPUComputePipelinePtr,
     type GPUCopyPassPtr,
@@ -18,11 +19,17 @@ import {
     type GPUGraphicsPipelinePtr,
     GPUIndexElementSize,
     type GPURenderPassPtr,
+    type GPUSamplerCreateInfo,
+    type GPUSamplerPtr,
     type GPUShaderCreateInfo,
     GPUShaderFormat,
     type GPUShaderPtr,
+    type GPUStorageBufferReadWriteBinding,
+    type GPUStorageTextureReadWriteBinding,
+    type GPUTextureCreateInfo,
     GPUTextureFormat,
     type GPUTexturePtr,
+    type GPUTextureSamplerBinding,
     type GPUTransferBufferCreateInfo,
     type GPUTransferBufferLocation,
     type GPUTransferBufferPtr,
@@ -92,11 +99,17 @@ export const sdlGetGPUSwapchainTextureFormat = sdl3.func("SDL_GPUTextureFormat S
 export const sdlCreateGPUBuffer = sdl3.func("SDL_GPUBuffer* SDL_CreateGPUBuffer(SDL_GPUDevice* device, _In_ const SDL_GPUBufferCreateInfo* createinfo)") as (device: GPUDevicePtr, createinfo: GPUBufferCreateInfo) => GPUBufferPtr | null;
 export const sdlCreateGPUTransferBuffer = sdl3.func("SDL_GPUTransferBuffer* SDL_CreateGPUTransferBuffer(SDL_GPUDevice* device, _In_ const SDL_GPUTransferBufferCreateInfo* createinfo)") as (device: GPUDevicePtr, createinfo: GPUTransferBufferCreateInfo) => GPUTransferBufferPtr | null;
 export const sdlCreateGPUShader = sdl3.func("SDL_GPUShader* SDL_CreateGPUShader(SDL_GPUDevice* device, _In_ const SDL_GPUShaderCreateInfo* createinfo)") as (device: GPUDevicePtr, createinfo: GPUShaderCreateInfo) => GPUShaderPtr | null;
+export const sdlCreateGPUTexture = sdl3.func("SDL_GPUTexture* SDL_CreateGPUTexture(SDL_GPUDevice* device, _In_ const SDL_GPUTextureCreateInfo* createinfo)") as (device: GPUDevicePtr, createinfo: GPUTextureCreateInfo) => GPUTexturePtr | null;
+export const sdlCreateGPUSampler = sdl3.func("SDL_GPUSampler* SDL_CreateGPUSampler(SDL_GPUDevice* device, _In_ const SDL_GPUSamplerCreateInfo* createinfo)") as (device: GPUDevicePtr, createinfo: GPUSamplerCreateInfo) => GPUSamplerPtr | null;
 export const sdlCreateGPUGraphicsPipeline = sdl3.func("SDL_GPUGraphicsPipeline* SDL_CreateGPUGraphicsPipeline(SDL_GPUDevice* device, _In_ const SDL_GPUGraphicsPipelineCreateInfo* createinfo)") as (device: GPUDevicePtr, createinfo: GPUGraphicsPipelineCreateInfo) => GPUGraphicsPipelinePtr | null;
+export const sdlCreateGPUComputePipeline = sdl3.func("SDL_GPUComputePipeline* SDL_CreateGPUComputePipeline(SDL_GPUDevice* device, const SDL_GPUComputePipelineCreateInfo* createinfo)") as (device: GPUDevicePtr, createinfo: GPUComputePipelineCreateInfo) => GPUComputePipelinePtr | null;
 export const sdlReleaseGPUBuffer = sdl3.func("void SDL_ReleaseGPUBuffer(SDL_GPUDevice* device, SDL_GPUBuffer* buffer)") as (device: GPUDevicePtr, buffer: GPUBufferPtr) => void;
 export const sdlReleaseGPUTransferBuffer = sdl3.func("void SDL_ReleaseGPUTransferBuffer(SDL_GPUDevice* device, SDL_GPUTransferBuffer* transfer_buffer)") as (device: GPUDevicePtr, transfer_buffer: GPUTransferBufferPtr) => void;
 export const sdlReleaseGPUShader = sdl3.func("void SDL_ReleaseGPUShader(SDL_GPUDevice* device, SDL_GPUShader* shader)") as (device: GPUDevicePtr, shader: GPUShaderPtr) => void;
+export const sdlReleaseGPUTexture = sdl3.func("void SDL_ReleaseGPUTexture(SDL_GPUDevice* device, SDL_GPUTexture* texture)") as (device: GPUDevicePtr, texture: GPUTexturePtr) => void;
+export const sdlReleaseGPUSampler = sdl3.func("void SDL_ReleaseGPUSampler(SDL_GPUDevice* device, SDL_GPUSampler* sampler)") as (device: GPUDevicePtr, sampler: GPUSamplerPtr) => void;
 export const sdlReleaseGPUGraphicsPipeline = sdl3.func("void SDL_ReleaseGPUGraphicsPipeline(SDL_GPUDevice* device, SDL_GPUGraphicsPipeline* pipeline)") as (device: GPUDevicePtr, pipeline: GPUGraphicsPipelinePtr) => void;
+export const sdlReleaseGPUComputePipeline = sdl3.func("void SDL_ReleaseGPUComputePipeline(SDL_GPUDevice* device, SDL_GPUComputePipeline* compute_pipeline)") as (device: GPUDevicePtr, compute_pipeline: GPUComputePipelinePtr) => void;
 
 const SDL_MapGPUTransferBuffer = sdl3.func("void* SDL_MapGPUTransferBuffer(SDL_GPUDevice* device, SDL_GPUTransferBuffer* transfer_buffer, bool cycle)");
 
@@ -127,10 +140,34 @@ export function sdlBindGPUVertexBuffers(render_pass: GPURenderPassPtr, first_slo
     SDL_BindGPUVertexBuffers(render_pass, first_slot, bindings, bindings.length);
 }
 
+const SDL_BindGPUVertexSamplers = sdl3.func("void SDL_BindGPUVertexSamplers(SDL_GPURenderPass* render_pass, uint32 first_slot, _In_ const SDL_GPUTextureSamplerBinding* texture_sampler_bindings, uint32 num_bindings)");
+
+export function sdlBindGPUVertexSamplers(render_pass: GPURenderPassPtr, first_slot: number, texture_sampler_bindings: GPUTextureSamplerBinding[]): void {
+    SDL_BindGPUVertexSamplers(render_pass, first_slot, texture_sampler_bindings, texture_sampler_bindings.length);
+}
+
+const SDL_BindGPUVertexStorageTextures = sdl3.func("void SDL_BindGPUVertexSamplers(SDL_GPURenderPass* render_pass, uint32 first_slot, _In_ const SDL_GPUTexture** storage_textures, uint32 num_bindings)");
+
+export function sdlBindGPUVertexStorageTextures(render_pass: GPURenderPassPtr, first_slot: number, storage_textures: GPUTexturePtr[]): void {
+    SDL_BindGPUVertexStorageTextures(render_pass, first_slot, storage_textures, storage_textures.length);
+}
+
 const SDL_BindGPUVertexStorageBuffers = sdl3.func("void SDL_BindGPUVertexBuffers(SDL_GPURenderPass* render_pass, uint32 first_slot, _In_ const SDL_GPUBuffer** storage_buffers, uint32 num_bindings)");
 
 export function sdlBindGPUVertexStorageBuffers(render_pass: GPURenderPassPtr, first_slot: number, storage_buffers: GPUBufferPtr[]): void {
     SDL_BindGPUVertexStorageBuffers(render_pass, first_slot, storage_buffers, storage_buffers.length);
+}
+
+const SDL_BindGPUFragmentSamplers = sdl3.func("void SDL_BindGPUFragmentSamplers(SDL_GPURenderPass* render_pass, uint32 first_slot, _In_ const SDL_GPUTextureSamplerBinding* texture_sampler_bindings, uint32 num_bindings)");
+
+export function sdlBindGPUFragmentSamplers(render_pass: GPURenderPassPtr, first_slot: number, texture_sampler_bindings: GPUTextureSamplerBinding[]): void {
+    SDL_BindGPUFragmentSamplers(render_pass, first_slot, texture_sampler_bindings, texture_sampler_bindings.length);
+}
+
+const SDL_BindGPUFragmentStorageTextures = sdl3.func("void SDL_BindGPUFragmentStorageTextures(SDL_GPURenderPass* render_pass, uint32 first_slot, _In_ const SDL_GPUTexture** storage_textures, uint32 num_bindings)");
+
+export function sdlBindGPUFragmentStorageTextures(render_pass: GPURenderPassPtr, first_slot: number, storage_textures: GPUTexturePtr[]): void {
+    SDL_BindGPUFragmentStorageTextures(render_pass, first_slot, storage_textures, storage_textures.length);
 }
 
 const SDL_BindGPUFragmentStorageBuffers = sdl3.func("void SDL_BindGPUVertexBuffers(SDL_GPURenderPass* render_pass, uint32 first_slot, _In_ const SDL_GPUBuffer** storage_buffers, uint32 num_bindings)");
@@ -161,5 +198,36 @@ export function sdlPushGPUComputeUniformData(command_buffer: GPUCommandBufferPtr
     SDL_PushGPUComputeUniformData(command_buffer, slot_index, data, data.byteLength);
 }
 
-export const sdlCreateGPUComputePipeline = sdl3.func("SDL_GPUComputePipeline* SDL_CreateGPUComputePipeline(SDL_GPUDevice* device, const SDL_GPUComputePipelineCreateInfo* createinfo)") as (device: GPUDevicePtr, createinfo: GPUComputePipelineCreateInfo) => GPUComputePipelinePtr | null;
-export const sdlReleaseGPUComputePipeline = sdl3.func("void SDL_ReleaseGPUComputePipeline(SDL_GPUDevice* device, SDL_GPUComputePipeline* compute_pipeline)") as (device: GPUDevicePtr, compute_pipeline: GPUComputePipelinePtr) => void;
+const SDL_BeginGPUComputePass = sdl3.func("SDL_GPUComputePass* SDL_BeginGPUComputePass(SDL_GPUCommandBuffer *command_buffer, const SDL_GPUStorageTextureReadWriteBinding *storage_texture_bindings, uint32 num_storage_texture_bindings, const SDL_GPUStorageBufferReadWriteBinding *storage_buffer_bindings, uint32 num_storage_buffer_bindings)");
+
+export function sdlBeginGPUComputePass(command_buffer: GPUCommandBufferPtr, storage_texture_bindings?: GPUStorageTextureReadWriteBinding[] | null, storage_buffer_bindings?: GPUStorageBufferReadWriteBinding[] | null): GPUComputePassPtr {
+    return SDL_BeginGPUComputePass(
+        command_buffer,
+        storage_texture_bindings ?? null,
+        storage_texture_bindings?.length ?? 0,
+        storage_buffer_bindings ?? null,
+        storage_buffer_bindings?.length ?? 0,
+    ) as GPUComputePassPtr;
+}
+
+export const sdlDispatchGPUCompute = sdl3.func("void SDL_DispatchGPUCompute(SDL_GPUComputePass* compute_pass, uint32 groupcount_x, uint32 groupcount_y, uint32 groupcount_z)") as (compute_pass: GPUComputePassPtr, groupcount_x: number, groupcount_y: number, groupcount_z: number) => void;
+export const sdlEndGPUComputePass = sdl3.func("void SDL_EndGPUComputePass(SDL_GPUComputePass* compute_pass)") as (compute_pass: GPUComputePassPtr) => void;
+export const sdlBindGPUComputePipeline = sdl3.func("void SDL_BindGPUComputePipeline(SDL_GPUComputePass* compute_pass, SDL_GPUComputePipeline* compute_pipeline)") as (compute_pass: GPUComputePassPtr, compute_pipeline: GPUComputePipelinePtr) => void;
+
+const SDL_BindGPUComputeSamplers = sdl3.func("void SDL_BindGPUComputeSamplers(SDL_GPUComputePass* compute_pass, uint32 first_slot, _In_ const SDL_GPUTextureSamplerBinding* texture_sampler_bindings, uint32 num_bindings)");
+
+export function sdlBindGPUComputeSamplers(compute_pass: GPUComputePassPtr, first_slot: number, texture_sampler_bindings: GPUTextureSamplerBinding[]): void {
+    SDL_BindGPUComputeSamplers(compute_pass, first_slot, texture_sampler_bindings, texture_sampler_bindings.length);
+}
+
+const SDL_BindGPUComputeStorageTextures = sdl3.func("void SDL_BindGPUComputeStorageTextures(SDL_GPUComputePass* compute_pass, uint32 first_slot, _In_ const SDL_GPUTexture** storage_textures, uint32 num_bindings)");
+
+export function sdlBindGPUComputeStorageTextures(compute_pass: GPUComputePassPtr, first_slot: number, storage_textures: GPUTexturePtr[]): void {
+    SDL_BindGPUComputeStorageTextures(compute_pass, first_slot, storage_textures, storage_textures.length);
+}
+
+const SDL_BindGPUComputeStorageBuffers = sdl3.func("void SDL_BindGPUComputeStorageBuffers(SDL_GPUComputePass* compute_pass, uint32 first_slot, _In_ const SDL_GPUBuffer** storage_buffers, uint32 num_bindings)");
+
+export function sdlBindGPUComputeStorageBuffers(compute_pass: GPUComputePassPtr, first_slot: number, storage_buffers: GPUBufferPtr[]): void {
+    SDL_BindGPUComputeStorageBuffers(compute_pass, first_slot, storage_buffers, storage_buffers.length);
+}
