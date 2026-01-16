@@ -2,11 +2,19 @@ import {
     defaultGraphicsPipelineCreateInfo,
     Device,
     EventType,
+    GPUCompareOp,
+    GPUFilter,
     GPUIndexElementSize,
     GPULoadOp,
     GPUPrimitiveType,
+    GPUSampleCount,
+    GPUSamplerAddressMode,
+    GPUSamplerMipmapMode,
     GPUShaderFormat,
     GPUStoreOp,
+    GPUTextureFormat,
+    GPUTextureType,
+    GPUTextureUsageFlags,
     GPUVertexInputRate,
     Keymod,
     Mesh,
@@ -14,7 +22,7 @@ import {
     System,
     Window,
 } from "sdl3";
-import {allocate, ArrayOf, F32, StructOf, Vec} from "metis-data";
+import { ArrayOf, F32, StructOf, Vec } from "metis-data";
 import { sdlGetError } from "sdl3/ffi";
 
 import triangle from "./triangle.wgsl";
@@ -28,7 +36,7 @@ function decodeKeymods(mod: Keymod): string[] {
         });
 }
 
-if (!triangle.vertex || !triangle.fragment) {
+if (!triangle.vertex || !triangle.fragment || !triangle.compute) {
     throw new Error("Failed loading compiled shader");
 }
 
@@ -52,29 +60,56 @@ const count = Number(4);
 
 const quadBuffer = new Mesh(ArrayOf(StructOf({
     position: Vec(F32, 2),
-    color: Vec(F32, 3),
+    uv: Vec(F32, 2),
 }), count), 6);
 quadBuffer.vertices.at(0).set({
     position: [-.5, -.5],
-    color: [1, 0, 0],
+    uv: [0, 1],
 });
 quadBuffer.vertices.at(1).set({
     position: [0.5, -.5],
-    color: [0, 1, 0],
+    uv: [1, 1],
 });
 quadBuffer.vertices.at(2).set({
     position: [0.5, 0.5],
-    color: [0, 0, 1],
+    uv: [1, 0],
 });
 quadBuffer.vertices.at(3).set({
     position: [-.5, 0.5],
-    color: [1, 0, 1],
+    uv: [0, 0],
 });
 quadBuffer.setIndices([0, 1, 2, 0, 2, 3]);
 
 using vertexBuffer = quadBuffer.createVertexDeviceBuffer(dev);
 using indexBuffer = quadBuffer.createIndexDeviceBuffer(dev);
 
+using computeTexture = dev.createTexture({
+    type: GPUTextureType.TwoD,
+    format: GPUTextureFormat.R8G8B8A8Unorm,
+    usage: GPUTextureUsageFlags.Sampler | GPUTextureUsageFlags.ComputeStorageWrite,
+    width: 1440 / 2,
+    height: 768 / 2,
+    layer_count_or_depth: 1,
+    num_levels: 1,
+    sample_count: GPUSampleCount.One,
+});
+using sampler = dev.createSampler({
+    min_filter: GPUFilter.Linear,
+    mag_filter: GPUFilter.Linear,
+    mipmap_mode: GPUSamplerMipmapMode.Linear,
+    address_mode_u: GPUSamplerAddressMode.ClampToEdge,
+    address_mode_v: GPUSamplerAddressMode.ClampToEdge,
+    address_mode_w: GPUSamplerAddressMode.ClampToEdge,
+    compare_op: GPUCompareOp.Invalid,
+    enable_anisotropy: false,
+    enable_compare: false,
+    max_lod: 0,
+    max_anisotropy: 0,
+    min_lod: 0,
+    mip_lod_bias: 0,
+});
+
+using computePipeline = dev.createComputePipeline(triangle.compute);
 using pipeline = dev.createGraphicsPipeline({
     ...defaultGraphicsPipelineCreateInfo,
     vertex_shader: vertexShader.raw,
@@ -104,9 +139,6 @@ using pipeline = dev.createGraphicsPipeline({
     primitive_type: GPUPrimitiveType.TriangleList,
 });
 
-const colorUniform = allocate(Vec(F32, 4));
-colorUniform.set([0, 1, 0, 1]);
-
 let running = true;
 while (running) {
     for (const e of sys.events()) {
@@ -124,7 +156,16 @@ while (running) {
     const cb = dev.acquireCommandBuffer();
     const swapchain = cb.waitAndAcquireSwapchainTexture(wnd);
 
-    cb.pushFragmentUniformData(0, colorUniform.buffer);
+    const computePass = cb.beginComputePass([{
+        texture: computeTexture.raw,
+        layer: 0,
+        mip_level: 0,
+        cycle: false,
+    }]);
+    computePass.bindComputePipeline(computePipeline);
+    computePass.dispatch((1440 / 2 + 7) / 8, (768 / 2 + 7) / 8, 1);
+    computePass.end();
+
     const pass = cb.beginRenderPass([{
         texture: swapchain.texture,
         clear_color: {r: 0.3, g: 0.4, b: 0.5, a: 1.0},
@@ -132,12 +173,14 @@ while (running) {
         store_op: GPUStoreOp.Store,
     }], null);
     pass.bindGraphicsPipeline(pipeline);
-    pass.bindVertexBuffers([
-        {
-            buffer: vertexBuffer.raw,
-            offset: 0,
-        },
-    ]);
+    pass.bindFragmentSamplers([{
+        texture: computeTexture.raw,
+        sampler: sampler.raw,
+    }]);
+    pass.bindVertexBuffers([{
+        buffer: vertexBuffer.raw,
+        offset: 0,
+    }]);
     pass.bindIndexBuffer({
         buffer: indexBuffer.raw,
         offset: 0,
