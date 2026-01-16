@@ -239,6 +239,13 @@ class BindingInfo {
         }
         return v1;
     }
+    /**
+     * @returns {boolean}
+     */
+    get is_readonly() {
+        const ret = wasm.__wbg_get_bindinginfo_is_readonly(this.__wbg_ptr);
+        return ret !== 0;
+    }
 }
 if (Symbol.dispose) BindingInfo.prototype[Symbol.dispose] = BindingInfo.prototype.free;
 exports.BindingInfo = BindingInfo;

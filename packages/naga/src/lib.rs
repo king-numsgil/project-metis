@@ -207,6 +207,8 @@ pub struct BindingInfo {
     pub resource_type: String,
     #[wasm_bindgen(readonly)]
     pub type_name: Option<String>,
+    #[wasm_bindgen(readonly)]
+    pub is_readonly: bool,
 }
 
 #[wasm_bindgen]
@@ -336,7 +338,7 @@ pub fn reflect_wgsl(wgsl: &str) -> Result<ReflectionData, JsValue> {
                 if entry.function.expressions.iter().any(
                     |(_, expr)| matches!(expr, naga::Expression::GlobalVariable(h) if *h == handle),
                 ) {
-                    let (resource_type, type_name) = classify_binding(&module, var);
+                    let (resource_type, type_name, is_readonly) = classify_binding(&module, var);
 
                     bindings.push(BindingInfo {
                         name: var.name.clone().unwrap_or_else(|| {
@@ -346,6 +348,7 @@ pub fn reflect_wgsl(wgsl: &str) -> Result<ReflectionData, JsValue> {
                         binding: binding.binding,
                         resource_type,
                         type_name,
+                        is_readonly,
                     });
                 }
             }
@@ -450,25 +453,38 @@ pub fn reflect_wgsl(wgsl: &str) -> Result<ReflectionData, JsValue> {
     })
 }
 
-/// Classify a binding's resource type and get its type name
+/// Classify a binding's resource type, get its type name, and determine if it's readonly
 fn classify_binding(
     module: &Module,
     var: &naga::GlobalVariable,
-) -> (String, Option<String>) {
+) -> (String, Option<String>, bool) {
     use naga::TypeInner;
 
     let ty = &module.types[var.ty];
     let type_name = get_type_name(module, var.ty);
 
+    // Determine if storage is readonly based on StorageAccess
+    let is_readonly_storage = matches!(
+        var.space,
+        naga::AddressSpace::Storage {
+            access: naga::StorageAccess::LOAD
+        }
+    );
+
     let resource_type = match ty.inner {
-        // Uniform buffer
+        // Uniform buffer (always readonly)
         TypeInner::Struct { .. } if var.space == naga::AddressSpace::Uniform => "uniform",
 
-        // Storage buffer
+        // Storage buffer (can be readonly or read-write)
         TypeInner::Struct { .. } if matches!(var.space, naga::AddressSpace::Storage { .. }) => "storage",
 
-        // Texture types
-        TypeInner::Image { .. } => "texture",
+        // Texture types - check if it's a storage texture
+        TypeInner::Image { class, .. } => {
+            match class {
+                naga::ImageClass::Storage { .. } => "storage_texture",
+                _ => "texture",
+            }
+        }
 
         // Sampler
         TypeInner::Sampler { .. } => "sampler",
@@ -476,11 +492,11 @@ fn classify_binding(
         // Atomic types
         TypeInner::Atomic { .. } => "atomic",
 
-        // Scalar types (e.g., var<uniform> quad_color: vec4<f32>)
+        // Scalar types
         TypeInner::Scalar { .. } if var.space == naga::AddressSpace::Uniform => "uniform",
         TypeInner::Scalar { .. } if matches!(var.space, naga::AddressSpace::Storage { .. }) => "storage",
 
-        // Vector types (e.g., var<uniform> quad_color: vec4<f32>)
+        // Vector types
         TypeInner::Vector { .. } if var.space == naga::AddressSpace::Uniform => "uniform",
         TypeInner::Vector { .. } if matches!(var.space, naga::AddressSpace::Storage { .. }) => "storage",
 
@@ -508,7 +524,18 @@ fn classify_binding(
         _ => "unknown",
     };
 
-    (resource_type.to_string(), type_name)
+    // Determine readonly status:
+    // - Uniforms are always readonly
+    // - Storage textures/buffers check the StorageAccess
+    // - Regular textures and samplers are readonly
+    let is_readonly = match resource_type {
+        "uniform" => true,
+        "storage" | "storage_texture" => is_readonly_storage,
+        "texture" | "sampler" => true,
+        _ => false,
+    };
+
+    (resource_type.to_string(), type_name, is_readonly)
 }
 
 /// Get a complete type name for any Naga type

@@ -6,6 +6,7 @@ export const __wbg_entrypointinfo_free: (a: number, b: number) => void;
 export const __wbg_fragmentoutputinfo_free: (a: number, b: number) => void;
 export const __wbg_get_bindinginfo_binding: (a: number) => number;
 export const __wbg_get_bindinginfo_group: (a: number) => number;
+export const __wbg_get_bindinginfo_is_readonly: (a: number) => number;
 export const __wbg_get_bindinginfo_name: (a: number) => [number, number];
 export const __wbg_get_bindinginfo_resource_type: (a: number) => [number, number];
 export const __wbg_get_bindinginfo_type_name: (a: number) => [number, number];

@@ -27,10 +27,26 @@ declare module "*.wgsl" {
         num_uniform_buffers?: number;
     }
 
+    interface GPUComputePipelineCreateInfo {
+        code_size: number;
+        code: Buffer;
+        entrypoint: string;
+        format: GPUShaderFormat;
+        num_samplers?: number,
+        num_readonly_storage_textures?: number,
+        num_readonly_storage_buffers?: number,
+        num_readwrite_storage_textures?: number,
+        num_readwrite_storage_buffers?: number,
+        num_uniform_buffers?: number,
+        threadcount_x?: number,
+        threadcount_y?: number,
+        threadcount_z?: number,
+    }
+
     interface CompiledShader {
         vertex: GPUShaderCreateInfo | null;
         fragment: GPUShaderCreateInfo | null;
-        compute: GPUShaderCreateInfo | null;
+        compute: GPUComputePipelineCreateInfo | null;
     }
 
     const shader: CompiledShader;

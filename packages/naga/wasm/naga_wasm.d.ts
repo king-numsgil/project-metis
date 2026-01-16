@@ -11,6 +11,7 @@ export class BindingInfo {
   readonly binding: number;
   readonly resource_type: string;
   readonly type_name: string | undefined;
+  readonly is_readonly: boolean;
 }
 
 export class EntryPointInfo {
