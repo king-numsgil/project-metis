@@ -161,5 +161,5 @@ export function sdlPushGPUComputeUniformData(command_buffer: GPUCommandBufferPtr
     SDL_PushGPUComputeUniformData(command_buffer, slot_index, data, data.byteLength);
 }
 
-export const sdlCreateGPUComputePipeline = sdl3.func("SDL_GPUComputePipeline* SDL_CreateGPUComputePipeline(SDL_GPUDevice* device, const SDL_GPUComputePipelineCreateInfo* createinfo") as (device: GPUDevicePtr, createinfo: GPUComputePipelineCreateInfo) => GPUComputePipelinePtr | null;
+export const sdlCreateGPUComputePipeline = sdl3.func("SDL_GPUComputePipeline* SDL_CreateGPUComputePipeline(SDL_GPUDevice* device, const SDL_GPUComputePipelineCreateInfo* createinfo)") as (device: GPUDevicePtr, createinfo: GPUComputePipelineCreateInfo) => GPUComputePipelinePtr | null;
 export const sdlReleaseGPUComputePipeline = sdl3.func("void SDL_ReleaseGPUComputePipeline(SDL_GPUDevice* device, SDL_GPUComputePipeline* compute_pipeline)") as (device: GPUDevicePtr, compute_pipeline: GPUComputePipelinePtr) => void;
