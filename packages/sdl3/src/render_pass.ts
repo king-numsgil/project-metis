@@ -1,14 +1,16 @@
 import {
     type GPURenderPassPtr,
+    sdlBindGPUFragmentStorageBuffers,
     sdlBindGPUGraphicsPipeline,
     sdlBindGPUIndexBuffer,
     sdlBindGPUVertexBuffers,
+    sdlBindGPUVertexStorageBuffers,
     sdlDrawGPUIndexedPrimitives,
     sdlDrawGPUPrimitives,
     sdlEndGPURenderPass,
 } from "./ffi";
 
-import { type GPUBufferBinding, GPUIndexElementSize } from "sdl3";
+import { DeviceBuffer, type GPUBufferBinding, GPUIndexElementSize } from "sdl3";
 
 import { GraphicsPipeline } from "./graphics_pipeline.ts";
 
@@ -36,6 +38,18 @@ export class RenderPass {
 
     public bindIndexBuffer(binding: GPUBufferBinding, index_element_size: GPUIndexElementSize): void {
         sdlBindGPUIndexBuffer(this.handle, binding, index_element_size);
+    }
+
+    public bindVertexStorageBuffers(bindings: DeviceBuffer[]): void;
+    public bindVertexStorageBuffers(bindings: DeviceBuffer[], first_slot: number): void;
+    public bindVertexStorageBuffers(bindings: DeviceBuffer[], first_slot?: number): void {
+        sdlBindGPUVertexStorageBuffers(this.handle, first_slot ?? 0, bindings.map(db => db.raw));
+    }
+
+    public bindFragmentStorageBuffers(bindings: DeviceBuffer[]): void;
+    public bindFragmentStorageBuffers(bindings: DeviceBuffer[], first_slot: number): void;
+    public bindFragmentStorageBuffers(bindings: DeviceBuffer[], first_slot?: number): void {
+        sdlBindGPUFragmentStorageBuffers(this.handle, first_slot ?? 0, bindings.map(db => db.raw));
     }
 
     public drawIndexedPrimitives(num_indices: number): void;
