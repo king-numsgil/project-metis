@@ -103,9 +103,9 @@ using sampler = dev.createSampler({
     compare_op: GPUCompareOp.Invalid,
     enable_anisotropy: false,
     enable_compare: false,
+    min_lod: 0,
     max_lod: 0,
     max_anisotropy: 0,
-    min_lod: 0,
     mip_lod_bias: 0,
 });
 
