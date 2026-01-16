@@ -36,6 +36,7 @@ opaque("SDL_GPUFence");
 opaque("SDL_GPUCopyPass");
 opaque("SDL_GPUShader");
 opaque("SDL_GPUGraphicsPipeline");
+opaque("SDL_GPUComputePipeline");
 
 export const SDL_Rect = struct("SDL_Rect", {
     x: "int",
@@ -701,4 +702,21 @@ export const SDL_GPUGraphicsPipelineCreateInfo = struct("SDL_GPUGraphicsPipeline
 export const SDL_GPUBufferBinding = struct("SDL_GPUBufferBinding", {
     buffer: "SDL_GPUBuffer*",
     offset: "uint32",
+});
+
+export const SDL_GPUComputePipelineCreateInfo = struct("SDL_GPUComputePipelineCreateInfo", {
+    code_size: "uint64",
+    code: "const uint8*",
+    entrypoint: "const char*",
+    format: "SDL_GPUShaderFormat",
+    num_samplers: "uint32",
+    num_readonly_storage_textures: "uint32",
+    num_readonly_storage_buffers: "uint32",
+    num_readwrite_storage_textures: "uint32",
+    num_readwrite_storage_buffers: "uint32",
+    num_uniform_buffers: "uint32",
+    threadcount_x: "uint32",
+    threadcount_y: "uint32",
+    threadcount_z: "uint32",
+    props: "SDL_PropertiesID",
 });

@@ -12,6 +12,7 @@ export type GPUFencePtr = Tagged<{}, "SDL_GPUFence">;
 export type GPUCopyPassPtr = Tagged<{}, "SDL_GPUCopyPass">;
 export type GPUShaderPtr = Tagged<{}, "SDL_GPUShader">;
 export type GPUGraphicsPipelinePtr = Tagged<{}, "SDL_GPUGraphicsPipeline">;
+export type GPUComputePipelinePtr = Tagged<{}, "SDL_GPUComputePipeline">;
 
 export enum GPUShaderFormat {
     Invalid = 0,
@@ -541,4 +542,21 @@ export interface GPUGraphicsPipelineCreateInfo {
 export interface GPUBufferBinding {
     buffer: GPUBufferPtr,
     offset: number;
+}
+
+export interface GPUComputePipelineCreateInfo {
+    code_size: number;
+    code: Buffer;
+    entrypoint: string;
+    format: GPUShaderFormat;
+    num_samplers?: number,
+    num_readonly_storage_textures?: number,
+    num_readonly_storage_buffers?: number,
+    num_readwrite_storage_textures?: number,
+    num_readwrite_storage_buffers?: number,
+    num_uniform_buffers?: number,
+    threadcount_x?: number,
+    threadcount_y?: number,
+    threadcount_z?: number,
+    props?: PropertiesID;
 }

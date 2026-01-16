@@ -36,6 +36,7 @@ export {
 export type {
     WindowID,
     GPUTransferBufferCreateInfo,
+    GPUComputePipelineCreateInfo,
     GPUBufferCreateInfo,
     GPUBufferLocation,
     GPUBufferRegion,

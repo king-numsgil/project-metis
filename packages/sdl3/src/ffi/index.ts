@@ -10,6 +10,7 @@ export type {
     GPUTexturePtr,
     GPUGraphicsPipelinePtr,
     GPUShaderPtr,
+    GPUComputePipelinePtr,
 } from "./types";
 
 export * from "./init.ts";
