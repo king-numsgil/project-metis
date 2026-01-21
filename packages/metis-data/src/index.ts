@@ -36,3 +36,10 @@ export {
     type BoolMemoryBuffer,
     type MatMemoryBuffer,
 } from "./memory";
+
+export {
+    Quat,
+    Vec2,
+    Vec3,
+    Vec4,
+} from "./math";

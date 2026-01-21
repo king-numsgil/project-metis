@@ -1,5 +1,6 @@
 import { ArrayOf, F32, StructOf, Vec } from "./descriptors";
 import { allocate } from "./memory";
+import { Vec2 } from "./math";
 
 const Position = StructOf({
     position: Vec(F32, 2),
@@ -32,6 +33,8 @@ data.at(3).set({
     position: [7, 8],
     color: [7, 8, 7],
 });
+
+Vec2.scale(data.at(3).get("position"), data.at(3).get("position"), Math.PI);
 
 for (const vertex of data) {
     console.log(vertex.get("position").get(), vertex.get("color").get());
