@@ -44,4 +44,5 @@ export {
     Vec4,
     Mat2,
     Mat3,
+    Mat4,
 } from "./math";
