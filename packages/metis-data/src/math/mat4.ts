@@ -1,6 +1,6 @@
 import type { TupleOf } from "type-fest";
 
-import { allocate, F32, type ScalarDescriptor, Mat, type MatMemoryBuffer, type VecMemoryBuffer } from "metis-data";
+import { allocate, F32, Mat, type MatMemoryBuffer, type ScalarDescriptor, type VecMemoryBuffer } from "metis-data";
 
 import { Quat } from "./quat.ts";
 
@@ -106,7 +106,7 @@ export const Mat4 = {
         const bCol1 = b.get(1);
         const bCol2 = b.get(2);
         const bCol3 = b.get(3);
-        
+
         out.set(0, [
             aCol0[0]! + bCol0[0]!,
             aCol0[1]! + bCol0[1]!,
@@ -150,7 +150,7 @@ export const Mat4 = {
         const bCol1 = b.get(1);
         const bCol2 = b.get(2);
         const bCol3 = b.get(3);
-        
+
         out.set(0, [
             aCol0[0]! - bCol0[0]!,
             aCol0[1]! - bCol0[1]!,
@@ -194,7 +194,7 @@ export const Mat4 = {
         const bCol1 = b.get(1);
         const bCol2 = b.get(2);
         const bCol3 = b.get(3);
-        
+
         // Matrix multiplication: result[i][j] = sum(a[i][k] * b[k][j])
         // Since we store in column-major: result[j][i] = sum(a[k][i] * b[j][k])
         out.set(0, [
@@ -236,7 +236,7 @@ export const Mat4 = {
         const mCol1 = m.get(1);
         const mCol2 = m.get(2);
         const mCol3 = m.get(3);
-        
+
         out.set(0, [
             mCol0[0]! * s,
             mCol0[1]! * s,
@@ -272,12 +272,12 @@ export const Mat4 = {
         const [m10, m11, m12, m13] = m.get(1);
         const [m20, m21, m22, m23] = m.get(2);
         const [m30, m31, m32, m33] = m.get(3);
-        
+
         // Using cofactor expansion along first row
         return m00 * (m11 * (m22 * m33 - m23 * m32) - m12 * (m21 * m33 - m23 * m31) + m13 * (m21 * m32 - m22 * m31)) -
-               m01 * (m10 * (m22 * m33 - m23 * m32) - m12 * (m20 * m33 - m23 * m30) + m13 * (m20 * m32 - m22 * m30)) +
-               m02 * (m10 * (m21 * m33 - m23 * m31) - m11 * (m20 * m33 - m23 * m30) + m13 * (m20 * m31 - m21 * m30)) -
-               m03 * (m10 * (m21 * m32 - m22 * m31) - m11 * (m20 * m32 - m22 * m30) + m12 * (m20 * m31 - m21 * m30));
+            m01 * (m10 * (m22 * m33 - m23 * m32) - m12 * (m20 * m33 - m23 * m30) + m13 * (m20 * m32 - m22 * m30)) +
+            m02 * (m10 * (m21 * m33 - m23 * m31) - m11 * (m20 * m33 - m23 * m30) + m13 * (m20 * m31 - m21 * m30)) -
+            m03 * (m10 * (m21 * m32 - m22 * m31) - m11 * (m20 * m32 - m22 * m30) + m12 * (m20 * m31 - m21 * m30));
     },
 
     /**
@@ -291,13 +291,13 @@ export const Mat4 = {
         const [m10, m11, m12, m13] = m.get(1);
         const [m20, m21, m22, m23] = m.get(2);
         const [m30, m31, m32, m33] = m.get(3);
-        
+
         // Calculate the determinant
         const det = m00 * (m11 * (m22 * m33 - m23 * m32) - m12 * (m21 * m33 - m23 * m31) + m13 * (m21 * m32 - m22 * m31)) -
-                    m01 * (m10 * (m22 * m33 - m23 * m32) - m12 * (m20 * m33 - m23 * m30) + m13 * (m20 * m32 - m22 * m30)) +
-                    m02 * (m10 * (m21 * m33 - m23 * m31) - m11 * (m20 * m33 - m23 * m30) + m13 * (m20 * m31 - m21 * m30)) -
-                    m03 * (m10 * (m21 * m32 - m22 * m31) - m11 * (m20 * m32 - m22 * m30) + m12 * (m20 * m31 - m21 * m30));
-        
+            m01 * (m10 * (m22 * m33 - m23 * m32) - m12 * (m20 * m33 - m23 * m30) + m13 * (m20 * m32 - m22 * m30)) +
+            m02 * (m10 * (m21 * m33 - m23 * m31) - m11 * (m20 * m33 - m23 * m30) + m13 * (m20 * m31 - m21 * m30)) -
+            m03 * (m10 * (m21 * m32 - m22 * m31) - m11 * (m20 * m32 - m22 * m30) + m12 * (m20 * m31 - m21 * m30));
+
         if (det === 0) {
             // Matrix is not invertible, return zero matrix
             out.set(0, [0, 0, 0, 0] as TupleOf<4, number>);
@@ -306,9 +306,9 @@ export const Mat4 = {
             out.set(3, [0, 0, 0, 0] as TupleOf<4, number>);
             return out;
         }
-        
+
         const invDet = 1 / det;
-        
+
         // Calculate adjugate matrix (transpose of cofactor matrix)
         out.set(0, [
             (m11 * (m22 * m33 - m23 * m32) - m12 * (m21 * m33 - m23 * m31) + m13 * (m21 * m32 - m22 * m31)) * invDet,
@@ -348,7 +348,7 @@ export const Mat4 = {
         const [m10, m11, m12, m13] = m.get(1);
         const [m20, m21, m22, m23] = m.get(2);
         const [m30, m31, m32, m33] = m.get(3);
-        
+
         out.set(0, [m00, m10, m20, m30] as TupleOf<4, number>);
         out.set(1, [m01, m11, m21, m31] as TupleOf<4, number>);
         out.set(2, [m02, m12, m22, m32] as TupleOf<4, number>);
@@ -371,11 +371,11 @@ export const Mat4 = {
         const bCol1 = b.get(1);
         const bCol2 = b.get(2);
         const bCol3 = b.get(3);
-        
+
         return aCol0[0] === bCol0[0] && aCol0[1] === bCol0[1] && aCol0[2] === bCol0[2] && aCol0[3] === bCol0[3] &&
-               aCol1[0] === bCol1[0] && aCol1[1] === bCol1[1] && aCol1[2] === bCol1[2] && aCol1[3] === bCol1[3] &&
-               aCol2[0] === bCol2[0] && aCol2[1] === bCol2[1] && aCol2[2] === bCol2[2] && aCol2[3] === bCol2[3] &&
-               aCol3[0] === bCol3[0] && aCol3[1] === bCol3[1] && aCol3[2] === bCol3[2] && aCol3[3] === bCol3[3];
+            aCol1[0] === bCol1[0] && aCol1[1] === bCol1[1] && aCol1[2] === bCol1[2] && aCol1[3] === bCol1[3] &&
+            aCol2[0] === bCol2[0] && aCol2[1] === bCol2[1] && aCol2[2] === bCol2[2] && aCol2[3] === bCol2[3] &&
+            aCol3[0] === bCol3[0] && aCol3[1] === bCol3[1] && aCol3[2] === bCol3[2] && aCol3[3] === bCol3[3];
     },
 
     // ============================================================================
@@ -408,7 +408,7 @@ export const Mat4 = {
         q: VecMemoryBuffer<S, 4>,
     ): MatMemoryBuffer<S, 4> {
         const [x, y, z, w] = q.get();
-        
+
         const xx = x * x;
         const yy = y * y;
         const zz = z * z;
@@ -418,7 +418,7 @@ export const Mat4 = {
         const wx = w * x;
         const wy = w * y;
         const wz = w * z;
-        
+
         out.set(0, [
             1 - 2 * (yy + zz),
             2 * (xy + wz),
@@ -510,12 +510,12 @@ export const Mat4 = {
         const [ex, ey, ez] = eye.get();
         const [cx, cy, cz] = center.get();
         const [ux, uy, uz] = up.get();
-        
+
         // Calculate forward vector
         let fx = cx - ex;
         let fy = cy - ey;
         let fz = cz - ez;
-        
+
         // Normalize forward vector
         let fLen = Math.sqrt(fx * fx + fy * fy + fz * fz);
         if (fLen > 0.000001) {
@@ -523,12 +523,12 @@ export const Mat4 = {
             fy /= fLen;
             fz /= fLen;
         }
-        
+
         // Calculate right vector (cross product of forward and up)
         let rx = fy * uz - fz * uy;
         let ry = fz * ux - fx * uz;
         let rz = fx * uy - fy * ux;
-        
+
         // Normalize right vector
         let rLen = Math.sqrt(rx * rx + ry * ry + rz * rz);
         if (rLen > 0.000001) {
@@ -536,12 +536,12 @@ export const Mat4 = {
             ry /= rLen;
             rz /= rLen;
         }
-        
+
         // Calculate true up vector (cross product of right and forward)
         let tx = ry * fz - rz * fy;
         let ty = rz * fx - rx * fz;
         let tz = rx * fy - ry * fx;
-        
+
         const descriptor = Mat(scalar, 4);
         const buffer = allocate(descriptor);
         buffer.set(0, [rx, tx, -fx, 0] as TupleOf<4, number>);
@@ -563,7 +563,7 @@ export const Mat4 = {
     ): MatMemoryBuffer<S, 4> {
         const f = 1.0 / Math.tan(0.5 * fovy);
         const nf = 1 / (near - far);
-        
+
         const descriptor = Mat(scalar, 4);
         const buffer = allocate(descriptor);
         buffer.set(0, [f / aspect, 0, 0, 0] as TupleOf<4, number>);
@@ -588,7 +588,7 @@ export const Mat4 = {
         const lr = 1 / (left - right);
         const bt = 1 / (bottom - top);
         const nf = 1 / (near - far);
-        
+
         const descriptor = Mat(scalar, 4);
         const buffer = allocate(descriptor);
         buffer.set(0, [-2 * lr, 0, 0, 0] as TupleOf<4, number>);
@@ -612,7 +612,7 @@ export const Mat4 = {
         const mCol1 = m.get(1);
         const mCol2 = m.get(2);
         const mCol3 = m.get(3);
-        
+
         out.set(0, mCol0);
         out.set(1, mCol1);
         out.set(2, mCol2);
@@ -652,7 +652,7 @@ export const Mat4 = {
         const mCol1 = m.get(1);
         const mCol2 = m.get(2);
         const mCol3 = m.get(3);
-        
+
         out.set(0, [
             mCol0[0]! * x,
             mCol0[1]! * x,
@@ -694,7 +694,7 @@ export const Mat4 = {
         const rotation = Mat4.identity(scalar);
         Mat4.rotation(rotation, q);
         const translation = Mat4.translation(scalar, tx, ty, tz);
-        
+
         const temp = Mat4.create(scalar);
         Mat4.multiply(temp, translation, rotation);
         return Mat4.multiply(temp, temp, scaling);
@@ -714,31 +714,31 @@ export const Mat4 = {
         const mCol1 = m.get(1);
         const mCol2 = m.get(2);
         const mCol3 = m.get(3);
-        
+
         // Extract translation
         outTranslation.set([mCol3[0]!, mCol3[1]!, mCol3[2]!] as TupleOf<3, number>);
-        
+
         // Extract scale
         const scaleX = Math.sqrt(mCol0[0]! * mCol0[0]! + mCol0[1]! * mCol0[1]! + mCol0[2]! * mCol0[2]!);
         const scaleY = Math.sqrt(mCol1[0]! * mCol1[0]! + mCol1[1]! * mCol1[1]! + mCol1[2]! * mCol1[2]!);
         const scaleZ = Math.sqrt(mCol2[0]! * mCol2[0]! + mCol2[1]! * mCol2[1]! + mCol2[2]! * mCol2[2]!);
         outScale.set([scaleX, scaleY, scaleZ] as TupleOf<3, number>);
-        
+
         // Extract rotation by creating a pure rotation matrix
         const invScaleX = scaleX > 0.000001 ? 1 / scaleX : 0;
         const invScaleY = scaleY > 0.000001 ? 1 / scaleY : 0;
         const invScaleZ = scaleZ > 0.000001 ? 1 / scaleZ : 0;
-        
+
         const rotationMatrix = Mat4.create(outRotation.type.scalar,
             mCol0[0]! * invScaleX, mCol0[1]! * invScaleX, mCol0[2]! * invScaleX, 0,
             mCol1[0]! * invScaleY, mCol1[1]! * invScaleY, mCol1[2]! * invScaleY, 0,
             mCol2[0]! * invScaleZ, mCol2[1]! * invScaleZ, mCol2[2]! * invScaleZ, 0,
-            0, 0, 0, 1
+            0, 0, 0, 1,
         );
-        
+
         // Convert rotation matrix to quaternion
         Mat4.toQuat(outRotation, rotationMatrix);
-        
+
         return [outTranslation, outRotation, outScale];
     },
 
@@ -774,11 +774,11 @@ export const Mat4 = {
         const mCol0 = m.get(0);
         const mCol1 = m.get(1);
         const mCol2 = m.get(2);
-        
+
         const scaleX = Math.sqrt(mCol0[0]! * mCol0[0]! + mCol0[1]! * mCol0[1]! + mCol0[2]! * mCol0[2]!);
         const scaleY = Math.sqrt(mCol1[0]! * mCol1[0]! + mCol1[1]! * mCol1[1]! + mCol1[2]! * mCol1[2]!);
         const scaleZ = Math.sqrt(mCol2[0]! * mCol2[0]! + mCol2[1]! * mCol2[1]! + mCol2[2]! * mCol2[2]!);
-        
+
         out.set([scaleX, scaleY, scaleZ] as TupleOf<3, number>);
         return out;
     },
@@ -793,7 +793,7 @@ export const Mat4 = {
         const mCol0 = m.get(0);
         const mCol1 = m.get(1);
         const mCol2 = m.get(2);
-        
+
         out.set(0, [mCol0[0]!, mCol0[1]!, mCol0[2]!] as TupleOf<3, number>);
         out.set(1, [mCol1[0]!, mCol1[1]!, mCol1[2]!] as TupleOf<3, number>);
         out.set(2, [mCol2[0]!, mCol2[1]!, mCol2[2]!] as TupleOf<3, number>);
@@ -815,9 +815,9 @@ export const Mat4 = {
         const [m00, m01, m02] = m.get(0);
         const [m10, m11, m12] = m.get(1);
         const [m20, m21, m22] = m.get(2);
-        
+
         const trace = m00 + m11 + m22;
-        
+
         if (trace > 0) {
             const s = Math.sqrt(trace + 1.0) * 2; // s = 4 * qw
             out.set([

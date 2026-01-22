@@ -1,6 +1,6 @@
 import type { TupleOf } from "type-fest";
 
-import { allocate, F32, type ScalarDescriptor, Mat, type MatMemoryBuffer } from "metis-data";
+import { allocate, F32, Mat, type MatMemoryBuffer, type ScalarDescriptor } from "metis-data";
 
 // ============================================================================
 // Mat2 Math Object
@@ -86,7 +86,7 @@ export const Mat2 = {
         const aCol1 = a.get(1);
         const bCol0 = b.get(0);
         const bCol1 = b.get(1);
-        
+
         out.set(0, [
             aCol0[0]! + bCol0[0]!,
             aCol0[1]! + bCol0[1]!,
@@ -110,7 +110,7 @@ export const Mat2 = {
         const aCol1 = a.get(1);
         const bCol0 = b.get(0);
         const bCol1 = b.get(1);
-        
+
         out.set(0, [
             aCol0[0]! - bCol0[0]!,
             aCol0[1]! - bCol0[1]!,
@@ -134,7 +134,7 @@ export const Mat2 = {
         const aCol1 = a.get(1);
         const bCol0 = b.get(0);
         const bCol1 = b.get(1);
-        
+
         // Matrix multiplication: result[i][j] = sum(a[i][k] * b[k][j])
         // Since we store in column-major: result[j][i] = sum(a[k][i] * b[j][k])
         out.set(0, [
@@ -158,7 +158,7 @@ export const Mat2 = {
     ): MatMemoryBuffer<S, 2> {
         const mCol0 = m.get(0);
         const mCol1 = m.get(1);
-        
+
         out.set(0, [
             mCol0[0]! * s,
             mCol0[1]! * s,
@@ -188,15 +188,15 @@ export const Mat2 = {
     ): MatMemoryBuffer<S, 2> {
         const [m00, m01] = m.get(0);
         const [m10, m11] = m.get(1);
-        
+
         const det = m00 * m11 - m10 * m01;
-        
+
         if (det === 0) {
             out.set(0, [0, 0] as TupleOf<2, number>);
             out.set(1, [0, 0] as TupleOf<2, number>);
             return out;
         }
-        
+
         const invDet = 1 / det;
         out.set(0, [m11 * invDet, -m01 * invDet] as TupleOf<2, number>);
         out.set(1, [-m10 * invDet, m00 * invDet] as TupleOf<2, number>);
@@ -212,7 +212,7 @@ export const Mat2 = {
     ): MatMemoryBuffer<S, 2> {
         const [m00, m01] = m.get(0);
         const [m10, m11] = m.get(1);
-        
+
         out.set(0, [m00, m10] as TupleOf<2, number>);
         out.set(1, [m01, m11] as TupleOf<2, number>);
         return out;
@@ -227,7 +227,7 @@ export const Mat2 = {
     ): MatMemoryBuffer<S, 2> {
         const [m00, m01] = m.get(0);
         const [m10, m11] = m.get(1);
-        
+
         out.set(0, [m11, -m01] as TupleOf<2, number>);
         out.set(1, [-m10, m00] as TupleOf<2, number>);
         return out;
@@ -244,11 +244,11 @@ export const Mat2 = {
         const aCol1 = a.get(1);
         const bCol0 = b.get(0);
         const bCol1 = b.get(1);
-        
-        return aCol0[0] === bCol0[0] && 
-               aCol0[1] === bCol0[1] && 
-               aCol1[0] === bCol1[0] && 
-               aCol1[1] === bCol1[1];
+
+        return aCol0[0] === bCol0[0] &&
+            aCol0[1] === bCol0[1] &&
+            aCol1[0] === bCol1[0] &&
+            aCol1[1] === bCol1[1];
     },
 
     /**
@@ -265,7 +265,7 @@ export const Mat2 = {
     scaleFactors<S extends ScalarDescriptor>(m: MatMemoryBuffer<S, 2>): [x: number, y: number] {
         const [m00, m01] = m.get(0);
         const [m10, m11] = m.get(1);
-        
+
         const scaleX = Math.sqrt(m00 * m00 + m01 * m01);
         const scaleY = Math.sqrt(m10 * m10 + m11 * m11);
         return [scaleX, scaleY];

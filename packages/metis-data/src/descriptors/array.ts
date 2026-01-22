@@ -1,4 +1,10 @@
-import { PackingType, type ArrayDescriptor, type Descriptor, type DescriptorMemoryType, type DescriptorTypedArray } from "./index.ts";
+import {
+    type ArrayDescriptor,
+    type Descriptor,
+    type DescriptorMemoryType,
+    type DescriptorTypedArray,
+    PackingType,
+} from "./index.ts";
 import {
     GPU_ARRAY,
     GPU_BOOL,

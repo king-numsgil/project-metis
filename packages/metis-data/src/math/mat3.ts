@@ -1,6 +1,6 @@
 import type { TupleOf } from "type-fest";
 
-import { allocate, F32, type ScalarDescriptor, Mat, type MatMemoryBuffer } from "metis-data";
+import { allocate, F32, Mat, type MatMemoryBuffer, type ScalarDescriptor } from "metis-data";
 
 // ============================================================================
 // Mat3 Math Object
@@ -95,7 +95,7 @@ export const Mat3 = {
         const bCol0 = b.get(0);
         const bCol1 = b.get(1);
         const bCol2 = b.get(2);
-        
+
         out.set(0, [
             aCol0[0]! + bCol0[0]!,
             aCol0[1]! + bCol0[1]!,
@@ -128,7 +128,7 @@ export const Mat3 = {
         const bCol0 = b.get(0);
         const bCol1 = b.get(1);
         const bCol2 = b.get(2);
-        
+
         out.set(0, [
             aCol0[0]! - bCol0[0]!,
             aCol0[1]! - bCol0[1]!,
@@ -161,7 +161,7 @@ export const Mat3 = {
         const bCol0 = b.get(0);
         const bCol1 = b.get(1);
         const bCol2 = b.get(2);
-        
+
         // Matrix multiplication: result[i][j] = sum(a[i][k] * b[k][j])
         // Since we store in column-major: result[j][i] = sum(a[k][i] * b[j][k])
         out.set(0, [
@@ -193,7 +193,7 @@ export const Mat3 = {
         const mCol0 = m.get(0);
         const mCol1 = m.get(1);
         const mCol2 = m.get(2);
-        
+
         out.set(0, [
             mCol0[0]! * s,
             mCol0[1]! * s,
@@ -219,10 +219,10 @@ export const Mat3 = {
         const [m00, m01, m02] = m.get(0);
         const [m10, m11, m12] = m.get(1);
         const [m20, m21, m22] = m.get(2);
-        
+
         return m00 * (m11 * m22 - m12 * m21) -
-               m10 * (m01 * m22 - m02 * m21) +
-               m20 * (m01 * m12 - m02 * m11);
+            m10 * (m01 * m22 - m02 * m21) +
+            m20 * (m01 * m12 - m02 * m11);
     },
 
     /**
@@ -235,20 +235,20 @@ export const Mat3 = {
         const [m00, m01, m02] = m.get(0);
         const [m10, m11, m12] = m.get(1);
         const [m20, m21, m22] = m.get(2);
-        
+
         const det = m00 * (m11 * m22 - m12 * m21) -
-                   m10 * (m01 * m22 - m02 * m21) +
-                   m20 * (m01 * m12 - m02 * m11);
-        
+            m10 * (m01 * m22 - m02 * m21) +
+            m20 * (m01 * m12 - m02 * m11);
+
         if (det === 0) {
             out.set(0, [0, 0, 0] as TupleOf<3, number>);
             out.set(1, [0, 0, 0] as TupleOf<3, number>);
             out.set(2, [0, 0, 0] as TupleOf<3, number>);
             return out;
         }
-        
+
         const invDet = 1 / det;
-        
+
         out.set(0, [
             (m11 * m22 - m12 * m21) * invDet,
             (m02 * m21 - m01 * m22) * invDet,
@@ -277,7 +277,7 @@ export const Mat3 = {
         const [m00, m01, m02] = m.get(0);
         const [m10, m11, m12] = m.get(1);
         const [m20, m21, m22] = m.get(2);
-        
+
         out.set(0, [m00, m10, m20] as TupleOf<3, number>);
         out.set(1, [m01, m11, m21] as TupleOf<3, number>);
         out.set(2, [m02, m12, m22] as TupleOf<3, number>);
@@ -294,7 +294,7 @@ export const Mat3 = {
         const [m00, m01, m02] = m.get(0);
         const [m10, m11, m12] = m.get(1);
         const [m20, m21, m22] = m.get(2);
-        
+
         out.set(0, [
             m11 * m22 - m12 * m21,
             m02 * m21 - m01 * m22,
@@ -326,10 +326,10 @@ export const Mat3 = {
         const bCol0 = b.get(0);
         const bCol1 = b.get(1);
         const bCol2 = b.get(2);
-        
+
         return aCol0[0] === bCol0[0] && aCol0[1] === bCol0[1] && aCol0[2] === bCol0[2] &&
-               aCol1[0] === bCol1[0] && aCol1[1] === bCol1[1] && aCol1[2] === bCol1[2] &&
-               aCol2[0] === bCol2[0] && aCol2[1] === bCol2[1] && aCol2[2] === bCol2[2];
+            aCol1[0] === bCol1[0] && aCol1[1] === bCol1[1] && aCol1[2] === bCol1[2] &&
+            aCol2[0] === bCol2[0] && aCol2[1] === bCol2[1] && aCol2[2] === bCol2[2];
     },
 
     // ============================================================================
@@ -470,7 +470,7 @@ export const Mat3 = {
         const mCol0 = m.get(0);
         const mCol1 = m.get(1);
         const mCol2 = m.get(2);
-        
+
         out.set(0, mCol0);
         out.set(1, mCol1);
         out.set(2, [
@@ -494,7 +494,7 @@ export const Mat3 = {
         const mCol0 = m.get(0);
         const mCol1 = m.get(1);
         const mCol2 = m.get(2);
-        
+
         out.set(0, [
             mCol0[0]! * c + mCol1[0]! * s,
             mCol0[1]! * c + mCol1[1]! * s,
@@ -521,7 +521,7 @@ export const Mat3 = {
         const mCol0 = m.get(0);
         const mCol1 = m.get(1);
         const mCol2 = m.get(2);
-        
+
         out.set(0, [
             mCol0[0]! * x,
             mCol0[1]! * x,
@@ -551,17 +551,17 @@ export const Mat3 = {
     ): MatMemoryBuffer<S, 3> {
         const c = Math.cos(angle);
         const s = Math.sin(angle);
-        
+
         const descriptor = Mat(scalar, 3);
         const buffer = allocate(descriptor);
-        
+
         // T * R * S combined matrix
         // Translation is applied after rotation and scaling
         const m00 = sx * c;
         const m01 = sx * s;
         const m10 = -sy * s;
         const m11 = sy * c;
-        
+
         buffer.set(0, [m00, m01, 0] as TupleOf<3, number>);
         buffer.set(1, [m10, m11, 0] as TupleOf<3, number>);
         buffer.set(2, [tx, ty, 1] as TupleOf<3, number>);
@@ -576,18 +576,18 @@ export const Mat3 = {
         const mCol0 = m.get(0);
         const mCol1 = m.get(1);
         const mCol2 = m.get(2);
-        
+
         // Extract translation
         const tx = mCol2[0]!;
         const ty = mCol2[1]!;
-        
+
         // Extract scale
         const sx = Math.sqrt(mCol0[0]! * mCol0[0]! + mCol0[1]! * mCol0[1]!);
         const sy = Math.sqrt(mCol1[0]! * mCol1[0]! + mCol1[1]! * mCol1[1]!);
-        
+
         // Extract rotation (assuming no shear)
         const angle = Math.atan2(mCol0[1]! / sx, mCol0[0]! / sx);
-        
+
         return [tx, ty, angle, sx, sy];
     },
 
@@ -612,7 +612,7 @@ export const Mat3 = {
     getScale<S extends ScalarDescriptor>(m: MatMemoryBuffer<S, 3>): [number, number] {
         const mCol0 = m.get(0);
         const mCol1 = m.get(1);
-        
+
         const scaleX = Math.sqrt(mCol0[0]! * mCol0[0]! + mCol0[1]! * mCol0[1]!);
         const scaleY = Math.sqrt(mCol1[0]! * mCol1[0]! + mCol1[1]! * mCol1[1]!);
         return [scaleX, scaleY];
@@ -627,7 +627,7 @@ export const Mat3 = {
     ): MatMemoryBuffer<S, 2> {
         const mCol0 = m.get(0);
         const mCol1 = m.get(1);
-        
+
         out.set(0, [mCol0[0]!, mCol0[1]!] as TupleOf<2, number>);
         out.set(1, [mCol1[0]!, mCol1[1]!] as TupleOf<2, number>);
         return out;
