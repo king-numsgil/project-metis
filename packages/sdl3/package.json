@@ -13,9 +13,8 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "koffi": "^2.15.0",
-    "type-fest": "^5.3.1",
-    "wgpu-matrix": "^3.4.0",
+    "koffi": "^2.15.1",
+    "type-fest": "^5.3.2",
     "metis-data": "workspace:*"
   }
 }
