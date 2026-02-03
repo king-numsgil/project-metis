@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "koffi": "^2.15.1",
-    "type-fest": "^5.3.2",
+    "type-fest": "^5.4.3",
     "metis-data": "workspace:*"
   }
 }

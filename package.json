@@ -7,10 +7,10 @@
     "dependencies": {
         "koffi": "^2.15.1",
         "naga": "workspace:*",
-        "type-fest": "^5.4.2"
+        "type-fest": "^5.4.3"
     },
     "devDependencies": {
-        "@types/bun": "^1.3.7"
+        "@types/bun": "^1.3.8"
     },
     "peerDependencies": {
         "typescript": "^5.9.3"
