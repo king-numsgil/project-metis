@@ -104,6 +104,8 @@ export type {
     SDLRect,
     GPUStorageTextureReadWriteBinding,
     GPUStorageBufferReadWriteBinding,
+    GPUTextureTransferInfo,
+    GPUTextureRegion,
 } from "./ffi/types";
 
 export * from "./system.ts";

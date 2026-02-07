@@ -781,3 +781,22 @@ export const SDL_GPUStorageBufferReadWriteBinding = struct("SDL_GPUStorageBuffer
     padding2: "uint8",
     padding3: "uint8",
 });
+
+export const SDL_GPUTextureTransferInfo = struct("SDL_GPUTextureTransferInfo", {
+    transfer_buffer: "SDL_GPUTransferBuffer*",
+    offset: "uint32",
+    pixels_per_row: "uint32",
+    rows_per_layer: "uint32",
+});
+
+export const SDL_GPUTextureRegion = struct("SDL_GPUTextureRegion", {
+    texture: "SDL_GPUTexture*",
+    mip_level: "uint32",
+    layer: "uint32",
+    x: "uint32",
+    y: "uint32",
+    z: "uint32",
+    w: "uint32",
+    h: "uint32",
+    d: "uint32",
+});

@@ -28,8 +28,8 @@ import {
     type GPUStorageTextureReadWriteBinding,
     type GPUTextureCreateInfo,
     GPUTextureFormat,
-    type GPUTexturePtr,
-    type GPUTextureSamplerBinding,
+    type GPUTexturePtr, type GPUTextureRegion,
+    type GPUTextureSamplerBinding, type GPUTextureTransferInfo,
     type GPUTransferBufferCreateInfo,
     type GPUTransferBufferLocation,
     type GPUTransferBufferPtr,
@@ -131,6 +131,9 @@ export const sdlBeginGPUCopyPass = sdl3.func("SDL_GPUCopyPass* SDL_BeginGPUCopyP
 export const sdlUploadToGPUBuffer = sdl3.func("void SDL_UploadToGPUBuffer(SDL_GPUCopyPass* copy_pass, _In_ const SDL_GPUTransferBufferLocation* source, _In_ const SDL_GPUBufferRegion* destination, bool cycle)") as (copy_pass: GPUCopyPassPtr, source: GPUTransferBufferLocation, destination: GPUBufferRegion, cycle: boolean) => void;
 export const sdlDownloadFromGPUBuffer = sdl3.func("void SDL_DownloadFromGPUBuffer(SDL_GPUCopyPass* copy_pass, _In_ const SDL_GPUBufferRegion* source, _In_ const SDL_GPUTransferBufferLocation* destination)") as (copy_pass: GPUCopyPassPtr, source: GPUBufferRegion, destination: GPUTransferBufferLocation) => void;
 export const sdlCopyGPUBufferToBuffer = sdl3.func("void SDL_CopyGPUBufferToBuffer(SDL_GPUCopyPass* copy_pass, const SDL_GPUBufferLocation* source, const SDL_GPUBufferLocation* destination, uint32 size, bool cycle)") as (copy_pass: GPUCopyPassPtr, source: GPUBufferLocation, destination: GPUBufferLocation, size: number, cycle: boolean) => void;
+export const sdlUploadToGPUTexture = sdl3.func("void SDL_UploadToGPUTexture(SDL_GPUCopyPass* copy_pass, _In_ const SDL_GPUTextureTransferInfo* source, _In_ const SDL_GPUTextureRegion* destination, bool cycle)") as (copy_pass: GPUCopyPassPtr, source: GPUTextureTransferInfo, destination: GPUTextureRegion, cycle: boolean) => void;
+export const sdlCopyGPUTextureToTexture = sdl3.func("void SDL_CopyGPUTextureToTexture(SDL_GPUCopyPass* copy_pass, _In_ const SDL_GPUTextureTransferInfo* source, _In_ const SDL_GPUTextureTransferInfo* destination, uint32 w, uint32 h, uing32 d, bool cycle)") as (copy_pass: GPUCopyPassPtr, source: GPUTextureTransferInfo, destination: GPUTextureTransferInfo, w: number, h: number, d: number, cycle: boolean) => void;
+export const sdlDownloadFromGPUTexture = sdl3.func("void SDL_DownloadFromGPUTexture(SDL_GPUCopyPass* copy_pass, _In_ const SDL_GPUTextureRegion* source, _In_ const SDL_GPUTextureTransferInfo* destination)") as (copy_pass: GPUCopyPassPtr, source: GPUTextureRegion, destination: GPUTextureTransferInfo) => void;
 export const sdlEndGPUCopyPass = sdl3.func("void SDL_EndGPUCopyPass(SDL_GPUCopyPass* copy_pass)") as (copy_pass: GPUCopyPassPtr) => void;
 export const sdlBindGPUGraphicsPipeline = sdl3.func("void SDL_BindGPUGraphicsPipeline(SDL_GPURenderPass* render_pass, SDL_GPUGraphicsPipeline* graphics_pipeline)") as (render_pass: GPURenderPassPtr, graphics_pipeline: GPUGraphicsPipelinePtr) => void;
 

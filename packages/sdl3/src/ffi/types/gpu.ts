@@ -1,6 +1,7 @@
 import type { Tagged } from "type-fest";
 
 import type { PropertiesID } from "./properties.ts";
+import { SDL_GPUTextureRegion, SDL_GPUTextureTransferInfo } from "../c_structs.ts";
 
 export type GPUDevicePtr = Tagged<{}, "SDL_GPUDevice">;
 export type GPUCommandBufferPtr = Tagged<{}, "SDL_GPUCommandBuffer">;
@@ -625,4 +626,23 @@ export interface GPUStorageTextureReadWriteBinding {
 export interface GPUStorageBufferReadWriteBinding {
     buffer: GPUBufferPtr;
     cycle: boolean;
+}
+
+export interface GPUTextureTransferInfo {
+    transfer_buffer: GPUTransferBufferPtr;
+    offset: number;
+    pixels_per_row: number;
+    rows_per_layer: number;
+}
+
+export interface GPUTextureRegion {
+    texture: GPUTexturePtr;
+    mip_level: number;
+    layer: number;
+    x: number;
+    y: number;
+    z: number;
+    w: number;
+    h: number;
+    d: number;
 }
