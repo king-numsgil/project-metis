@@ -9,6 +9,6 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "type-fest": "^5.4.3"
+    "type-fest": "^5.4.4"
   }
 }
