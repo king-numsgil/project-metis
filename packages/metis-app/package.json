@@ -12,6 +12,7 @@
     "dependencies": {
         "metis-data": "workspace:*",
         "naga": "workspace:*",
-        "sdl3": "workspace:*"
+        "sdl3": "workspace:*",
+        "ttf3": "workspace:*"
     }
 }

@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bun --print \"import { ttfInit, ttfQuit } from ''./packages/ttf3/src/ffi/index.ts''; const ok = ttfInit\\(\\); console.log\\(''TTF_Init:'', ok\\); ttfQuit\\(\\);\")",
+      "Bash(gh api repos/libsdl-org/SDL_ttf/contents/examples/testgputext/shaders)",
+      "Bash(python3 -c \"import sys,json; [print\\(x[''name'']\\) for x in json.load\\(sys.stdin\\)]\")",
+      "Bash(gh api repos/libsdl-org/SDL_ttf/contents/examples/testgputext/shaders/shader.frag.hlsl)",
+      "Bash(python3 -c \"import sys,json,base64; d=json.load\\(sys.stdin\\); print\\(base64.b64decode\\(d[''content'']\\).decode\\(''utf-8'', errors=''replace''\\)\\)\")",
+      "Bash(gh api repos/libsdl-org/SDL_ttf/contents/examples/testgputext/shaders/shader-sdf.frag.hlsl)",
+      "Bash(gh api repos/libsdl-org/SDL_ttf/contents/examples/testgputext/shaders/shader.vert.hlsl)",
+      "Bash(gh api repos/libsdl-org/SDL_ttf/contents/examples/testgputext/shaders/shader.frag.msl.h)",
+      "Bash(gh api repos/libsdl-org/SDL_ttf/contents/src)",
+      "Bash(gh api repos/libsdl-org/SDL_ttf/contents/src/SDL_gpu_textengine.c)",
+      "Bash(python3 -c \":*)"
+    ]
+  }
+}

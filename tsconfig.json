@@ -28,6 +28,7 @@
         "paths": {
             "metis-data": ["./packages/metis-data/src"],
             "sdl3": ["./packages/sdl3/src"],
+            "ttf3": ["./packages/ttf3/src"],
 			"naga": ["./packages/naga/wasm"],
         }
     }

@@ -1,0 +1,21 @@
+{
+    "name": "ttf3",
+    "module": "src/index.ts",
+    "type": "module",
+    "exports": {
+        ".": "./src/index.ts",
+        "./ffi": "./src/ffi/index.ts"
+    },
+    "devDependencies": {
+        "@types/bun": "latest"
+    },
+    "peerDependencies": {
+        "typescript": "^5"
+    },
+    "dependencies": {
+        "koffi": "^2.15.1",
+        "type-fest": "^5.4.4",
+        "metis-data": "workspace:*",
+        "sdl3": "workspace:*"
+    }
+}
