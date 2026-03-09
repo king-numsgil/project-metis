@@ -1,5 +1,6 @@
 import {
     ttfAppendTextString,
+    ttfCreateText,
     ttfDecodeText,
     ttfDeleteTextString,
     ttfDestroyText,
@@ -26,31 +27,19 @@ import {
     ttfSetTextPosition,
     ttfSetTextScript,
     ttfSetTextString,
-    ttfSetTextWrapWidth,
     ttfSetTextWrapWhitespaceVisible,
+    ttfSetTextWrapWidth,
     ttfTextWrapWhitespaceVisible,
     ttfUpdateText,
-    ttfCreateText,
 } from "./ffi/index.ts";
-import type {
-    Direction,
-    FontPtr,
-    TextEnginePtr,
-    TextPtr,
-    TTFSubString,
-} from "./ffi/types/index.ts";
+import type { Direction, FontPtr, TextEnginePtr, TextPtr, TTFSubString } from "./ffi/types/index.ts";
+
 export class Text {
-    private constructor(private readonly handle: TextPtr) {}
+    private constructor(private readonly handle: TextPtr) {
+    }
 
     public get raw(): TextPtr {
         return this.handle;
-    }
-
-    public static create(engine: TextEnginePtr | null, font: { raw: FontPtr }, text: string): Text {
-        const handle = ttfCreateText(engine, font.raw, text, 0);
-
-        if (!handle) throw new Error(`TTF_CreateText failed`);
-        return new Text(handle);
     }
 
     /** The current UTF-8 string content of this text object. */
@@ -137,6 +126,15 @@ export class Text {
 
     public set string(value: string | null) {
         ttfSetTextString(this.handle, value, 0);
+    }
+
+    public static create(engine: TextEnginePtr | null, font: { raw: FontPtr }, text: string): Text {
+        const handle = ttfCreateText(engine, font.raw, text, 0);
+
+        if (!handle) {
+            throw new Error(`TTF_CreateText failed`);
+        }
+        return new Text(handle);
     }
 
     public append(str: string): boolean {

@@ -17,7 +17,6 @@ import {
     ttfGetFontHinting,
     ttfGetFontKerning,
     ttfGetFontLineSkip,
-    ttfGetNumFontFaces,
     ttfGetFontOutline,
     ttfGetFontProperties,
     ttfGetFontScript,
@@ -29,7 +28,7 @@ import {
     ttfGetFontWrapAlignment,
     ttfGetGlyphKerning,
     ttfGetGlyphMetrics,
-    ttfGetGlyphScript,
+    ttfGetNumFontFaces,
     ttfGetStringSize,
     ttfGetStringSizeWrapped,
     ttfMeasureString,
@@ -59,28 +58,11 @@ import type {
 } from "./ffi/types/index.ts";
 
 export class Font {
-    private constructor(private readonly handle: FontPtr) {}
+    private constructor(private readonly handle: FontPtr) {
+    }
 
     public get raw(): FontPtr {
         return this.handle;
-    }
-
-    public static open(file: string, ptsize: number): Font {
-        const handle = ttfOpenFont(file, ptsize);
-        if (!handle) throw new Error(`TTF_OpenFont failed`);
-        return new Font(handle);
-    }
-
-    public static openWithProperties(props: PropertiesID): Font {
-        const handle = ttfOpenFontWithProperties(props);
-        if (!handle) throw new Error(`TTF_OpenFontWithProperties failed`);
-        return new Font(handle);
-    }
-
-    public copy(): Font {
-        const handle = ttfCopyFont(this.handle);
-        if (!handle) throw new Error(`TTF_CopyFont failed`);
-        return new Font(handle);
     }
 
     public get properties(): PropertiesID {
@@ -91,32 +73,12 @@ export class Font {
         return ttfGetFontGeneration(this.handle);
     }
 
-    public addFallback(fallback: Font): boolean {
-        return ttfAddFallbackFont(this.handle, fallback.handle);
-    }
-
-    public removeFallback(fallback: Font): void {
-        ttfRemoveFallbackFont(this.handle, fallback.handle);
-    }
-
-    public clearFallbacks(): void {
-        ttfClearFallbackFonts(this.handle);
-    }
-
     public get size(): number {
         return ttfGetFontSize(this.handle);
     }
 
     public set size(ptsize: number) {
         ttfSetFontSize(this.handle, ptsize);
-    }
-
-    public setSizeDPI(ptsize: number, hdpi: number, vdpi: number): boolean {
-        return ttfSetFontSizeDPI(this.handle, ptsize, hdpi, vdpi);
-    }
-
-    public getDPI(): [number, number] | null {
-        return ttfGetFontDPI(this.handle);
     }
 
     public get style(): FontStyleFlags {
@@ -229,6 +191,50 @@ export class Font {
 
     public set language(lang: string | null) {
         ttfSetFontLanguage(this.handle, lang);
+    }
+
+    public static open(file: string, ptsize: number): Font {
+        const handle = ttfOpenFont(file, ptsize);
+        if (!handle) {
+            throw new Error(`TTF_OpenFont failed`);
+        }
+        return new Font(handle);
+    }
+
+    public static openWithProperties(props: PropertiesID): Font {
+        const handle = ttfOpenFontWithProperties(props);
+        if (!handle) {
+            throw new Error(`TTF_OpenFontWithProperties failed`);
+        }
+        return new Font(handle);
+    }
+
+    public copy(): Font {
+        const handle = ttfCopyFont(this.handle);
+        if (!handle) {
+            throw new Error(`TTF_CopyFont failed`);
+        }
+        return new Font(handle);
+    }
+
+    public addFallback(fallback: Font): boolean {
+        return ttfAddFallbackFont(this.handle, fallback.handle);
+    }
+
+    public removeFallback(fallback: Font): void {
+        ttfRemoveFallbackFont(this.handle, fallback.handle);
+    }
+
+    public clearFallbacks(): void {
+        ttfClearFallbackFonts(this.handle);
+    }
+
+    public setSizeDPI(ptsize: number, hdpi: number, vdpi: number): boolean {
+        return ttfSetFontSizeDPI(this.handle, ptsize, hdpi, vdpi);
+    }
+
+    public getDPI(): [number, number] | null {
+        return ttfGetFontDPI(this.handle);
     }
 
     public hasGlyph(ch: number): boolean {

@@ -12,10 +12,10 @@ export interface TTFText {
 
 export enum SubStringFlags {
     DirectionMask = 0x000000FF,
-    TextStart     = 0x00000100,
-    LineStart     = 0x00000200,
-    LineEnd       = 0x00000400,
-    TextEnd       = 0x00000800,
+    TextStart = 0x00000100,
+    LineStart = 0x00000200,
+    LineEnd = 0x00000400,
+    TextEnd = 0x00000800,
 }
 
 export interface TTFSubString {

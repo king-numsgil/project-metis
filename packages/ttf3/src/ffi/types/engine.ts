@@ -1,9 +1,9 @@
 import type { GPUTexturePtr } from "sdl3/ffi";
 
 export enum GPUTextEngineWinding {
-    Invalid           = -1,
-    Clockwise         = 0,
-    CounterClockwise  = 1,
+    Invalid = -1,
+    Clockwise = 0,
+    CounterClockwise = 1,
 }
 
 export interface SDLFPoint {

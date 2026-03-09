@@ -3,7 +3,7 @@ import { sdl3ttf } from "./lib.ts";
 export const ttfVersion = sdl3ttf.func("int TTF_Version()") as () => number;
 
 const TTF_GetFreeTypeVersion = sdl3ttf.func(
-    "void TTF_GetFreeTypeVersion(_Out_ int* major, _Out_ int* minor, _Out_ int* patch)"
+    "void TTF_GetFreeTypeVersion(_Out_ int* major, _Out_ int* minor, _Out_ int* patch)",
 );
 
 export function ttfGetFreeTypeVersion(): [number, number, number] {
@@ -13,7 +13,7 @@ export function ttfGetFreeTypeVersion(): [number, number, number] {
 }
 
 const TTF_GetHarfBuzzVersion = sdl3ttf.func(
-    "void TTF_GetHarfBuzzVersion(_Out_ int* major, _Out_ int* minor, _Out_ int* patch)"
+    "void TTF_GetHarfBuzzVersion(_Out_ int* major, _Out_ int* minor, _Out_ int* patch)",
 );
 
 export function ttfGetHarfBuzzVersion(): [number, number, number] {
