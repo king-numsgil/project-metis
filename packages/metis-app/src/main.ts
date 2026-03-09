@@ -29,6 +29,8 @@ import { ArrayOf, F32, StructOf, Vec } from "metis-data";
 import { Font, GPUTextEngine, Text, TTF } from "ttf3";
 import { sdlGetError } from "sdl3/ffi";
 
+import {join} from "node:path";
+
 import triangleShader from "./triangle.wgsl";
 import textShader from "./text.wgsl";
 
@@ -150,7 +152,7 @@ using pipeline = dev.createGraphicsPipeline({
 });
 
 // ---------- TTF text setup ----------
-using font = Font.open(import.meta.dir + "/JetBrainsMono-Regular.ttf", 24);
+using font = Font.open(join(import.meta.dir, "JetBrainsMono-Regular.ttf"), 24);
 using textEngine = GPUTextEngine.create(dev.raw);
 using textObj = Text.create(textEngine.raw, font, "Hello World of TTF!");
 textObj.update();
@@ -158,7 +160,7 @@ textObj.update();
 const WIN_W = 1440;
 const WIN_H = 768;
 const TEXT_X = 10;
-const TEXT_Y = 50;
+const TEXT_Y = 34;
 
 const drawData = textEngine.getDrawData(textObj);
 if (!drawData || drawData.length === 0) {
