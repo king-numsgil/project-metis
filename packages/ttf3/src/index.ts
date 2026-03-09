@@ -23,6 +23,7 @@ export type {
 export { ttfInit, ttfQuit, ttfWasInit, ttfVersion, ttfGetFreeTypeVersion, ttfGetHarfBuzzVersion } from "./ffi/init.ts";
 export { ttfTagToString, ttfStringToTag, ttfGetGlyphScript } from "./ffi/font.ts";
 
+export * from "./ttf.ts";
 export * from "./font.ts";
 export * from "./text.ts";
 export * from "./gpu_text_engine.ts";

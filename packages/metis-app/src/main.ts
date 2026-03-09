@@ -26,10 +26,10 @@ import {
     Window,
 } from "sdl3";
 import { ArrayOf, F32, StructOf, Vec } from "metis-data";
+import { Font, GPUTextEngine, Text, TTF } from "ttf3";
 import { sdlGetError } from "sdl3/ffi";
-import { Font, GPUTextEngine, Text, ttfInit } from "ttf3";
 
-import triangle from "./triangle.wgsl";
+import triangleShader from "./triangle.wgsl";
 import textShader from "./text.wgsl";
 
 function decodeKeymods(mod: Keymod): string[] {
@@ -41,8 +41,8 @@ function decodeKeymods(mod: Keymod): string[] {
         });
 }
 
-if (!triangle.vertex || !triangle.fragment || !triangle.compute) {
-    throw new Error("Failed loading compiled shader");
+if (!triangleShader.vertex || !triangleShader.fragment || !triangleShader.compute) {
+    throw new Error("Failed loading triangle shader");
 }
 
 if (!textShader.vertex || !textShader.fragment) {
@@ -51,6 +51,9 @@ if (!textShader.vertex || !textShader.fragment) {
 
 using sys = new System();
 console.log(`Platform: ${sys.platform}`);
+
+using ttf = new TTF();
+console.log(`TTF: ${ttf.version} (FT ${ttf.freetypeVersion}; HB ${ttf.harfbuzzVersion})`);
 
 using wnd = Window.create("SDL Experiment", 1440, 768);
 console.log(`WindowID: ${wnd.windowID}`);
@@ -62,15 +65,13 @@ dev.claimWindow(wnd);
 console.log(`Device Driver : ${dev.driver}`);
 console.log(`Device Shader Format : ${GPUShaderFormat[dev.shader_formats]}`);
 
-using vertexShader = dev.createShader(triangle.vertex);
-using fragmentShader = dev.createShader(triangle.fragment);
-
-const count = Number(4);
+using vertexShader = dev.createShader(triangleShader.vertex);
+using fragmentShader = dev.createShader(triangleShader.fragment);
 
 const quadBuffer = new Mesh(ArrayOf(StructOf({
     position: Vec(F32, 2),
     uv: Vec(F32, 2),
-}), count), 6);
+}), 4), 6);
 quadBuffer.vertices.at(0).set({
     position: [-.5, -.5],
     uv: [0, 1],
@@ -118,7 +119,7 @@ using sampler = dev.createSampler({
     mip_lod_bias: 0,
 });
 
-using computePipeline = dev.createComputePipeline(triangle.compute);
+using computePipeline = dev.createComputePipeline(triangleShader.compute);
 using pipeline = dev.createGraphicsPipeline({
     ...defaultGraphicsPipelineCreateInfo,
     vertex_shader: vertexShader.raw,
@@ -149,7 +150,6 @@ using pipeline = dev.createGraphicsPipeline({
 });
 
 // ---------- TTF text setup ----------
-if (!ttfInit()) throw new Error("TTF_Init failed");
 using font = Font.open(import.meta.dir + "/JetBrainsMono-Regular.ttf", 24);
 using textEngine = GPUTextEngine.create(dev.raw);
 using textObj = Text.create(textEngine.raw, font, "Hello World of TTF!");
@@ -161,12 +161,14 @@ const TEXT_X = 10;
 const TEXT_Y = 50;
 
 const drawData = textEngine.getDrawData(textObj);
-if (!drawData || drawData.length === 0) throw new Error("No TTF draw data");
+if (!drawData || drawData.length === 0) {
+    throw new Error("No TTF draw data");
+}
 
 // Handle the first (typically only) draw sequence for a single-line text
 const seq = drawData[0]!;
 const textMesh = new Mesh(
-    ArrayOf(StructOf({ xy: Vec(F32, 2), uv: Vec(F32, 2) }), seq.num_vertices),
+    ArrayOf(StructOf({xy: Vec(F32, 2), uv: Vec(F32, 2)}), seq.num_vertices),
     seq.num_indices,
     "uint32",
 );
@@ -298,7 +300,7 @@ while (running) {
     // Text overlay pass: alpha-blend TTF text on top (Load, not Clear)
     const textPass = cb.beginRenderPass([{
         texture: swapchain.texture,
-        clear_color: { r: 0, g: 0, b: 0, a: 0 },
+        clear_color: {r: 0, g: 0, b: 0, a: 0},
         load_op: GPULoadOp.Load,
         store_op: GPUStoreOp.Store,
     }], null);
