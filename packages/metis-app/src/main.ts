@@ -276,7 +276,6 @@ while (running) {
     computePass.dispatch((1440 / 2 + 7) / 8, (768 / 2 + 7) / 8, 1);
     computePass.end();
 
-    // Scene pass: render the gradient quad (clears background)
     const pass = cb.beginRenderPass([{
         texture: swapchain.texture,
         clear_color: {r: 0.3, g: 0.4, b: 0.5, a: 1.0},
@@ -297,30 +296,22 @@ while (running) {
         offset: 0,
     }, GPUIndexElementSize.Size16Bit);
     pass.drawIndexedPrimitives(6);
-    pass.end();
 
-    // Text overlay pass: alpha-blend TTF text on top (Load, not Clear)
-    const textPass = cb.beginRenderPass([{
-        texture: swapchain.texture,
-        clear_color: {r: 0, g: 0, b: 0, a: 0},
-        load_op: GPULoadOp.Load,
-        store_op: GPUStoreOp.Store,
-    }], null);
-    textPass.bindGraphicsPipeline(textPipeline);
-    textPass.bindFragmentSamplers([{
+    pass.bindGraphicsPipeline(textPipeline);
+    pass.bindFragmentSamplers([{
         texture: seq.atlas_texture,
         sampler: textSampler.raw,
     }]);
-    textPass.bindVertexBuffers([{
+    pass.bindVertexBuffers([{
         buffer: textVertexBuf.raw,
         offset: 0,
     }]);
-    textPass.bindIndexBuffer({
+    pass.bindIndexBuffer({
         buffer: textIndexBuf.raw,
         offset: 0,
     }, GPUIndexElementSize.Size32Bit);
-    textPass.drawIndexedPrimitives(seq.num_indices);
-    textPass.end();
+    pass.drawIndexedPrimitives(seq.num_indices);
+    pass.end();
 
     if (!cb.submit()) {
         console.log(`Failed to submit command buffer : ${sdlGetError()}`);
