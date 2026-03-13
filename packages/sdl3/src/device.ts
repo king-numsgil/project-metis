@@ -43,7 +43,7 @@ import {
     sdlWaitForGPUFences,
 } from "./ffi";
 
-import { GraphicsPipeline } from "./graphics_pipeline.ts";
+import {GraphicsPipeline, GraphicsPipelineBuilder} from "./graphics_pipeline.ts";
 import { ComputePipeline } from "./compute_pipeline.ts";
 import { TransferBuffer } from "./transfer_buffer.ts";
 import { CommandBuffer } from "./command_buffer.ts";
@@ -225,6 +225,10 @@ export class Device {
         }
 
         return new GraphicsPipeline(gp, this);
+    }
+
+    public buildGraphicsPipeline(): GraphicsPipelineBuilder {
+        return new GraphicsPipelineBuilder(this);
     }
 
     public createComputePipeline(create_info: GPUComputePipelineCreateInfo): ComputePipeline {

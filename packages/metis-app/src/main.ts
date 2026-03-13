@@ -1,10 +1,8 @@
 import {
-    defaultGraphicsPipelineCreateInfo,
     Device,
     EventType,
     GPUBlendFactor,
     GPUBlendOp,
-    GPUColorComponentFlags,
     GPUCompareOp,
     GPUFilter,
     GPUIndexElementSize,
@@ -18,16 +16,15 @@ import {
     GPUTextureFormat,
     GPUTextureType,
     GPUTextureUsageFlags,
-    GPUVertexInputRate,
     Keymod,
     Mesh,
     Scancode,
     System,
     Window,
 } from "sdl3";
-import { ArrayOf, F32, StructOf, Vec } from "metis-data";
-import { Font, GPUTextEngine, Text, TTF } from "ttf3";
-import { sdlGetError } from "sdl3/ffi";
+import {ArrayOf, F32, StructOf, Vec} from "metis-data";
+import {Font, GPUTextEngine, Text, TTF} from "ttf3";
+import {sdlGetError} from "sdl3/ffi";
 
 import {join} from "node:path";
 
@@ -122,34 +119,12 @@ using sampler = dev.createSampler({
 });
 
 using computePipeline = dev.createComputePipeline(triangleShader.compute);
-using pipeline = dev.createGraphicsPipeline({
-    ...defaultGraphicsPipelineCreateInfo,
-    vertex_shader: vertexShader.raw,
-    fragment_shader: fragmentShader.raw,
-    vertex_input_state: {
-        num_vertex_buffers: 1,
-        vertex_buffer_descriptions: [
-            {
-                slot: 0,
-                pitch: quadBuffer.vertices.type.arrayPitch,
-                input_rate: GPUVertexInputRate.Vertex,
-                instance_step_rate: 0,
-            },
-        ],
-        num_vertex_attributes: 2,
-        vertex_attributes: quadBuffer.getVertexAttributes(0),
-    },
-    target_info: {
-        ...defaultGraphicsPipelineCreateInfo.target_info,
-        color_target_descriptions: [
-            {
-                ...defaultGraphicsPipelineCreateInfo.target_info.color_target_descriptions[0]!,
-                format: dev.getSwapchainFormat(wnd),
-            },
-        ],
-    },
-    primitive_type: GPUPrimitiveType.TriangleList,
-});
+using pipeline = dev.buildGraphicsPipeline()
+    .shaders(vertexShader, fragmentShader)
+    .addColorTarget(dev.getSwapchainFormat(wnd))
+    .addVertexInput(quadBuffer, 0)
+    .primitiveType(GPUPrimitiveType.TriangleList)
+    .build();
 
 // ---------- TTF text setup ----------
 using font = Font.open(join(import.meta.dir, "JetBrainsMono-Regular.ttf"), 24);
@@ -208,44 +183,20 @@ using textSampler = dev.createSampler({
 using textVertexShader = dev.createShader(textShader.vertex);
 using textFragmentShader = dev.createShader(textShader.fragment);
 
-using textPipeline = dev.createGraphicsPipeline({
-    ...defaultGraphicsPipelineCreateInfo,
-    vertex_shader: textVertexShader.raw,
-    fragment_shader: textFragmentShader.raw,
-    vertex_input_state: {
-        num_vertex_buffers: 1,
-        vertex_buffer_descriptions: [
-            {
-                slot: 0,
-                pitch: textMesh.vertices.type.arrayPitch,
-                input_rate: GPUVertexInputRate.Vertex,
-                instance_step_rate: 0,
-            },
-        ],
-        num_vertex_attributes: 2,
-        vertex_attributes: textMesh.getVertexAttributes(0),
-    },
-    target_info: {
-        ...defaultGraphicsPipelineCreateInfo.target_info,
-        color_target_descriptions: [
-            {
-                format: dev.getSwapchainFormat(wnd),
-                blend_state: {
-                    enable_blend: true,
-                    color_blend_op: GPUBlendOp.Add,
-                    alpha_blend_op: GPUBlendOp.Add,
-                    src_color_blendfactor: GPUBlendFactor.SrcAlpha,
-                    dst_color_blendfactor: GPUBlendFactor.OneMinusSrcAlpha,
-                    src_alpha_blendfactor: GPUBlendFactor.One,
-                    dst_alpha_blendfactor: GPUBlendFactor.DstAlpha,
-                    color_write_mask: GPUColorComponentFlags.R | GPUColorComponentFlags.G | GPUColorComponentFlags.B | GPUColorComponentFlags.A,
-                    enable_color_write_mask: false,
-                },
-            },
-        ],
-    },
-    primitive_type: GPUPrimitiveType.TriangleList,
-});
+using textPipeline = dev.buildGraphicsPipeline()
+    .shaders(textVertexShader, textFragmentShader)
+    .addColorTarget(dev.getSwapchainFormat(wnd), {
+        enable_blend: true,
+        color_blend_op: GPUBlendOp.Add,
+        alpha_blend_op: GPUBlendOp.Add,
+        src_color_blendfactor: GPUBlendFactor.SrcAlpha,
+        dst_color_blendfactor: GPUBlendFactor.OneMinusSrcAlpha,
+        src_alpha_blendfactor: GPUBlendFactor.One,
+        dst_alpha_blendfactor: GPUBlendFactor.DstAlpha,
+    })
+    .addVertexInput(textMesh, 0)
+    .primitiveType(GPUPrimitiveType.TriangleList)
+    .build();
 
 // ---------- Render loop ----------
 let running = true;
