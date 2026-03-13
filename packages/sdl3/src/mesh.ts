@@ -22,6 +22,11 @@ import {
  */
 type IndexType = "uint16" | "uint32";
 
+export interface VertexBufferSource {
+    readonly vertices: { readonly type: { readonly arrayPitch: number } };
+    getVertexAttributes(slot: number): GPUVertexAttribute[];
+}
+
 /**
  * A type-safe mesh buffer that manages GPU-compatible vertex and index data using
  * the descriptor DSL for automatic memory layout.
@@ -69,7 +74,7 @@ type IndexType = "uint16" | "uint32";
 export class Mesh<
     T extends StructDescriptor<Record<string, Descriptor<DescriptorTypedArray>>>,
     N extends number,
-> {
+> implements VertexBufferSource {
     /** The array descriptor for vertices */
     private readonly _vertexDescriptor: ArrayDescriptor<T, N>;
 
