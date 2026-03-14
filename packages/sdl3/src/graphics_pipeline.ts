@@ -1,4 +1,4 @@
-import {type GPUGraphicsPipelinePtr, type GPUShaderPtr, sdlReleaseGPUGraphicsPipeline} from "./ffi";
+import { type GPUGraphicsPipelinePtr, type GPUShaderPtr, sdlReleaseGPUGraphicsPipeline } from "./ffi";
 
 import {
     GPUBlendFactor,
@@ -15,9 +15,9 @@ import {
     GPUVertexInputRate,
 } from "./ffi/types";
 
-import {defaultGraphicsPipelineCreateInfo, Device} from "./device.ts";
-import {type VertexBufferSource} from "./mesh.ts";
-import type {Shader} from "./shader.ts";
+import { defaultGraphicsPipelineCreateInfo, Device } from "./device.ts";
+import { type VertexBufferSource } from "./mesh.ts";
+import type { Shader } from "./shader.ts";
 
 export class GraphicsPipeline {
     public constructor(private readonly handle: GPUGraphicsPipelinePtr, private readonly device: Device) {
@@ -149,7 +149,7 @@ export class GraphicsPipelineBuilder {
                 // getVertexAttributes(slot) already stamps the correct buffer_slot
                 // on each attribute, so a flat concat is all we need
                 vertex_attributes: sortedSlots.flatMap(({source, slot}) =>
-                    source.getVertexAttributes(slot)
+                    source.getVertexAttributes(slot),
                 ),
                 num_vertex_attributes: sortedSlots.reduce(
                     (sum, {source, slot}) => sum + source.getVertexAttributes(slot).length,

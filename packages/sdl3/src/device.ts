@@ -43,7 +43,7 @@ import {
     sdlWaitForGPUFences,
 } from "./ffi";
 
-import {GraphicsPipeline, GraphicsPipelineBuilder} from "./graphics_pipeline.ts";
+import { GraphicsPipeline, GraphicsPipelineBuilder } from "./graphics_pipeline.ts";
 import { ComputePipeline } from "./compute_pipeline.ts";
 import { TransferBuffer } from "./transfer_buffer.ts";
 import { CommandBuffer } from "./command_buffer.ts";
