@@ -1,0 +1,20 @@
+{
+    "name": "metis-engine",
+    "module": "src/index.ts",
+    "type": "module",
+    "private": true,
+    "devDependencies": {
+        "@types/bun": "latest"
+    },
+    "peerDependencies": {
+        "typescript": "^5"
+    },
+    "dependencies": {
+        "metis-data": "workspace:*",
+        "naga": "workspace:*",
+        "radashi": "^12.7.2",
+        "sdl3": "workspace:*",
+        "ttf3": "workspace:*",
+        "type-fest": "^5.4.4"
+    }
+}

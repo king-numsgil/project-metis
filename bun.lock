@@ -45,6 +45,14 @@
     },
     "packages/metis-engine": {
       "name": "metis-engine",
+      "dependencies": {
+        "metis-data": "workspace:*",
+        "naga": "workspace:*",
+        "radashi": "^12.7.2",
+        "sdl3": "workspace:*",
+        "ttf3": "workspace:*",
+        "type-fest": "^5.4.4",
+      },
       "devDependencies": {
         "@types/bun": "latest",
       },
@@ -102,6 +110,8 @@
     "metis-engine": ["metis-engine@workspace:packages/metis-engine"],
 
     "naga": ["naga@workspace:packages/naga"],
+
+    "radashi": ["radashi@12.7.2", "", {}, "sha512-BfoN4XJll34ok3rCHjVlRypymJvD3cE+M3UATC8519wUgHl1/AXt2dEEIFv5865gO6t0ENAU6qEOqjr/NcIRyQ=="],
 
     "sdl3": ["sdl3@workspace:packages/sdl3"],
 
