@@ -5,7 +5,7 @@
         "compile": "bun build ./packages/metis-app/src/main.ts --compile --no-compile-autoload-bunfig --outfile metis.exe"
     },
     "dependencies": {
-        "koffi": "^2.15.1",
+        "koffi": "^2.15.2",
         "naga": "workspace:*",
         "type-fest": "^5.4.4"
     },
