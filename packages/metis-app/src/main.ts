@@ -127,7 +127,7 @@ using pipeline = dev.buildGraphicsPipeline()
     .build();
 
 // ---------- TTF text setup ----------
-using font = Font.open(join(import.meta.dir, "JetBrainsMono-Regular.ttf"), 24);
+using font = Font.open(join("assets", "JetBrainsMono-Regular.ttf"), 24);
 using textEngine = GPUTextEngine.create(dev.raw);
 using textObj = Text.create(textEngine.raw, font, "Hello World of TTF!");
 textObj.update();
