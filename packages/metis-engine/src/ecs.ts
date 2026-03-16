@@ -1,18 +1,28 @@
 import type { Tagged } from "type-fest";
 import type {
-    BoolMemoryBuffer,
     Descriptor,
-    DescriptorToMemoryBuffer,
     DescriptorTypedArray,
+    DescriptorToMemoryBuffer,
     DescriptorValueType,
-    MatMemoryBuffer,
-    ScalarDescriptor,
-    ScalarMemoryBuffer,
     StructDescriptor,
     StructMemoryBuffer,
     VecMemoryBuffer,
+    BoolMemoryBuffer,
+    ScalarDescriptor,
+    ScalarMemoryBuffer,
+    MatMemoryBuffer,
 } from "metis-data";
-import { GPU_BOOL, GPU_MAT2, GPU_MAT3, GPU_MAT4, GPU_STRUCT, GPU_VEC2, GPU_VEC3, GPU_VEC4, wrap } from "metis-data";
+import { wrap } from "metis-data";
+import {
+    GPU_BOOL,
+    GPU_STRUCT,
+    GPU_VEC2,
+    GPU_VEC3,
+    GPU_VEC4,
+    GPU_MAT2,
+    GPU_MAT3,
+    GPU_MAT4,
+} from "metis-data";
 
 // ============================================================================
 // Entity
@@ -65,7 +75,7 @@ export function component<
     Name extends string,
     D extends Descriptor<DescriptorTypedArray>,
 >(name: Name, descriptor: D): DataComponentDef<Name, D> {
-    return {name, descriptor, __tag: false as const};
+    return { name, descriptor, __tag: false as const };
 }
 
 /**
@@ -76,7 +86,7 @@ export function component<
  * ```
  */
 export function tag<Name extends string>(name: Name): TagComponentDef<Name> {
-    return {name, descriptor: null, __tag: true as const};
+    return { name, descriptor: null, __tag: true as const };
 }
 
 // ============================================================================
@@ -121,12 +131,18 @@ const DEFAULT_CAPACITY = 64;
  * cache-friendly iteration.
  */
 class DataStorage<D extends Descriptor<DescriptorTypedArray>> {
+    /** Packed array of entities that own this component, indexed by dense index. */
+    private _dense: Entity[] = [];
     /** Entity → dense index mapping. */
     private _sparse: Map<number, number> = new Map();
+    /** The raw backing buffer. Layout: descriptor.arrayPitch * capacity bytes. */
+    private _buffer: ArrayBuffer;
     /** The component's type descriptor. */
     private readonly _descriptor: D;
     /** Current allocated capacity (in elements). */
     private _capacity: number;
+    /** Number of active components. */
+    private _count: number = 0;
     /** Pitch in bytes per element. */
     private readonly _pitch: number;
 
@@ -137,29 +153,20 @@ class DataStorage<D extends Descriptor<DescriptorTypedArray>> {
         this._buffer = new ArrayBuffer(this._pitch * initialCapacity);
     }
 
-    /** Packed array of entities that own this component, indexed by dense index. */
-    private _dense: Entity[] = [];
-
-    get dense(): readonly Entity[] {
-        return this._dense;
-    }
-
-    /** The raw backing buffer. Layout: descriptor.arrayPitch * capacity bytes. */
-    private _buffer: ArrayBuffer;
-
-    get buffer(): ArrayBuffer {
-        return this._buffer;
-    }
-
-    /** Number of active components. */
-    private _count: number = 0;
-
     get count(): number {
         return this._count;
     }
 
     get descriptor(): D {
         return this._descriptor;
+    }
+
+    get buffer(): ArrayBuffer {
+        return this._buffer;
+    }
+
+    get dense(): readonly Entity[] {
+        return this._dense;
     }
 
     get pitch(): number {
@@ -271,11 +278,6 @@ class DataStorage<D extends Descriptor<DescriptorTypedArray>> {
 class TagStorage {
     private _entities: Set<number> = new Set();
 
-    /** Expose the raw set for iteration in views. */
-    get entities(): ReadonlySet<number> {
-        return this._entities;
-    }
-
     get count(): number {
         return this._entities.size;
     }
@@ -294,6 +296,11 @@ class TagStorage {
 
     destroyEntity(entity: Entity): boolean {
         return this.remove(entity);
+    }
+
+    /** Expose the raw set for iteration in views. */
+    get entities(): ReadonlySet<number> {
+        return this._entities;
     }
 }
 
@@ -455,9 +462,7 @@ export class View<Defs extends readonly AnyComponentDef[]> {
         outer:
             for (const entity of candidates) {
                 for (let i = 0; i < this._storages.length; i++) {
-                    if (i === smallestIdx) {
-                        continue;
-                    }
+                    if (i === smallestIdx) continue;
                     if (!this._storages[i]!.has(entity)) {
                         continue outer;
                     }
@@ -651,15 +656,11 @@ export class World<Defs extends readonly AnyComponentDef[]> {
             names.push(def.name);
             if (def.descriptor !== null) {
                 const s = this._dataStorages.get(def.name);
-                if (!s) {
-                    throw new Error(`Unknown data component: "${def.name}"`);
-                }
+                if (!s) throw new Error(`Unknown data component: "${def.name}"`);
                 storages.push(s);
             } else {
                 const s = this._tagStorages.get(def.name);
-                if (!s) {
-                    throw new Error(`Unknown tag component: "${def.name}"`);
-                }
+                if (!s) throw new Error(`Unknown tag component: "${def.name}"`);
                 storages.push(s);
             }
         }
@@ -687,14 +688,14 @@ export class World<Defs extends readonly AnyComponentDef[]> {
      * }
      * ```
      */
-    * query<Q extends readonly AnyComponentDef[]>(
+    *query<Q extends readonly AnyComponentDef[]>(
         view: View<Q>,
     ): Generator<ViewResult<Q>> {
         const entities = view.getEntities();
         const names = view.names;
 
         for (const entity of entities) {
-            const result: Record<string, unknown> = {entity};
+            const result: Record<string, unknown> = { entity };
 
             for (const name of names) {
                 const dataStorage = this._dataStorages.get(name);
@@ -709,12 +710,14 @@ export class World<Defs extends readonly AnyComponentDef[]> {
     }
 
     /**
-     * Callback-based iteration over a view. Lower overhead than the
-     * generator — reuses a single result object across iterations.
+     * Callback-based iteration over a view. Pre-allocates one memory buffer
+     * wrapper per data component and recycles it across iterations by
+     * mutating its internal buffer/offset fields. This avoids the per-entity
+     * per-component `wrap()` allocation that dominates forEach cost.
      *
      * **Important:** Do not retain references to the result object or its
-     * component buffers across callback invocations; offsets are stable
-     * per call but the object identity is reused.
+     * component buffers across callback invocations. The wrapper objects
+     * are reused and their offsets change on every step.
      */
     forEach<Q extends readonly AnyComponentDef[]>(
         view: View<Q>,
@@ -723,23 +726,41 @@ export class World<Defs extends readonly AnyComponentDef[]> {
         const entities = view.getEntities();
         const names = view.names;
 
-        // Pre-collect data storage references for the queried names.
-        const dataStorageEntries: Array<{ name: string; storage: DataStorage<Descriptor<DescriptorTypedArray>> }> = [];
+        // Pre-collect data storages and create ONE recycled wrapper per component.
+        const recycledEntries: Array<{
+            name: string;
+            storage: DataStorage<Descriptor<DescriptorTypedArray>>;
+            wrapper: MutableWrapper;
+        }> = [];
+
         for (const name of names) {
             const ds = this._dataStorages.get(name);
             if (ds) {
-                dataStorageEntries.push({name, storage: ds});
+                // Create a single wrapper at offset 0. We'll mutate it each iteration.
+                const wrapper = wrap(ds.descriptor, ds.buffer, 0) as unknown as MutableWrapper;
+                recycledEntries.push({ name, storage: ds, wrapper });
             }
         }
 
-        // Reusable result object.
+        // Build the reusable result object with the recycled wrappers pinned in.
         const result: Record<string, unknown> = {};
+        for (const entry of recycledEntries) {
+            result[entry.name] = entry.wrapper;
+        }
 
         for (const entity of entities) {
             result["entity"] = entity;
 
-            for (const entry of dataStorageEntries) {
-                result[entry.name] = entry.storage.getView(entity);
+            // Update each wrapper's buffer + offset in place.
+            for (const entry of recycledEntries) {
+                const index = entry.storage.indexOf(entity);
+                const wrapper = entry.wrapper;
+                // The storage's buffer may have changed due to a prior grow(),
+                // but during iteration no mutations occur — safe to set once
+                // before the loop. We set it here per-entry anyway to be safe
+                // against future multi-view interleaving.
+                wrapper.buffer = entry.storage.buffer;
+                wrapper.offset = index * entry.storage.pitch;
             }
 
             callback(result as ViewResult<Q>);
@@ -766,7 +787,7 @@ export class World<Defs extends readonly AnyComponentDef[]> {
         for (const name of names) {
             const ds = this._dataStorages.get(name);
             if (ds) {
-                entries.push({name, storage: ds});
+                entries.push({ name, storage: ds });
             }
         }
 
@@ -793,7 +814,7 @@ export class World<Defs extends readonly AnyComponentDef[]> {
      * One-off query without a cached view. Convenient but slower for
      * repeated use — prefer createView + query for hot paths.
      */
-    * queryOnce<Q extends readonly AnyComponentDef[]>(
+    *queryOnce<Q extends readonly AnyComponentDef[]>(
         ...queryDefs: Q
     ): Generator<ViewResult<Q>> {
         // Gather storages.
@@ -803,15 +824,11 @@ export class World<Defs extends readonly AnyComponentDef[]> {
             names.push(def.name);
             if (def.descriptor !== null) {
                 const s = this._dataStorages.get(def.name);
-                if (!s) {
-                    return;
-                }
+                if (!s) return;
                 storages.push(s);
             } else {
                 const s = this._tagStorages.get(def.name);
-                if (!s) {
-                    return;
-                }
+                if (!s) return;
                 storages.push(s);
             }
         }
@@ -841,15 +858,11 @@ export class World<Defs extends readonly AnyComponentDef[]> {
         outer:
             for (const entity of candidates) {
                 for (let i = 0; i < storages.length; i++) {
-                    if (i === smallestIdx) {
-                        continue;
-                    }
-                    if (!storages[i]!.has(entity)) {
-                        continue outer;
-                    }
+                    if (i === smallestIdx) continue;
+                    if (!storages[i]!.has(entity)) continue outer;
                 }
 
-                const result: Record<string, unknown> = {entity};
+                const result: Record<string, unknown> = { entity };
                 for (const name of names) {
                     const ds = this._dataStorages.get(name);
                     if (ds) {
@@ -874,3 +887,19 @@ type RawBufferEntry = {
 type RawBufferMap<Defs extends readonly AnyComponentDef[]> = {
     [D in Extract<Defs[number], { __tag: false }> as D["name"]]: RawBufferEntry;
 };
+
+// ============================================================================
+// Mutable Wrapper (internal — for forEach recycling)
+// ============================================================================
+
+/**
+ * Cast target for recycled memory buffer wrappers in forEach.
+ * The concrete *Impl classes from metis-data declare buffer/offset as
+ * `public readonly`, which is a compile-time-only annotation. At runtime
+ * these are plain writable properties. This interface lets us reassign
+ * them without touching metis-data's public API.
+ */
+interface MutableWrapper {
+    buffer: ArrayBuffer;
+    offset: number;
+}
