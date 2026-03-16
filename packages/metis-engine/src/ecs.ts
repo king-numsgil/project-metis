@@ -426,6 +426,60 @@ export class View<Defs extends readonly AnyComponentDef[]> {
         return this._cached ?? [];
     }
 
+    /**
+     * Generator-based iteration. Allocates wrappers per entity.
+     *
+     * ```ts
+     * for (const { entity, Position } of view.query()) {
+     *     const pos = Position.get("x");
+     * }
+     * ```
+     */
+    *query(): Generator<ViewResult<Defs>> {
+        if (!this._world) return;
+        yield* this._world.query(this);
+    }
+
+    /**
+     * Callback iteration with recycled wrappers.
+     *
+     * ```ts
+     * view.forEach(({ entity, Position, Velocity }) => {
+     *     Position.get("x").set(Position.get("x").get() + Velocity.get("vx").get() * dt);
+     * });
+     * ```
+     */
+    forEach(callback: (result: ViewResult<Defs>) => void): void {
+        if (!this._world) return;
+        this._world.forEach(this, callback);
+    }
+
+    /**
+     * Raw buffer iteration for maximum performance.
+     *
+     * ```ts
+     * view.forEachRaw((entity, buffers) => {
+     *     const f32 = new Float32Array(buffers.Position.buffer, buffers.Position.offset, 3);
+     *     f32[0] += 1;
+     * });
+     * ```
+     */
+    forEachRaw(callback: (entity: Entity, buffers: RawBufferMap<Defs>) => void): void {
+        if (!this._world) return;
+        this._world.forEachRaw(this, callback);
+    }
+
+    /**
+     * Make the view iterable via for...of (delegates to query()).
+     *
+     * ```ts
+     * for (const { entity, Position } of view) { ... }
+     * ```
+     */
+    [Symbol.iterator](): Iterator<ViewResult<Defs>> {
+        return this.query();
+    }
+
     private computeIntersection(): Entity[] {
         if (this._storages.length === 0) {
             return [];
