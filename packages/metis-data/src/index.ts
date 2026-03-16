@@ -35,6 +35,8 @@ export {
     type ScalarMemoryBuffer,
     type BoolMemoryBuffer,
     type MatMemoryBuffer,
+    type DescriptorValueType,
+    type DescriptorToMemoryBuffer,
 } from "./memory";
 
 export {
@@ -46,3 +48,20 @@ export {
     Mat3,
     Mat4,
 } from "./math";
+
+export {
+    GPU_STRUCT,
+    GPU_ARRAY,
+    GPU_BOOL,
+    GPU_VEC4,
+    GPU_VEC3,
+    GPU_VEC2,
+    GPU_MAT4,
+    GPU_MAT3,
+    GPU_MAT2,
+    GPU_F16,
+    GPU_F32,
+    GPU_F64,
+    GPU_I32,
+    GPU_U32,
+} from "./descriptors/constants.ts";
