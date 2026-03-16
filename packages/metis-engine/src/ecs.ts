@@ -94,11 +94,13 @@ type GetDef<
 
 /** Extract only data defs from a tuple of defs. */
 type DataDefsOnly<Defs extends readonly AnyComponentDef[]> =
-    Extract<Defs[number], DataComponentDef>;
+    Extract<Defs[number], { __tag: false }>;
 
 /** Build the typed result object for a view query. */
 type ViewResultComponents<Defs extends readonly AnyComponentDef[]> = {
-    [D in DataDefsOnly<Defs> as D["name"]]: DescriptorToMemoryBuffer<D["descriptor"]>;
+    [D in DataDefsOnly<Defs> as D["name"]]: D extends DataComponentDef<string, infer Desc>
+        ? DescriptorToMemoryBuffer<Desc>
+        : never;
 };
 
 export type ViewResult<Defs extends readonly AnyComponentDef[]> = {
@@ -870,5 +872,5 @@ type RawBufferEntry = {
 };
 
 type RawBufferMap<Defs extends readonly AnyComponentDef[]> = {
-    [D in DataDefsOnly<Defs> as D["name"]]: RawBufferEntry;
+    [D in Extract<Defs[number], { __tag: false }> as D["name"]]: RawBufferEntry;
 };
