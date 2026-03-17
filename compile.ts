@@ -9,8 +9,10 @@ await Bun.build({
         autoloadBunfig: false,
         outfile: "./metis",
     },
+    target: "bun",
     minify: true,
     bytecode: true,
+    format: "esm",
     plugins: [
         wgslLoader,
     ],
