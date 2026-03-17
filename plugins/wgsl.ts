@@ -1,12 +1,12 @@
-import { type OnLoadResultSourceCode, plugin, type PluginBuilder } from "bun";
+import { type OnLoadResultSourceCode, plugin, type PluginBuilder, type BunPlugin } from "bun";
 
 import { reflectWgsl, wgslToSpirvBin } from "naga";
 
-plugin({
+export const wgslLoader: BunPlugin = {
     name: "wgslLoader",
     target: "bun",
-    setup(build: PluginBuilder): void {
-        build.onLoad({filter: /\.wgsl$/}, async ({path}): Promise<OnLoadResultSourceCode | undefined> => {
+    setup(builder: PluginBuilder): void {
+        builder.onLoad({filter: /\.wgsl$/}, async ({path}): Promise<OnLoadResultSourceCode | undefined> => {
             const source = await Bun.file(path).text();
             try {
                 using reflect = reflectWgsl(source);
@@ -158,4 +158,6 @@ plugin({
             }
         });
     },
-});
+};
+
+plugin(wgslLoader);
