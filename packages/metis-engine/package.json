@@ -3,6 +3,10 @@
     "module": "src/index.ts",
     "type": "module",
     "private": true,
+    "exports": {
+        ".": "./src/index.ts",
+        "./ecs": "./src/ecs/index.ts"
+    },
     "devDependencies": {
         "@types/bun": "latest"
     },
