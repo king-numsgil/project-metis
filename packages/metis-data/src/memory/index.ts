@@ -1,16 +1,4 @@
 import type { ArrayIndices, TupleOf } from "type-fest";
-
-import {
-    GPU_ARRAY,
-    GPU_BOOL,
-    GPU_MAT2,
-    GPU_MAT3,
-    GPU_MAT4,
-    GPU_STRUCT,
-    GPU_VEC2,
-    GPU_VEC3,
-    GPU_VEC4,
-} from "../descriptors/constants.ts";
 import type {
     ArrayDescriptor,
     BoolDescriptor,
@@ -23,12 +11,24 @@ import type {
     VecDescriptor,
 } from "../descriptors";
 
-import { ScalarMemoryBufferImpl } from "./scalar.ts";
-import { StructMemoryBufferImpl } from "./struct.ts";
+import {
+    GPU_ARRAY,
+    GPU_BOOL,
+    GPU_MAT2,
+    GPU_MAT3,
+    GPU_MAT4,
+    GPU_STRUCT,
+    GPU_VEC2,
+    GPU_VEC3,
+    GPU_VEC4,
+} from "../descriptors/constants.ts";
 import { ArrayMemoryBufferImpl } from "./array.ts";
 import { BoolMemoryBufferImpl } from "./bool.ts";
-import { VecMemoryBufferImpl } from "./vec.ts";
 import { MatMemoryBufferImpl } from "./mat.ts";
+
+import { ScalarMemoryBufferImpl } from "./scalar.ts";
+import { StructMemoryBufferImpl } from "./struct.ts";
+import { VecMemoryBufferImpl } from "./vec.ts";
 
 export interface MemoryBuffer<
     Type extends Descriptor<DescriptorTypedArray>,

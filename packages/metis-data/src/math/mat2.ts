@@ -1,6 +1,5 @@
-import type { TupleOf } from "type-fest";
-
 import { allocate, F32, Mat, type MatMemoryBuffer, type ScalarDescriptor } from "metis-data";
+import type { TupleOf } from "type-fest";
 
 // ============================================================================
 // Mat2 Math Object

@@ -19,6 +19,10 @@ import {
     GPUTextureFormat,
     type GPUTransferBufferCreateInfo,
 } from "sdl3";
+import { CommandBuffer } from "./command_buffer.ts";
+import { ComputePipeline } from "./compute_pipeline.ts";
+import { DeviceBuffer } from "./device_buffer.ts";
+import { Fence } from "./fence.ts";
 
 import {
     type GPUDevicePtr,
@@ -44,15 +48,11 @@ import {
 } from "./ffi";
 
 import { GraphicsPipeline, GraphicsPipelineBuilder } from "./graphics_pipeline.ts";
-import { ComputePipeline } from "./compute_pipeline.ts";
-import { TransferBuffer } from "./transfer_buffer.ts";
-import { CommandBuffer } from "./command_buffer.ts";
-import { DeviceBuffer } from "./device_buffer.ts";
-import type { Window } from "./window.ts";
-import { Texture } from "./texture.ts";
 import { Sampler } from "./sampler.ts";
 import { Shader } from "./shader.ts";
-import { Fence } from "./fence.ts";
+import { Texture } from "./texture.ts";
+import { TransferBuffer } from "./transfer_buffer.ts";
+import type { Window } from "./window.ts";
 
 export const defaultGraphicsPipelineCreateInfo: Readonly<Omit<
     GPUGraphicsPipelineCreateInfo,

@@ -1,4 +1,5 @@
 import { view } from "koffi";
+import { sdl3 } from "./lib.ts";
 
 import {
     type GPUBufferBinding,
@@ -37,7 +38,6 @@ import {
     type GPUTransferBufferPtr,
     type WindowPtr,
 } from "./types";
-import { sdl3 } from "./lib.ts";
 
 export const sdlCreateGPUDevice = sdl3.func(
     "SDL_GPUDevice* SDL_CreateGPUDevice(SDL_GPUShaderFormat format_flags, bool debug_mode, const char* name)",

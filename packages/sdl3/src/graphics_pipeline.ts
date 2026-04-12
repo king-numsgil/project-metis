@@ -1,3 +1,4 @@
+import { defaultGraphicsPipelineCreateInfo, Device } from "./device.ts";
 import { type GPUGraphicsPipelinePtr, type GPUShaderPtr, sdlReleaseGPUGraphicsPipeline } from "./ffi";
 
 import {
@@ -14,8 +15,6 @@ import {
     GPUTextureFormat,
     GPUVertexInputRate,
 } from "./ffi/types";
-
-import { defaultGraphicsPipelineCreateInfo, Device } from "./device.ts";
 import { type VertexBufferSource } from "./mesh.ts";
 import type { Shader } from "./shader.ts";
 

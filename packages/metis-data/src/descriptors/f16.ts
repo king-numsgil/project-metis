@@ -1,5 +1,5 @@
-import { type F16Descriptor } from "./index.ts";
 import { GPU_F16 } from "./constants.ts";
+import { type F16Descriptor } from "./index.ts";
 
 export class F16DescriptorImpl implements F16Descriptor {
     public get type(): typeof GPU_F16 {

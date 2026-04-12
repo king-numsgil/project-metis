@@ -1,5 +1,5 @@
-import type { Tagged } from "type-fest";
 import type { SDLRect } from "sdl3";
+import type { Tagged } from "type-fest";
 
 export type TextPtr = Tagged<{}, "TTF_Text">;
 export type TextEnginePtr = Tagged<{}, "TTF_TextEngine">;

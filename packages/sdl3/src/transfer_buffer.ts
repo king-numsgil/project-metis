@@ -1,3 +1,4 @@
+import { Device } from "./device.ts";
 import {
     type GPUTransferBufferPtr,
     sdlGetError,
@@ -5,8 +6,6 @@ import {
     sdlReleaseGPUTransferBuffer,
     sdlUnmapGPUTransferBuffer,
 } from "./ffi";
-
-import { Device } from "./device.ts";
 
 export class TransferBuffer {
     public constructor(private readonly device: Device, private readonly handle: GPUTransferBufferPtr, private readonly _size: number) {

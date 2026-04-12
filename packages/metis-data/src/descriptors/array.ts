@@ -1,11 +1,4 @@
 import {
-    type ArrayDescriptor,
-    type Descriptor,
-    type DescriptorMemoryType,
-    type DescriptorTypedArray,
-    PackingType,
-} from "./index.ts";
-import {
     GPU_ARRAY,
     GPU_BOOL,
     GPU_F16,
@@ -21,6 +14,13 @@ import {
     GPU_VEC3,
     GPU_VEC4,
 } from "./constants.ts";
+import {
+    type ArrayDescriptor,
+    type Descriptor,
+    type DescriptorMemoryType,
+    type DescriptorTypedArray,
+    PackingType,
+} from "./index.ts";
 
 type TypedArrayConstructor =
     | typeof Float16Array
@@ -95,15 +95,20 @@ export class ArrayDescriptorImpl<
         return this._arrayPitch;
     }
 
-    public toString(): string {
-        return `${GPU_ARRAY}<${this._itemDescriptor.toString()}, ${this._length}>`;
-    }
-
     public offsetAt(index: number): number {
         if (index < 0 || index >= this._length) {
             throw new RangeError(`Array index ${index} out of range [0, ${this._length})`);
         }
         return index * this._arrayPitch;
+    }
+
+    public at(buffer: ArrayBuffer, offset: number, index: number): DescriptorMemoryType<ItemType> {
+        const elementByteOffset = offset + this.offsetAt(index);
+        return this._itemDescriptor.view(buffer, elementByteOffset) as DescriptorMemoryType<ItemType>;
+    }
+
+    public toString(): string {
+        return `${GPU_ARRAY}<${this._itemDescriptor.toString()}, ${this._length}>`;
     }
 
     public view(buffer: ArrayBuffer, offset: number): DescriptorMemoryType<ItemType> {
@@ -123,10 +128,5 @@ export class ArrayDescriptorImpl<
 
         const TypedArrayConstructor = TYPED_ARRAY_CONSTRUCTORS[itemType]!;
         return new TypedArrayConstructor(buffer, offset, elementCount) as DescriptorMemoryType<ItemType>;
-    }
-
-    public at(buffer: ArrayBuffer, offset: number, index: number): DescriptorMemoryType<ItemType> {
-        const elementByteOffset = offset + this.offsetAt(index);
-        return this._itemDescriptor.view(buffer, elementByteOffset) as DescriptorMemoryType<ItemType>;
     }
 }

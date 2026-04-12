@@ -5,9 +5,9 @@ export class ArrayMemoryBufferImpl<
     ItemType extends Descriptor<DescriptorTypedArray>,
     N extends number,
 > implements ArrayMemoryBuffer<ItemType, N> {
+    public readonly type: ArrayDescriptor<ItemType, N>;
     public readonly buffer: ArrayBuffer;
     public readonly offset: number;
-    public readonly type: ArrayDescriptor<ItemType, N>;
 
     public constructor(descriptor: ArrayDescriptor<ItemType, N>, buffer: ArrayBuffer, offset: number) {
         this.type = descriptor;

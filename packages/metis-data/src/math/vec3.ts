@@ -1,6 +1,5 @@
-import type { TupleOf } from "type-fest";
-
 import { allocate, F32, type ScalarDescriptor, Vec, type VecMemoryBuffer } from "metis-data";
+import type { TupleOf } from "type-fest";
 
 // ============================================================================
 // Vec3 Math Object

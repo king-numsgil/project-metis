@@ -2,18 +2,18 @@ import type { BoolDescriptor } from "../descriptors";
 import type { BoolMemoryBuffer } from "./index.ts";
 
 export class BoolMemoryBufferImpl implements BoolMemoryBuffer {
+    public readonly type: BoolDescriptor;
     public readonly buffer: ArrayBuffer;
     public readonly offset: number;
-    public readonly type: BoolDescriptor;
+
+    public view(): ReturnType<BoolDescriptor["view"]> {
+        return this.type.view(this.buffer, this.offset);
+    }
 
     public constructor(descriptor: BoolDescriptor, buffer: ArrayBuffer, offset: number) {
         this.buffer = buffer;
         this.offset = offset;
         this.type = descriptor;
-    }
-
-    public view(): ReturnType<BoolDescriptor["view"]> {
-        return this.type.view(this.buffer, this.offset);
     }
 
     public get(): boolean {

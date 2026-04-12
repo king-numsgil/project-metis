@@ -1,5 +1,5 @@
-import { type GPUShaderPtr, sdlReleaseGPUShader } from "./ffi";
 import { Device } from "./device.ts";
+import { type GPUShaderPtr, sdlReleaseGPUShader } from "./ffi";
 
 export class Shader {
     public constructor(private readonly handle: GPUShaderPtr, private readonly device: Device) {

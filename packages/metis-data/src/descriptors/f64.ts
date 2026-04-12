@@ -1,5 +1,5 @@
-import { type F64Descriptor } from "./index.ts";
 import { GPU_F64 } from "./constants.ts";
+import { type F64Descriptor } from "./index.ts";
 
 export class F64DescriptorImpl implements F64Descriptor {
     public get type(): typeof GPU_F64 {

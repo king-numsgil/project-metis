@@ -1,13 +1,17 @@
-import { type DescriptorToMemoryBuffer, type DescriptorValueType, type StructMemoryBuffer, wrap } from "./index.ts";
 import type { Descriptor, DescriptorTypedArray, StructDescriptor } from "../descriptors";
 import { GPU_ARRAY, GPU_MAT2, GPU_MAT3, GPU_MAT4, GPU_STRUCT } from "../descriptors/constants.ts";
+import { type DescriptorToMemoryBuffer, type DescriptorValueType, type StructMemoryBuffer, wrap } from "./index.ts";
 
 export class StructMemoryBufferImpl<
     Members extends Record<string, Descriptor<DescriptorTypedArray>>,
 > implements StructMemoryBuffer<Members> {
+    public readonly type: StructDescriptor<Members>;
     public readonly buffer: ArrayBuffer;
     public readonly offset: number;
-    public readonly type: StructDescriptor<Members>;
+
+    public view(): ReturnType<StructDescriptor<Members>["view"]> {
+        return this.type.view(this.buffer, this.offset);
+    }
 
     public constructor(descriptor: StructDescriptor<Members>, buffer: ArrayBuffer, offset: number) {
         this.type = descriptor;
@@ -17,10 +21,6 @@ export class StructMemoryBufferImpl<
 
     public get members(): Members {
         return this.type.members;
-    }
-
-    public view(): ReturnType<StructDescriptor<Members>["view"]> {
-        return this.type.view(this.buffer, this.offset);
     }
 
     public get<K extends keyof Members>(name: K): DescriptorToMemoryBuffer<Members[K]> {

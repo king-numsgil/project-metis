@@ -1,3 +1,7 @@
+import type { GPUTextureSamplerBinding } from "sdl3";
+
+import { ComputePipeline } from "./compute_pipeline.ts";
+import { DeviceBuffer } from "./device_buffer.ts";
 import {
     type GPUComputePassPtr,
     sdlBindGPUComputePipeline,
@@ -7,11 +11,6 @@ import {
     sdlDispatchGPUCompute,
     sdlEndGPUComputePass,
 } from "./ffi";
-
-import type { GPUTextureSamplerBinding } from "sdl3";
-
-import { ComputePipeline } from "./compute_pipeline.ts";
-import { DeviceBuffer } from "./device_buffer.ts";
 import type { Texture } from "./texture.ts";
 
 export class ComputePass {

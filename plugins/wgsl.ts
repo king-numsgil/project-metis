@@ -1,4 +1,4 @@
-import { type OnLoadResultSourceCode, plugin, type PluginBuilder, type BunPlugin } from "bun";
+import { type BunPlugin, type OnLoadResultSourceCode, plugin, type PluginBuilder } from "bun";
 
 import { reflectWgsl, wgslToSpirvBin } from "naga";
 

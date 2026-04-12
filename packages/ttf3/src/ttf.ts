@@ -1,5 +1,5 @@
-import { ttfGetFreeTypeVersion, ttfGetHarfBuzzVersion, ttfInit, ttfQuit, ttfVersion } from "./ffi";
 import { sdlGetError } from "sdl3/ffi";
+import { ttfGetFreeTypeVersion, ttfGetHarfBuzzVersion, ttfInit, ttfQuit, ttfVersion } from "./ffi";
 
 export class TTF {
     public constructor() {

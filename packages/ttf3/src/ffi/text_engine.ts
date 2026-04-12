@@ -1,6 +1,6 @@
 import { decode } from "koffi";
-import type { GPUDevicePtr } from "sdl3/ffi";
 import type { PropertiesID } from "sdl3";
+import type { GPUDevicePtr } from "sdl3/ffi";
 import { sdl3ttf } from "./lib.ts";
 import type {
     Direction,

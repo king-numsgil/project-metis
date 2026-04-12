@@ -1,5 +1,5 @@
-import type { GPUDevicePtr } from "sdl3/ffi";
 import type { PropertiesID } from "sdl3";
+import type { GPUDevicePtr } from "sdl3/ffi";
 import {
     ttfCreateGPUTextEngine,
     ttfCreateGPUTextEngineWithProperties,

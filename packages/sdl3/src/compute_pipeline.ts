@@ -1,6 +1,5 @@
-import { type GPUComputePipelinePtr, sdlReleaseGPUComputePipeline } from "./ffi";
-
 import { Device } from "./device.ts";
+import { type GPUComputePipelinePtr, sdlReleaseGPUComputePipeline } from "./ffi";
 
 export class ComputePipeline {
     public constructor(private readonly handle: GPUComputePipelinePtr, private readonly device: Device) {

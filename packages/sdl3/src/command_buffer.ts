@@ -4,6 +4,11 @@ import type {
     GPUStorageBufferReadWriteBinding,
     GPUStorageTextureReadWriteBinding,
 } from "sdl3";
+
+import { ComputePass } from "./compute_pass.ts";
+import { CopyPass } from "./copy_pass.ts";
+import type { Device } from "./device.ts";
+import { Fence } from "./fence.ts";
 import {
     type GPUCommandBufferPtr,
     type GPUTexturePtr,
@@ -18,13 +23,8 @@ import {
     sdlSubmitGPUCommandBufferAndAcquireFence,
     sdlWaitAndAcquireGPUSwapchainTexture,
 } from "./ffi";
-
-import { ComputePass } from "./compute_pass.ts";
 import { RenderPass } from "./render_pass.ts";
 import type { Window } from "./window.ts";
-import type { Device } from "./device.ts";
-import { CopyPass } from "./copy_pass.ts";
-import { Fence } from "./fence.ts";
 
 export class CommandBuffer {
     public constructor(private readonly handle: GPUCommandBufferPtr, private readonly device: Device) {

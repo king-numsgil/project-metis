@@ -1,3 +1,4 @@
+import { DeviceBuffer, type GPUBufferBinding, GPUIndexElementSize, type GPUTextureSamplerBinding } from "sdl3";
 import {
     type GPURenderPassPtr,
     sdlBindGPUFragmentSamplers,
@@ -13,8 +14,6 @@ import {
     sdlDrawGPUPrimitives,
     sdlEndGPURenderPass,
 } from "./ffi";
-
-import { DeviceBuffer, type GPUBufferBinding, GPUIndexElementSize, type GPUTextureSamplerBinding } from "sdl3";
 
 import { GraphicsPipeline } from "./graphics_pipeline.ts";
 import type { Texture } from "./texture.ts";

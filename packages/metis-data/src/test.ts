@@ -1,6 +1,6 @@
 import { ArrayOf, F32, StructOf, Vec } from "./descriptors";
-import { allocate } from "./memory";
 import { Vec2 } from "./math";
+import { allocate } from "./memory";
 
 const Position = StructOf({
     position: Vec(F32, 2),

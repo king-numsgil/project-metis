@@ -1,6 +1,5 @@
-import type { TupleOf } from "type-fest";
-
 import { allocate, F32, Mat, type MatMemoryBuffer, type ScalarDescriptor, type VecMemoryBuffer } from "metis-data";
+import type { TupleOf } from "type-fest";
 
 import { Quat } from "./quat.ts";
 

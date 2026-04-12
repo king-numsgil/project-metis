@@ -1,5 +1,5 @@
-import { type I32Descriptor } from "./index.ts";
 import { GPU_I32 } from "./constants.ts";
+import { type I32Descriptor } from "./index.ts";
 
 export class I32DescriptorImpl implements I32Descriptor {
     public get type(): typeof GPU_I32 {

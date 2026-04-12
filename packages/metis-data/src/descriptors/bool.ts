@@ -1,5 +1,5 @@
-import { type BoolDescriptor } from "./index.ts";
 import { GPU_BOOL } from "./constants.ts";
+import { type BoolDescriptor } from "./index.ts";
 
 export class BoolDescriptorImpl implements BoolDescriptor {
     public get type(): typeof GPU_BOOL {

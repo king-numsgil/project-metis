@@ -100,16 +100,6 @@ export class MatDescriptorImpl<
         return this._n * this._n;
     }
 
-    public toString(): string {
-        return `${this._type}<${this._scalarDescriptor.type}>`;
-    }
-
-    public view(buffer: ArrayBuffer, offset: number): DescriptorMemoryType<ScalarType> {
-        const TypedArrayConstructor = TYPED_ARRAY_CONSTRUCTORS[this._scalarDescriptor.type]!;
-        const elementCount = (this._byteSize / this._scalarDescriptor.byteSize);
-        return new TypedArrayConstructor(buffer, offset, elementCount) as DescriptorMemoryType<ScalarType>;
-    }
-
     public col(buffer: ArrayBuffer, offset: number, index: number): DescriptorMemoryType<ScalarType> {
         if (index < 0 || index >= this._n) {
             throw new RangeError(`Column index ${index} out of range [0, ${this._n})`);
@@ -118,5 +108,15 @@ export class MatDescriptorImpl<
         const TypedArrayConstructor = TYPED_ARRAY_CONSTRUCTORS[this._scalarDescriptor.type]!;
         const columnByteOffset = offset + (index * this._columnStride);
         return new TypedArrayConstructor(buffer, columnByteOffset, this._n) as DescriptorMemoryType<ScalarType>;
+    }
+
+    public toString(): string {
+        return `${this._type}<${this._scalarDescriptor.type}>`;
+    }
+
+    public view(buffer: ArrayBuffer, offset: number): DescriptorMemoryType<ScalarType> {
+        const TypedArrayConstructor = TYPED_ARRAY_CONSTRUCTORS[this._scalarDescriptor.type]!;
+        const elementCount = (this._byteSize / this._scalarDescriptor.byteSize);
+        return new TypedArrayConstructor(buffer, offset, elementCount) as DescriptorMemoryType<ScalarType>;
     }
 }

@@ -1,4 +1,6 @@
 import type { IntRange } from "type-fest";
+import { ArrayDescriptorImpl } from "./array.ts";
+import { BoolDescriptorImpl } from "./bool.ts";
 
 import {
     GPU_ARRAY,
@@ -17,17 +19,15 @@ import {
     GPU_VEC4,
     type GPUType,
 } from "./constants.ts";
-
-import { StructDescriptorImpl } from "./struct.ts";
-import { ArrayDescriptorImpl } from "./array.ts";
-import { BoolDescriptorImpl } from "./bool.ts";
-import { I32DescriptorImpl } from "./i32.ts";
-import { U32DescriptorImpl } from "./u32.ts";
 import { F16DescriptorImpl } from "./f16.ts";
 import { F32DescriptorImpl } from "./f32.ts";
 import { F64DescriptorImpl } from "./f64.ts";
-import { VecDescriptorImpl } from "./vec.ts";
+import { I32DescriptorImpl } from "./i32.ts";
 import { MatDescriptorImpl } from "./mat.ts";
+
+import { StructDescriptorImpl } from "./struct.ts";
+import { U32DescriptorImpl } from "./u32.ts";
+import { VecDescriptorImpl } from "./vec.ts";
 
 export type DescriptorTypedArray =
     | Uint8Array

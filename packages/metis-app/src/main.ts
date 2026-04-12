@@ -1,3 +1,6 @@
+import { ArrayOf, F32, StructOf, Vec } from "metis-data";
+
+import { join } from "node:path";
 import {
     Device,
     EventType,
@@ -22,14 +25,11 @@ import {
     System,
     Window,
 } from "sdl3";
-import {ArrayOf, F32, StructOf, Vec} from "metis-data";
-import {Font, GPUTextEngine, Text, TTF} from "ttf3";
-import {sdlGetError} from "sdl3/ffi";
-
-import {join} from "node:path";
+import { sdlGetError } from "sdl3/ffi";
+import { Font, GPUTextEngine, Text, TTF } from "ttf3";
+import textShader from "./text.wgsl";
 
 import triangleShader from "./triangle.wgsl";
-import textShader from "./text.wgsl";
 
 function decodeKeymods(mod: Keymod): string[] {
     return (Object.keys(Keymod) as Array<keyof typeof Keymod>)

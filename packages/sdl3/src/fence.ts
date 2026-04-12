@@ -1,6 +1,5 @@
-import { type GPUFencePtr, sdlQueryGPUFence, sdlReleaseGPUFence, sdlWaitForGPUFences } from "./ffi";
-
 import type { Device } from "./device.ts";
+import { type GPUFencePtr, sdlQueryGPUFence, sdlReleaseGPUFence, sdlWaitForGPUFences } from "./ffi";
 
 export class Fence {
     public constructor(private readonly device: Device, private readonly handle: GPUFencePtr) {

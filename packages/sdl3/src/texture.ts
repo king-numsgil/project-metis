@@ -1,6 +1,5 @@
-import { type GPUTexturePtr, sdlReleaseGPUTexture } from "./ffi";
-
 import { Device } from "./device.ts";
+import { type GPUTexturePtr, sdlReleaseGPUTexture } from "./ffi";
 
 export class Texture {
     public constructor(private readonly handle: GPUTexturePtr, private readonly device: Device) {

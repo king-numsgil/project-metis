@@ -1,6 +1,5 @@
-import { type GPUBufferPtr, sdlReleaseGPUBuffer } from "./ffi";
-
 import { Device } from "./device.ts";
+import { type GPUBufferPtr, sdlReleaseGPUBuffer } from "./ffi";
 
 export class DeviceBuffer {
     public constructor(private readonly device: Device, private readonly handle: GPUBufferPtr, private readonly _size: number) {

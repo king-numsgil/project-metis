@@ -1,12 +1,4 @@
 import {
-    Device,
-    DeviceBuffer,
-    GPUBufferUsageFlags,
-    GPUTransferBufferUsage,
-    type GPUVertexAttribute,
-    GPUVertexElementFormat,
-} from "sdl3";
-import {
     allocate,
     type ArrayDescriptor,
     type ArrayMemoryBuffer,
@@ -16,6 +8,14 @@ import {
     type StructDescriptor,
     type VecDescriptor,
 } from "metis-data";
+import {
+    Device,
+    DeviceBuffer,
+    GPUBufferUsageFlags,
+    GPUTransferBufferUsage,
+    type GPUVertexAttribute,
+    GPUVertexElementFormat,
+} from "sdl3";
 
 /**
  * Supported index element sizes for index buffers.
@@ -24,6 +24,7 @@ type IndexType = "uint16" | "uint32";
 
 export interface VertexBufferSource {
     readonly vertices: { readonly type: { readonly arrayPitch: number } };
+
     getVertexAttributes(slot: number): GPUVertexAttribute[];
 }
 
@@ -143,6 +144,53 @@ export class Mesh<
      */
     get vertices(): ArrayMemoryBuffer<T, N> {
         return this._vertices;
+    }
+
+    /**
+     * Generate SDL3 vertex attribute descriptors for this mesh's layout.
+     *
+     * This automatically handles the descriptor structure and generates
+     * appropriate vertex attributes for SDL3.
+     *
+     * @param bufferSlot - The buffer slot to use for all attributes (default: 0)
+     * @returns Array of GPUVertexAttribute descriptors for SDL3
+     *
+     * @example
+     * ```typescript
+     * const attributes = mesh.getVertexAttributes(0);
+     *
+     * const pipeline = dev.createGraphicsPipeline({
+     *     ...defaultGraphicsPipelineCreateInfo,
+     *     vertex_input_state: {
+     *         num_vertex_buffers: 1,
+     *         vertex_buffer_descriptions: [...],
+     *         num_vertex_attributes: attributes.length,
+     *         vertex_attributes: attributes,
+     *     },
+     * });
+     * ```
+     */
+    getVertexAttributes(bufferSlot: number = 0): GPUVertexAttribute[] {
+        const attributes: GPUVertexAttribute[] = [];
+        const structDescriptor = this._vertexDescriptor.item;
+        let location = 0;
+
+        for (const [name, offset] of Object.entries(structDescriptor.offsets)) {
+            const member = structDescriptor.members[name];
+            if (!member) {
+                continue;
+            }
+
+            const format = this.getVertexElementFormat(member);
+            attributes.push({
+                location: location++,
+                buffer_slot: bufferSlot,
+                format: format,
+                offset: offset,
+            });
+        }
+
+        return attributes;
     }
 
     /**
@@ -302,53 +350,6 @@ export class Mesh<
         } else {
             return new Uint32Array(this._indexBuffer);
         }
-    }
-
-    /**
-     * Generate SDL3 vertex attribute descriptors for this mesh's layout.
-     *
-     * This automatically handles the descriptor structure and generates
-     * appropriate vertex attributes for SDL3.
-     *
-     * @param bufferSlot - The buffer slot to use for all attributes (default: 0)
-     * @returns Array of GPUVertexAttribute descriptors for SDL3
-     *
-     * @example
-     * ```typescript
-     * const attributes = mesh.getVertexAttributes(0);
-     *
-     * const pipeline = dev.createGraphicsPipeline({
-     *     ...defaultGraphicsPipelineCreateInfo,
-     *     vertex_input_state: {
-     *         num_vertex_buffers: 1,
-     *         vertex_buffer_descriptions: [...],
-     *         num_vertex_attributes: attributes.length,
-     *         vertex_attributes: attributes,
-     *     },
-     * });
-     * ```
-     */
-    getVertexAttributes(bufferSlot: number = 0): GPUVertexAttribute[] {
-        const attributes: GPUVertexAttribute[] = [];
-        const structDescriptor = this._vertexDescriptor.item;
-        let location = 0;
-
-        for (const [name, offset] of Object.entries(structDescriptor.offsets)) {
-            const member = structDescriptor.members[name];
-            if (!member) {
-                continue;
-            }
-
-            const format = this.getVertexElementFormat(member);
-            attributes.push({
-                location: location++,
-                buffer_slot: bufferSlot,
-                format: format,
-                offset: offset,
-            });
-        }
-
-        return attributes;
     }
 
     /**

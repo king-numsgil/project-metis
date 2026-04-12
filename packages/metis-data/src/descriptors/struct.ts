@@ -66,6 +66,28 @@ export class StructDescriptorImpl<
         return {...this._offsets};
     }
 
+    public offsetOf<K extends keyof Members>(name: K): number {
+        if (!(name in this._offsets)) {
+            throw new Error(`Member "${String(name)}" does not exist in struct`);
+        }
+        return this._offsets[name];
+    }
+
+    public member<K extends keyof Members>(
+        buffer: ArrayBuffer,
+        offset: number,
+        name: K,
+    ): DescriptorMemoryType<Members[K]> {
+        if (!(name in this._offsets)) {
+            throw new Error(`Member "${String(name)}" does not exist in struct`);
+        }
+
+        const memberOffset = this._offsets[name]!;
+        const memberDescriptor = this._members[name]!;
+
+        return memberDescriptor.view(buffer, offset + memberOffset) as DescriptorMemoryType<Members[K]>;
+    }
+
     public get byteSize(): number {
         return this._byteSize;
     }
@@ -85,29 +107,7 @@ export class StructDescriptorImpl<
         return `${GPU_STRUCT} { ${memberStrings} }`;
     }
 
-    public offsetOf<K extends keyof Members>(name: K): number {
-        if (!(name in this._offsets)) {
-            throw new Error(`Member "${String(name)}" does not exist in struct`);
-        }
-        return this._offsets[name];
-    }
-
     public view(buffer: ArrayBuffer, offset: number): Uint8Array {
         return new Uint8Array(buffer, offset, this._byteSize);
-    }
-
-    public member<K extends keyof Members>(
-        buffer: ArrayBuffer,
-        offset: number,
-        name: K,
-    ): DescriptorMemoryType<Members[K]> {
-        if (!(name in this._offsets)) {
-            throw new Error(`Member "${String(name)}" does not exist in struct`);
-        }
-
-        const memberOffset = this._offsets[name]!;
-        const memberDescriptor = this._members[name]!;
-
-        return memberDescriptor.view(buffer, offset + memberOffset) as DescriptorMemoryType<Members[K]>;
     }
 }

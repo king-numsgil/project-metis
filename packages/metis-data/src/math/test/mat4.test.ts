@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { F32 } from "metis-data";
-import { Mat4 } from "../mat4.ts";
 import { Mat3 } from "../mat3.ts";
+import { Mat4 } from "../mat4.ts";
 import { Quat } from "../quat.ts";
 import { Vec3 } from "../vec3.ts";
 

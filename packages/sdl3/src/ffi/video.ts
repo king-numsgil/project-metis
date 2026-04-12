@@ -1,4 +1,5 @@
 import { decode } from "koffi";
+import { sdl3, sdlFree } from "./lib.ts";
 
 import {
     FlashOperation,
@@ -9,7 +10,6 @@ import {
     WindowPosition,
     type WindowPtr,
 } from "./types";
-import { sdl3, sdlFree } from "./lib.ts";
 
 export const sdlGetNumVideoDrivers = sdl3.func(
     "int SDL_GetNumVideoDrivers()",

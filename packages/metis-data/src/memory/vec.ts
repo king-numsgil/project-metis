@@ -8,18 +8,18 @@ export class VecMemoryBufferImpl<
     ScalarType extends ScalarDescriptor,
     N extends 2 | 3 | 4,
 > implements VecMemoryBuffer<ScalarType, N> {
+    public readonly type: VecDescriptor<ScalarType, N>;
     public readonly buffer: ArrayBuffer;
     public readonly offset: number;
-    public readonly type: VecDescriptor<ScalarType, N>;
+
+    public view(): ReturnType<VecDescriptor<ScalarType, N>["view"]> {
+        return this.type.view(this.buffer, this.offset);
+    }
 
     public constructor(descriptor: VecDescriptor<ScalarType, N>, buffer: ArrayBuffer, offset: number) {
         this.type = descriptor;
         this.buffer = buffer;
         this.offset = offset;
-    }
-
-    public view(): ReturnType<VecDescriptor<ScalarType, N>["view"]> {
-        return this.type.view(this.buffer, this.offset);
     }
 
     public at(index: ArrayIndices<TupleOf<N, number>>): ScalarMemoryBuffer<ScalarType> {

@@ -1,9 +1,8 @@
-import type { TupleOf } from "type-fest";
-
 import { allocate, F32, type ScalarDescriptor, Vec, type VecMemoryBuffer } from "metis-data";
+import type { TupleOf } from "type-fest";
+import { Vec3 } from "./vec3.ts";
 
 import { Vec4 } from "./vec4.ts";
-import { Vec3 } from "./vec3.ts";
 
 // ============================================================================
 // Quat Math Object (operates on Vec4 buffers)

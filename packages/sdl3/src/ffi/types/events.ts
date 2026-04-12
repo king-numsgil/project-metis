@@ -1,6 +1,6 @@
 import { Keycode, Keymod } from "./keycode.ts";
-import type { WindowID } from "./video.ts";
 import { Scancode } from "./scancode.ts";
+import type { WindowID } from "./video.ts";
 
 export enum EventType {
     First = 0,
