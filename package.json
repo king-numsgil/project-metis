@@ -5,15 +5,15 @@
         "compile": "bun compile.ts"
     },
     "dependencies": {
-        "koffi": "^2.15.2",
+        "koffi": "^2.15.6",
         "naga": "workspace:*",
         "type-fest": "^5.5.0"
     },
     "devDependencies": {
-        "@types/bun": "^1.3.11"
+        "@types/bun": "^1.3.12"
     },
     "peerDependencies": {
-        "typescript": "^5.9.3"
+        "typescript": "^6.0.2"
     },
     "workspaces": [
         "packages/*"

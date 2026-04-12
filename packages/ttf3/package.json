@@ -10,10 +10,10 @@
         "@types/bun": "latest"
     },
     "peerDependencies": {
-        "typescript": "^5"
+        "typescript": "^6"
     },
     "dependencies": {
-        "koffi": "^2.15.2",
+        "koffi": "^2.15.6",
         "type-fest": "^5.5.0",
         "metis-data": "workspace:*",
         "sdl3": "workspace:*"
