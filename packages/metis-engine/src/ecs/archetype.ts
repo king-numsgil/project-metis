@@ -19,7 +19,7 @@ export function makeSignatureKey(names: string[]): SignatureKey {
 const INITIAL_CAPACITY = 32;
 
 type ArchetypeStructMembers<CS extends ComponentSet> = {
-    [K in keyof CS]: CS[K]["descriptor"]
+    [K in keyof CS]: CS[K]["descriptor"];
 };
 
 type ArchetypeRowDescriptor<CS extends ComponentSet> = StructDescriptor<ArchetypeStructMembers<CS>>;

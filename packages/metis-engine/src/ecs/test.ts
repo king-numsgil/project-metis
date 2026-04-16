@@ -12,10 +12,10 @@ const components = {
 
 const world = new World(components);
 
-const e0 = world.spawnEntity(["Position", "Velocity", "Tags"]);
-const e1 = world.spawnEntity(["Position", "Velocity", "Tags"]);
-const e2 = world.spawnEntity(["Position", "Velocity", "Health"]);
-const e3 = world.spawnEntity(["Health"]);
+const e0 = world.spawnEntity("Position", "Velocity", "Tags");
+const e1 = world.spawnEntity("Position", "Velocity", "Tags");
+const e2 = world.spawnEntity("Position", "Velocity", "Health");
+const e3 = world.spawnEntity("Health");
 
 world.getComponent(e0, "Position").set({x: 1.5, y: 2.5});
 world.getComponent(e0, "Velocity").set({x: 0.1, y: 0.2});
@@ -51,7 +51,7 @@ printEntityBytes(world, e0);
 console.log("\n\n>>> SPAWNING 35 more entities to trigger buffer growth (capacity starts at 32)...");
 const extras: number[] = [];
 for (let i = 0; i < 35; i++) {
-    const id = world.spawnEntity(["Position", "Velocity", "Tags"]);
+    const id = world.spawnEntity("Position", "Velocity", "Tags");
     world.getComponent(id, "Position").get("x").set(i);
     extras.push(id);
 }

@@ -31,7 +31,7 @@ export class World<CS extends ComponentSet> {
         return this.entityRecords.size;
     }
 
-    spawnEntity(componentNames: Array<keyof CS & string>): EntityId {
+    spawnEntity(...componentNames: Array<keyof CS & string>): EntityId {
         const archetype = this.getOrCreateArchetype(componentNames);
         const entityId = this.nextEntityId++;
         archetype.addEntity(entityId);
