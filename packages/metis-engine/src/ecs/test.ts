@@ -3,14 +3,12 @@ import { defineComponent } from "./component.ts";
 import { printEntityBytes, printWorldInfo } from "./debug.ts";
 import { World } from "./world.ts";
 
-const components = {
+const world = new World({
     Position: defineComponent("Position", StructOf({x: F32, y: F32})),
     Velocity: defineComponent("Velocity", StructOf({x: F32, y: F32})),
     Health: defineComponent("Health", StructOf({value: F32})),
     Tags: defineComponent("Tags", U32),
-} as const;
-
-const world = new World(components);
+} as const);
 
 const e0 = world.spawnEntity("Position", "Velocity", "Tags");
 const e1 = world.spawnEntity("Position", "Velocity", "Tags");
