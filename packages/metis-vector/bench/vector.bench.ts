@@ -168,29 +168,29 @@ group("path stroke", () => {
 
 group("transforms", () => {
     bench("push + pop (no draw)", () => {
-        ctx.pushTransform([2, 0, 0, 2, 100, 100]);
+        ctx.pushTransform(new Float32Array([2, 0, 0, 2, 100, 100]));
         ctx.popTransform();
     });
 
     bench("push 8 + pop 8 (no draw)", () => {
-        for (let i = 0; i < 8; i++) ctx.pushTransform([1, 0, 0, 1, i * 10, 0]);
+        for (let i = 0; i < 8; i++) ctx.pushTransform(new Float32Array([1, 0, 0, 1, i * 10, 0]));
         for (let i = 0; i < 8; i++) ctx.popTransform();
     });
 
     bench("fill triangle under scale+translate", () => {
-        ctx.pushTransform([1.5, 0, 0, 1.5, 50, 50]);
+        ctx.pushTransform(new Float32Array([1.5, 0, 0, 1.5, 50, 50]));
         filledTriangle();
         ctx.popTransform();
         ctx.flush();
     });
 
     bench("setWorldTransform", () => {
-        ctx.setWorldTransform([
+        ctx.setWorldTransform(new Float32Array([
             1, 0, 0, 0,
             0, 1, 0, 0,
             0, 0, 1, 0,
             10, 20, 0, 1,
-        ]);
+        ]));
     });
 });
 

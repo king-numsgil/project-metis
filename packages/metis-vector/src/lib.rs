@@ -8,6 +8,7 @@ use std::f32::consts::PI;
 use lyon_path::math::point;
 use lyon_path::geom::euclid::default::Transform2D;
 use lyon_path::Path;
+use lyon_tessellation::{FillTessellator, StrokeTessellator};
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 
@@ -17,7 +18,7 @@ use output::{FlushOutput, FontMetrics, GpuDrawCall};
 use tessellator::tessellate_command;
 
 // ---------------------------------------------------------------------------
-// Pending draw entry: a tessellated command + world transform snapshot
+// Pending draw entry
 // ---------------------------------------------------------------------------
 
 struct PendingDraw {
@@ -46,6 +47,10 @@ pub struct VectorContext {
 
     // Font storage
     fonts: FontStore,
+
+    // Reused tessellators — their internal scratch allocations survive across calls
+    fill_tess: FillTessellator,
+    stroke_tess: StrokeTessellator,
 
     // Tessellation tolerance
     tolerance: f32,
@@ -77,6 +82,8 @@ impl VectorContext {
             world_transform: identity_4x4(),
             pending: Vec::new(),
             fonts: FontStore::new(),
+            fill_tess: FillTessellator::new(),
+            stroke_tess: StrokeTessellator::new(),
             tolerance: tolerance.map(|t| t as f32).unwrap_or(0.25),
         }
     }
@@ -86,15 +93,15 @@ impl VectorContext {
     // -----------------------------------------------------------------------
 
     #[napi]
-    pub fn push_transform(&mut self, matrix: Vec<f64>) {
-        let m = &matrix;
+    pub fn push_transform(&mut self, matrix: Float32Array) {
+        let m = matrix.as_ref();
         let t = Transform2D::new(
-            m.get(0).copied().unwrap_or(1.0) as f32,
-            m.get(1).copied().unwrap_or(0.0) as f32,
-            m.get(2).copied().unwrap_or(0.0) as f32,
-            m.get(3).copied().unwrap_or(1.0) as f32,
-            m.get(4).copied().unwrap_or(0.0) as f32,
-            m.get(5).copied().unwrap_or(0.0) as f32,
+            m.get(0).copied().unwrap_or(1.0),
+            m.get(1).copied().unwrap_or(0.0),
+            m.get(2).copied().unwrap_or(0.0),
+            m.get(3).copied().unwrap_or(1.0),
+            m.get(4).copied().unwrap_or(0.0),
+            m.get(5).copied().unwrap_or(0.0),
         );
         let combined = current_local(&self.local_stack).then(&t);
         self.local_stack.push(combined);
@@ -108,10 +115,10 @@ impl VectorContext {
     }
 
     #[napi]
-    pub fn set_world_transform(&mut self, matrix: Vec<f64>) {
+    pub fn set_world_transform(&mut self, matrix: Float32Array) {
         let mut wt = identity_4x4();
-        for (i, v) in matrix.iter().enumerate().take(16) {
-            wt[i] = *v as f32;
+        for (i, v) in matrix.as_ref().iter().enumerate().take(16) {
+            wt[i] = *v;
         }
         self.world_transform = wt;
     }
@@ -179,10 +186,7 @@ impl VectorContext {
         let steps = ((sweep.abs() / (2.0 * PI)) * 64.0).ceil().max(4.0) as usize;
         let step_angle = sweep / steps as f32;
 
-        let first = lt.transform_point(point(
-            cx + r * start.cos(),
-            cy + r * start.sin(),
-        ));
+        let first = lt.transform_point(point(cx + r * start.cos(), cy + r * start.sin()));
 
         let builder = match &mut self.path_builder {
             Some(b) => b,
@@ -268,7 +272,7 @@ impl VectorContext {
     ) -> napi::Result<()> {
         self.fonts
             .load(name, &path, face_index.unwrap_or(0))
-            .map_err(|e| napi::Error::from_reason(e))
+            .map_err(napi::Error::from_reason)
     }
 
     #[napi]
@@ -292,8 +296,9 @@ impl VectorContext {
         }
 
         let lt = current_local(&self.local_stack);
+        let mut builder = Path::builder();
 
-        let glyph_paths = font::expand_text_path(
+        let fill_rule = font::expand_text_path(
             &self.fonts,
             &font_name,
             size_px as f32,
@@ -301,22 +306,14 @@ impl VectorContext {
             x as f32,
             y as f32,
             &lt,
+            &mut builder,
         )
-        .map_err(|e| napi::Error::from_reason(e))?;
+        .map_err(napi::Error::from_reason)?;
 
-        // Merge all glyph paths into one compound path
-        let mut builder = Path::builder();
-        for glyph_path in &glyph_paths.paths {
-            for event in glyph_path.iter() {
-                builder.path_event(event);
-            }
-        }
-        let merged = builder.build();
-
-        self.current_path = Some(merged);
+        self.current_path = Some(builder.build());
         self.path_builder = None;
         self.path_is_from_text = true;
-        self.text_fill_rule = glyph_paths.fill_rule;
+        self.text_fill_rule = fill_rule;
 
         Ok(())
     }
@@ -325,15 +322,15 @@ impl VectorContext {
     pub fn font_metrics(&self, font_name: String, size_px: f64) -> napi::Result<FontMetrics> {
         let (ascender, descender, line_gap, line_height, cap_height, x_height, upm) =
             font::get_font_metrics(&self.fonts, &font_name, size_px as f32)
-                .map_err(|e| napi::Error::from_reason(e))?;
+                .map_err(napi::Error::from_reason)?;
 
         Ok(FontMetrics {
-            ascender: ascender as f64,
-            descender: descender as f64,
-            line_gap: line_gap as f64,
-            line_height: line_height as f64,
-            cap_height: cap_height as f64,
-            x_height: x_height as f64,
+            ascender:     ascender as f64,
+            descender:    descender as f64,
+            line_gap:     line_gap as f64,
+            line_height:  line_height as f64,
+            cap_height:   cap_height as f64,
+            x_height:     x_height as f64,
             units_per_em: upm as f64,
         })
     }
@@ -347,7 +344,7 @@ impl VectorContext {
         }
         font::measure_text_width(&self.fonts, &font_name, size_px as f32, &text)
             .map(|w| w as f64)
-            .map_err(|e| napi::Error::from_reason(e))
+            .map_err(napi::Error::from_reason)
     }
 
     // -----------------------------------------------------------------------
@@ -365,28 +362,24 @@ impl VectorContext {
         let mut draw_calls: Vec<GpuDrawCall> = Vec::new();
 
         for draw in &pending {
-            let result = tessellate_command(&draw.command, self.tolerance);
-            let tess = match result {
-                Some(t) => t,
-                None => continue,
-            };
-
-            let index_offset = (all_vertices.len() / 6) as u32;
             let first_index = all_indices.len() as u32;
-            let index_count = tess.indices.len() as u32;
 
-            for v in &tess.vertices {
-                all_vertices.extend_from_slice(&[v.x, v.y, v.r, v.g, v.b, v.a]);
-            }
-            for idx in &tess.indices {
-                all_indices.push(idx + index_offset);
-            }
+            let ok = tessellate_command(
+                &draw.command,
+                self.tolerance,
+                &mut self.fill_tess,
+                &mut self.stroke_tess,
+                &mut all_vertices,
+                &mut all_indices,
+            );
 
-            draw_calls.push(GpuDrawCall {
-                first_index,
-                index_count,
-                model_matrix: Float32Array::new(draw.world_transform.to_vec()),
-            });
+            if ok {
+                draw_calls.push(GpuDrawCall {
+                    first_index,
+                    index_count: all_indices.len() as u32 - first_index,
+                    model_matrix: Float32Array::new(draw.world_transform.to_vec()),
+                });
+            }
         }
 
         Ok(FlushOutput {
