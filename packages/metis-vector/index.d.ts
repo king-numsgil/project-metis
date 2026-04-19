@@ -42,5 +42,5 @@ export interface FontMetrics {
 export interface GpuDrawCall {
   firstIndex: number
   indexCount: number
-  modelMatrix: Array<number>
+  modelMatrix: Float32Array
 }

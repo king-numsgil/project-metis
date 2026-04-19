@@ -5,7 +5,7 @@ use napi_derive::napi;
 pub struct GpuDrawCall {
     pub first_index: u32,
     pub index_count: u32,
-    pub model_matrix: Vec<f64>,
+    pub model_matrix: Float32Array,
 }
 
 #[napi(object)]

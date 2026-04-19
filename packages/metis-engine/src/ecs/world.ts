@@ -4,7 +4,7 @@ import { Archetype, type EntityBytesDump, type EntityId, makeSignatureKey, type 
 import type { ComponentSet } from "./component.ts";
 
 type SubsetOf<CS extends ComponentSet, K extends keyof CS = keyof CS> = {
-    [P in K]: CS[P]
+    [P in K]: CS[P];
 };
 
 interface EntityRecord {

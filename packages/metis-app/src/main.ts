@@ -196,11 +196,6 @@ while (running) {
     const cb = dev.acquireCommandBuffer();
     const swapchain = cb.waitAndAcquireSwapchainTexture(wnd);
 
-    /*console.log({
-        scWidth: swapchain.width,
-        scHeight: swapchain.height,
-    });*/
-
     // Compute pass: generate gradient texture
     const computePass = cb.beginComputePass([{
         texture: computeTexture.raw,
@@ -247,7 +242,7 @@ while (running) {
     }, GPUIndexElementSize.Size16Bit);
 
     for (const call of gpuVector.drawCalls) {
-        cb.pushVertexUniformData(1, new Float32Array(call.modelMatrix).buffer);
+        cb.pushVertexUniformData(1, call.modelMatrix.buffer as ArrayBuffer);
         pass.drawIndexedPrimitives(call.indexCount, 1, call.firstIndex, 0);
     }
     pass.end();

@@ -385,7 +385,7 @@ impl VectorContext {
             draw_calls.push(GpuDrawCall {
                 first_index,
                 index_count,
-                model_matrix: draw.world_transform.iter().map(|&v| v as f64).collect(),
+                model_matrix: Float32Array::new(draw.world_transform.to_vec()),
             });
         }
 
