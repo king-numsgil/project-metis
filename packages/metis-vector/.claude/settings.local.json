@@ -3,7 +3,13 @@
     "allow": [
       "Bash(cargo check *)",
       "Bash(cargo test *)",
-      "Bash(cargo build *)"
+      "Bash(cargo build *)",
+      "Bash(bun test *)",
+      "Bash(bun -e \"import 'mitata'\")",
+      "Bash(bun add *)",
+      "Bash(bun -e \"import { bench, run, group } from 'mitata'; console.log\\('ok'\\)\")",
+      "Bash(bun -e \"import * as m from 'mitata'; console.log\\(Object.keys\\(m\\)\\)\")",
+      "Bash(bun run *)"
     ]
   }
 }

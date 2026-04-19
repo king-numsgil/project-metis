@@ -36,13 +36,15 @@
   },
   "scripts": {
     "build": "napi build --platform --release",
-    "build:debug": "napi build --platform"
+    "build:debug": "napi build --platform",
+    "bench": "bun run bench/vector.bench.ts"
   },
   "devDependencies": {
     "@emnapi/core": "^1.5.0",
     "@emnapi/runtime": "^1.5.0",
     "@napi-rs/cli": "^3.2.0",
     "@tybys/wasm-util": "^0.10.0",
+    "mitata": "^1.0.34",
     "typescript": "^6.0.0"
   }
 }
