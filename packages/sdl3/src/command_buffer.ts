@@ -1,4 +1,5 @@
 import type {
+    GPUBlitInfo,
     GPUColorTargetInfo,
     GPUDepthStencilTargetInfo,
     GPUStorageBufferReadWriteBinding,
@@ -14,7 +15,7 @@ import {
     type GPUTexturePtr,
     sdlBeginGPUComputePass,
     sdlBeginGPUCopyPass,
-    sdlBeginGPURenderPass,
+    sdlBeginGPURenderPass, sdlBlitGPUTexture,
     sdlGetError,
     sdlPushGPUComputeUniformData,
     sdlPushGPUFragmentUniformData,
@@ -65,6 +66,10 @@ export class CommandBuffer {
 
     public beginComputePass(storage_texture_bindings?: GPUStorageTextureReadWriteBinding[] | null, storage_buffer_bindings?: GPUStorageBufferReadWriteBinding[] | null): ComputePass {
         return new ComputePass(sdlBeginGPUComputePass(this.handle, storage_texture_bindings, storage_buffer_bindings));
+    }
+
+    public blitTexture(info: GPUBlitInfo): void {
+        sdlBlitGPUTexture(this.handle, info);
     }
 
     public submit(): boolean {

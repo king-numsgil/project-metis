@@ -385,6 +385,13 @@ export enum GPUPrimitiveType {
     PointList,
 }
 
+export enum FlipMode {
+    None,
+    Horizontal,
+    Vertical,
+    HorizontalAndVertical = (Horizontal | Vertical),
+}
+
 export interface FColor {
     r: number;
     g: number;
@@ -644,4 +651,24 @@ export interface GPUTextureRegion {
     w: number;
     h: number;
     d: number;
+}
+
+export interface GPUBlitRegion {
+    texture: GPUTexturePtr,
+    mip_level: number,
+    layer_or_depth_plane: number,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+}
+
+export interface GPUBlitInfo {
+    source: GPUBlitRegion,
+    destination: GPUBlitRegion,
+    load_op: GPULoadOp,
+    clear_color: FColor,
+    flip_mode: FlipMode,
+    filter: GPUFilter,
+    cycle: boolean,
 }

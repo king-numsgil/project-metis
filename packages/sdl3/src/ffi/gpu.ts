@@ -2,6 +2,7 @@ import { view } from "koffi";
 import { sdl3 } from "./lib.ts";
 
 import {
+    type GPUBlitInfo,
     type GPUBufferBinding,
     type GPUBufferCreateInfo,
     type GPUBufferLocation,
@@ -362,3 +363,7 @@ const SDL_BindGPUComputeStorageBuffers = sdl3.func(
 export function sdlBindGPUComputeStorageBuffers(compute_pass: GPUComputePassPtr, first_slot: number, storage_buffers: GPUBufferPtr[]): void {
     SDL_BindGPUComputeStorageBuffers(compute_pass, first_slot, storage_buffers, storage_buffers.length);
 }
+
+export const sdlBlitGPUTexture = sdl3.func(
+    "void SDL_BlitGPUTexture(SDL_GPUCommandBuffer* command_buffer, _In_ const SDL_GPUBlitInfo* info)"
+) as (command_buffer: GPUCommandBufferPtr, info: GPUBlitInfo) => void;

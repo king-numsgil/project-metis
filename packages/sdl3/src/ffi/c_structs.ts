@@ -31,6 +31,7 @@ alias("SDL_GPUIndexElementSize", "int");
 alias("SDL_GPUFilter", "int");
 alias("SDL_GPUSamplerMipmapMode", "int");
 alias("SDL_GPUSamplerAddressMode", "int");
+alias("SDL_FlipMode", "int");
 opaque("SDL_GPUDevice");
 opaque("SDL_GPUCommandBuffer");
 opaque("SDL_GPUTexture");
@@ -799,4 +800,27 @@ export const SDL_GPUTextureRegion = struct("SDL_GPUTextureRegion", {
     w: "uint32",
     h: "uint32",
     d: "uint32",
+});
+
+export const SDL_GPUBlitRegion = struct("SDL_GPUBlitRegion", {
+    texture: "SDL_GPUTexture*",
+    mip_level: "uint32",
+    layer_or_depth_plane: "uint32",
+    x: "uint32",
+    y: "uint32",
+    w: "uint32",
+    h: "uint32",
+});
+
+export const SDL_GPUBlitInfo = struct("SDL_GPUBlitInfo", {
+    source: "SDL_GPUBlitRegion",
+    destination: "SDL_GPUBlitRegion",
+    load_op: "SDL_GPULoadOp",
+    clear_color: "SDL_FColor",
+    flip_mode: "SDL_FlipMode",
+    filter: "SDL_GPUFilter",
+    cycle: "bool",
+    padding1: "uint8",
+    padding2: "uint8",
+    padding3: "uint8",
 });

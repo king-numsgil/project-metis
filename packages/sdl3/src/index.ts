@@ -33,6 +33,7 @@ export {
     GPUIndexElementSize,
     GPUTextureUsageFlags,
     GPUTextureType,
+    FlipMode,
 } from "./ffi/types";
 
 export type {
@@ -106,6 +107,8 @@ export type {
     GPUStorageBufferReadWriteBinding,
     GPUTextureTransferInfo,
     GPUTextureRegion,
+    GPUBlitRegion,
+    GPUBlitInfo,
 } from "./ffi/types";
 
 export * from "./system.ts";
