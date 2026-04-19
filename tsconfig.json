@@ -26,6 +26,7 @@
         "noPropertyAccessFromIndexSignature": false,
         "types": ["@types/bun"],
         "paths": {
+            "metis-vector": ["./packages/metis-vector"],
             "metis-engine": ["./packages/metis-engine/src"],
             "metis-data": ["./packages/metis-data/src"],
             "sdl3": ["./packages/sdl3/src"],
