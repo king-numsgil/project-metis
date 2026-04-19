@@ -20,5 +20,10 @@ ttf-parser = "0.21"
 napi-build = "2"
 
 [profile.release]
-lto = true
 strip = "symbols"
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+
+[build]
+rustflags = ["-C", "target-cpu=native"]
