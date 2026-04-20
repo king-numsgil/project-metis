@@ -150,15 +150,22 @@ ctx.lineTo(0, 50);
 ctx.closePath();
 ctx.fill(1.0, 0.0, 0.0, 1.0);
 
+ctx.beginPath();
+ctx.arc(200, 75, 50, 0, 2 * Math.PI);
+ctx.closePath();
+ctx.stroke(1.0, 1.0, 1.0, 1.0, 5.0);
+ctx.fill(0.0, 0.0, 1.0, 1.0);
+
 ctx.drawText("Hello World!", "JetBrainsMono", 50, 25, 200);
-ctx.fill(0.0, 0.0, 0.0, 1.0);
+ctx.stroke(0.0, 0.0, 0.0, 1.0, 3.0);
+ctx.fill(1.0, 1.0, 1.0, 1.0);
 const gpuVector = ctx.flush();
 ctx.clear();
 
 const vectorMesh = new Mesh(ArrayOf(StructOf({
     position: Vec(F32, 2),
     color: Vec(F32, 4),
-}), 1024), 1024);
+}), gpuVector.vertices.length / 6), gpuVector.indices.length);
 
 new Float32Array(vectorMesh.vertexBuffer).set(gpuVector.vertices);
 vectorMesh.setIndices(Array.from(gpuVector.indices));
