@@ -142,6 +142,13 @@ using pipeline = dev.buildGraphicsPipeline()
 
 const ctx = new VectorContext();
 ctx.loadFont("JetBrainsMono", join("assets", "JetBrainsMono-Regular.ttf"));
+
+ctx.beginPath();
+ctx.arc(75, 75, 50, 0, 2 * Math.PI);
+ctx.closePath();
+ctx.fill(0.0, 0.0, 1.0, 1.0);
+ctx.stroke(1.0, 1.0, 1.0, 1.0, 2.5);
+
 ctx.beginPath();
 ctx.moveTo(0, 0);
 ctx.lineTo(50, 0);
@@ -150,18 +157,13 @@ ctx.lineTo(0, 50);
 ctx.closePath();
 ctx.fill(1.0, 0.0, 0.0, 1.0);
 
-ctx.beginPath();
-ctx.arc(200, 75, 50, 0, 2 * Math.PI);
-ctx.closePath();
-ctx.stroke(1.0, 1.0, 1.0, 1.0, 5.0);
-ctx.fill(0.0, 0.0, 1.0, 1.0);
-
 ctx.drawText("Hello World!", "JetBrainsMono", 50, 25, 200);
-ctx.stroke(0.0, 0.0, 0.0, 1.0, 3.0);
 ctx.fill(1.0, 1.0, 1.0, 1.0);
+ctx.stroke(0.0, 0.0, 0.0, 1.0, 1.5);
 const gpuVector = ctx.flush();
 ctx.clear();
 
+console.log(`Number of draw calls for vector graphics : ${gpuVector.drawCalls.length}`);
 const vectorMesh = new Mesh(ArrayOf(StructOf({
     position: Vec(F32, 2),
     color: Vec(F32, 4),
