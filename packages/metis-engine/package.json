@@ -19,6 +19,6 @@
         "radashi": "^12.7.2",
         "sdl3": "workspace:*",
         "ttf3": "workspace:*",
-        "type-fest": "^5.5.0"
+        "type-fest": "^5.6.0"
     }
 }

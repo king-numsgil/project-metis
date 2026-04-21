@@ -13,8 +13,8 @@
         "typescript": "^6"
     },
     "dependencies": {
-        "koffi": "^2.15.6",
-        "type-fest": "^5.5.0",
+        "koffi": "^2.16.1",
+        "type-fest": "^5.6.0",
         "metis-data": "workspace:*"
     }
 }

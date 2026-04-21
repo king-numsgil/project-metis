@@ -45,6 +45,6 @@
     "@napi-rs/cli": "^3.2.0",
     "@tybys/wasm-util": "^0.10.0",
     "mitata": "^1.0.34",
-    "typescript": "^6.0.0"
+    "typescript": "^6"
   }
 }
