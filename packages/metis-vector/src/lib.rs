@@ -359,6 +359,7 @@ impl VectorContext {
         let pending = std::mem::take(&mut self.pending);
         self.current_path = None;
         self.path_builder = None;
+        self.local_stack.clear();
 
         let mut all_vertices: Vec<f32> = Vec::new();
         let mut all_indices: Vec<u32> = Vec::new();
@@ -397,5 +398,6 @@ impl VectorContext {
         self.pending.clear();
         self.current_path = None;
         self.path_builder = None;
+        self.local_stack.clear();
     }
 }
