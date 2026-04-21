@@ -161,7 +161,6 @@ ctx.drawText("Hello World!", "JetBrainsMono", 50, 25, 200);
 ctx.fill(1.0, 1.0, 1.0, 1.0);
 ctx.stroke(0.0, 0.0, 0.0, 1.0, 1.5);
 const gpuVector = ctx.flush();
-ctx.clear();
 
 console.log(`Number of draw calls for vector graphics : ${gpuVector.drawCalls.length}`);
 const vectorMesh = new Mesh(ArrayOf(StructOf({
