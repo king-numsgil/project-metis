@@ -21,7 +21,7 @@ export class System {
         sdlQuit();
     }
 
-    public* events(): IterableIterator<SDLEvent> {
+    public *events(): IterableIterator<SDLEvent> {
         let event: SDLEvent | null;
 
         do {

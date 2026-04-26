@@ -365,5 +365,5 @@ export function sdlBindGPUComputeStorageBuffers(compute_pass: GPUComputePassPtr,
 }
 
 export const sdlBlitGPUTexture = sdl3.func(
-    "void SDL_BlitGPUTexture(SDL_GPUCommandBuffer* command_buffer, _In_ const SDL_GPUBlitInfo* info)"
+    "void SDL_BlitGPUTexture(SDL_GPUCommandBuffer* command_buffer, _In_ const SDL_GPUBlitInfo* info)",
 ) as (command_buffer: GPUCommandBufferPtr, info: GPUBlitInfo) => void;

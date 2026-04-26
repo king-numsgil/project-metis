@@ -1,5 +1,5 @@
-import { InitFlags, Scancode } from "sdl3";
 import { view } from "koffi";
+import { InitFlags, Scancode } from "sdl3";
 import { sdl3 } from "./lib.ts";
 
 const SDL_Init = sdl3.func("bool SDL_Init(uint32 flags)") as (flags: number) => boolean;
