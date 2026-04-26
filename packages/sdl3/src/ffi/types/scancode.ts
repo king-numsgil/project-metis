@@ -272,4 +272,5 @@ export enum Scancode {
     ENDCALL = 290,
 
     RESERVED = 400,
+    COUNT = 512,
 }

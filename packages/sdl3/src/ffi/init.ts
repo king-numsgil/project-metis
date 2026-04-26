@@ -1,4 +1,5 @@
-import { InitFlags } from "sdl3";
+import { InitFlags, Scancode } from "sdl3";
+import { view } from "koffi";
 import { sdl3 } from "./lib.ts";
 
 const SDL_Init = sdl3.func("bool SDL_Init(uint32 flags)") as (flags: number) => boolean;
@@ -16,3 +17,13 @@ export const sdlGetPlatform = sdl3.func(
 export const sdlGetError = sdl3.func(
     "const char* SDL_GetError()",
 ) as () => string;
+
+const SDL_GetKeyboardState = sdl3.func(
+    "const bool* SDL_GetKeyboardState(_In_ int* numkeys)",
+);
+
+export function sdlGetKeyboardState(): Uint8Array {
+    const ptr = SDL_GetKeyboardState(null);
+    const buffer = view(ptr, Scancode.COUNT as number);
+    return new Uint8Array(buffer);
+}

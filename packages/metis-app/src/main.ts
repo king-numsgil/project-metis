@@ -24,7 +24,7 @@ import {
     System,
     Window,
 } from "sdl3";
-import { sdlGetError } from "sdl3/ffi";
+import { sdlGetError, sdlGetKeyboardState } from "sdl3/ffi";
 
 import triangleShader from "./triangle.wgsl";
 import vectorShader from "./vector.wgsl";
@@ -58,6 +58,8 @@ using dev = new Device(GPUShaderFormat.SPIRV, true);
 dev.claimWindow(wnd);
 console.log(`Device Driver : ${dev.driver}`);
 console.log(`Device Shader Format : ${GPUShaderFormat[dev.shader_formats]}`);
+
+const keyboard = sdlGetKeyboardState();
 
 using msaaTexture = dev.createTexture({
     type: GPUTextureType.TwoD,
@@ -199,6 +201,10 @@ while (running) {
                 console.log(`Got KeyDown event at ${e.key.timestamp} with ${Scancode[e.key.scancode]} (${decodeKeymods(e.key.mod).join(" | ")})`);
                 break;
         }
+    }
+
+    if (keyboard[Scancode.W] === 1) {
+        console.log("Keyboard state for W is true!");
     }
 
     const cb = dev.acquireCommandBuffer();
