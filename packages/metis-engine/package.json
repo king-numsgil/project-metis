@@ -15,6 +15,7 @@
     },
     "dependencies": {
         "metis-data": "workspace:*",
+        "mitt": "^3.0.1",
         "naga": "workspace:*",
         "radashi": "^12.7.2",
         "sdl3": "workspace:*",

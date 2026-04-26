@@ -1,9 +1,9 @@
 import { ArrayOf, F32, Mat4, StructOf, Vec } from "metis-data";
+import { Game } from "metis-engine";
 import { VectorContext } from "metis-vector";
 import { join } from "node:path";
 import {
     Device,
-    EventType,
     FlipMode,
     GPUCompareOp,
     GPUFilter,
@@ -21,7 +21,6 @@ import {
     Keymod,
     Mesh,
     Scancode,
-    System,
     Window,
 } from "sdl3";
 import { sdlGetError, sdlGetKeyboardState } from "sdl3/ffi";
@@ -46,8 +45,8 @@ if (!vectorShader.vertex || !vectorShader.fragment) {
     throw new Error("Failed loading vector shader");
 }
 
-using sys = new System();
-console.log(`Platform: ${sys.platform}`);
+using game = new Game();
+console.log(`Platform: ${game.system.platform}`);
 
 using wnd = Window.create("SDL Experiment", 1440, 768);
 console.log(`WindowID: ${wnd.windowID}`);
@@ -189,20 +188,14 @@ using vectorPipeline = dev.buildGraphicsPipeline()
 
 const ortho = Mat4.orthographic(F32, 0, 1440, 0, 768, -1, 1);
 
-let running = true;
-while (running) {
-    for (const e of sys.events()) {
-        switch (e.type) {
-            case EventType.Quit:
-                running = false;
-                console.log(`Got Quit event at ${e.quit.timestamp}`);
-                break;
-            case EventType.KeyDown:
-                console.log(`Got KeyDown event at ${e.key.timestamp} with ${Scancode[e.key.scancode]} (${decodeKeymods(e.key.mod).join(" | ")})`);
-                break;
-        }
-    }
-
+game.on("Quit", (e) => {
+    game.exit();
+    console.log(`Got Quit event at ${e.timestamp}`);
+});
+game.on("KeyDown", (e) => {
+    console.log(`Got KeyDown event at ${e.timestamp} with ${Scancode[e.scancode]} (${decodeKeymods(e.mod).join(" | ")})`);
+});
+game.on("Frame", (dt) => {
     if (keyboard[Scancode.W] === 1) {
         console.log("Keyboard state for W is true!");
     }
@@ -295,6 +288,7 @@ while (running) {
     if (!cb.submit()) {
         console.log(`Failed to submit command buffer : ${sdlGetError()}`);
     }
-}
+});
+game.run();
 
 dev.releaseWindow(wnd);
