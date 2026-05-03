@@ -15,8 +15,6 @@ type GameEvents = {
 
 export class Game {
     private static _instance: Game | null;
-
-    private _system: System;
     private sdlEvents: Emitter<SDLEventMap>;
     private gameEvents: Emitter<GameEvents>;
     private running: boolean = false;
@@ -33,6 +31,16 @@ export class Game {
         this.gameEvents = mitt<GameEvents>();
     }
 
+    private _system: System;
+
+    public get system(): System {
+        return this._system;
+    }
+
+    public get isRunning(): boolean {
+        return this.running;
+    }
+
     public dispose(): void {
         if (Game._instance) {
             this._system.dispose();
@@ -44,12 +52,10 @@ export class Game {
         this.dispose();
     }
 
-    public get system(): System {
-        return this._system;
-    }
-
     public on<K extends keyof SDLEventMap>(event: K, handler: (e: SDLEventMap[K]) => void): void;
+
     public on<K extends keyof GameEvents>(event: K, handler: (e: GameEvents[K]) => void): void;
+
     public on(event: keyof SDLEventMap | keyof GameEvents, handler: (e: never) => void): void {
         if (SDL_EVENT_MAP_KEY_SET.has(event as string)) {
             this.sdlEvents.on(event as keyof SDLEventMap, handler as never);
@@ -59,17 +65,15 @@ export class Game {
     }
 
     public off<K extends keyof SDLEventMap>(event: K, handler: (e: SDLEventMap[K]) => void): void;
+
     public off<K extends keyof GameEvents>(event: K, handler: (e: GameEvents[K]) => void): void;
+
     public off(event: keyof SDLEventMap | keyof GameEvents, handler: (e: never) => void): void {
         if (SDL_EVENT_MAP_KEY_SET.has(event as string)) {
             this.sdlEvents.off(event as keyof SDLEventMap, handler as never);
         } else {
             this.gameEvents.off(event as keyof GameEvents, handler as never);
         }
-    }
-
-    public get isRunning(): boolean {
-        return this.running;
     }
 
     public exit(): void {
@@ -328,7 +332,7 @@ export class Game {
                 }
             }
 
-            this.gameEvents.emit("Frame", { dt: 0 });
+            this.gameEvents.emit("Frame", {dt: 0});
         }
     }
 }

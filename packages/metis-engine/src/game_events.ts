@@ -1,7 +1,8 @@
 import type {
     AudioDeviceEvent,
     CameraDeviceEvent,
-    ClipboardEvent, CommonEvent,
+    ClipboardEvent,
+    CommonEvent,
     DisplayEvent,
     DropEvent,
     GamepadAxisEvent,
