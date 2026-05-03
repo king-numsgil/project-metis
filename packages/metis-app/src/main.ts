@@ -195,7 +195,7 @@ game.on("Quit", (e) => {
 game.on("KeyDown", (e) => {
     console.log(`Got KeyDown event at ${e.timestamp} with ${Scancode[e.scancode]} (${decodeKeymods(e.mod).join(" | ")})`);
 });
-game.on("Frame", (dt) => {
+game.on("Frame", (ctx) => {
     if (keyboard[Scancode.W] === 1) {
         console.log("Keyboard state for W is true!");
     }

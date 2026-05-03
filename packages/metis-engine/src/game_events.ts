@@ -1,7 +1,7 @@
 import type {
     AudioDeviceEvent,
     CameraDeviceEvent,
-    ClipboardEvent,
+    ClipboardEvent, CommonEvent,
     DisplayEvent,
     DropEvent,
     GamepadAxisEvent,
@@ -83,7 +83,7 @@ export type SDLEventMap = {
     TextEditing: TextEditingEvent;
     TextEditingCandidates: TextEditingCandidatesEvent;
     TextInput: TextInputEvent;
-    KeymapChanged: void;
+    KeymapChanged: CommonEvent;
     KeyboardAdded: KeyboardDeviceEvent;
     KeyboardRemoved: KeyboardDeviceEvent;
 
