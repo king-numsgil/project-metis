@@ -586,4 +586,8 @@ export type SDLEvent =
     type: EventType.WindowShown | EventType.WindowHidden | EventType.WindowExposed | EventType.WindowMoved | EventType.WindowResized | EventType.WindowPixelSizeChanged | EventType.WindowMetalViewResized | EventType.WindowMinimized | EventType.WindowMaximized | EventType.WindowRestored | EventType.WindowMouseEnter | EventType.WindowMouseLeave | EventType.WindowFocusGained | EventType.WindowFocusLost | EventType.WindowCloseRequested | EventType.WindowHitTest | EventType.WindowIccprofChanged | EventType.WindowDisplayChanged | EventType.WindowDisplayScaleChanged | EventType.WindowSafeAreaChanged | EventType.WindowOccluded | EventType.WindowEnterFullscreen | EventType.WindowLeaveFullscreen | EventType.WindowDestroyed | EventType.WindowHdrStateChanged;
     common: CommonEvent;
     window: WindowEvent
+}
+    | {
+    type: EventType.KeymapChanged;
+    common: CommonEvent;
 };
