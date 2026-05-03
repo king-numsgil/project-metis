@@ -141,7 +141,7 @@ export class Game {
 
                         // KeymapEvent
                         case EventType.KeymapChanged:
-                            this.sdlEvents.emit("KeymapChanged", e.common);
+                            this.sdlEvents.emit(key, e.common);
                             break;
 
                         // TextEditingEvent
