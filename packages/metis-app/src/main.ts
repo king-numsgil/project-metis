@@ -220,6 +220,7 @@ using textPipeline = dev.buildGraphicsPipeline()
     })
     .addVertexInput(textMesh, 0)
     .primitiveType(GPUPrimitiveType.TriangleList)
+    .multisample(GPUSampleCount.Four)
     .build();
 
 const ctx = new VectorContext();
