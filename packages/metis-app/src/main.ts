@@ -4,7 +4,9 @@ import { VectorContext } from "metis-vector";
 import { join } from "node:path";
 import {
     Device,
-    FlipMode, GPUBlendFactor, GPUBlendOp,
+    FlipMode,
+    GPUBlendFactor,
+    GPUBlendOp,
     GPUCompareOp,
     GPUFilter,
     GPUIndexElementSize,
@@ -25,10 +27,10 @@ import {
 } from "sdl3";
 import { sdlGetError, sdlGetKeyboardState } from "sdl3/ffi";
 import { Font, GPUTextEngine, Text, TTF } from "ttf3";
+import textShader from "./text.wgsl";
 
 import triangleShader from "./triangle.wgsl";
 import vectorShader from "./vector.wgsl";
-import textShader from "./text.wgsl";
 
 function decodeKeymods(mod: Keymod): string[] {
     return (Object.keys(Keymod) as Array<keyof typeof Keymod>)
@@ -66,6 +68,8 @@ using dev = new Device(GPUShaderFormat.SPIRV, true);
 dev.claimWindow(wnd);
 console.log(`Device Driver : ${dev.driver}`);
 console.log(`Device Shader Format : ${GPUShaderFormat[dev.shader_formats]}`);
+
+//game.mainWindow = game.createWindow("SDL Experiment", 1440, 768, GPUSampleCount.Four);
 
 const keyboard = sdlGetKeyboardState();
 

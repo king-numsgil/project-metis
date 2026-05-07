@@ -1,23 +1,56 @@
 import mitt, { type Emitter } from "mitt";
-import { CommandBuffer, EventType, System } from "sdl3";
+import {
+    CommandBuffer,
+    Device,
+    EventType, FlipMode, GPUFilter, GPULoadOp,
+    GPUSampleCount,
+    GPUShaderFormat, GPUTextureType, GPUTextureUsageFlags,
+    type SDL_WindowFlags,
+    System,
+    Texture,
+    Window,
+    type WindowID,
+} from "sdl3";
+import { sdlGetError } from "sdl3/ffi";
 
 import { eventTypeToKey, SDL_EVENT_MAP_KEY_SET, type SDLEventMap } from "./game_events.ts";
 
-export interface FrameContext {
-    cb?: CommandBuffer;
+export interface PreFrameContext {
+    cb: CommandBuffer;
     dt: number;
+    window: WindowID;
+}
+
+export interface FrameContext {
+    cb: CommandBuffer;
+    dt: number;
+    window: WindowID;
+    texture: Texture | null;
+    resolve_texture: Texture | null;
 }
 
 type GameEvents = {
-    PreFrame: FrameContext;
+    PreFrame: PreFrameContext;
     Frame: FrameContext;
 };
 
+interface ManagedWindow {
+    window: Window;
+    device: Device;
+    width: number;
+    height: number;
+    msaa: Texture | null;
+    resolve: Texture | null;
+}
+
 export class Game {
     private static _instance: Game | null;
+    private readonly _system: System;
     private sdlEvents: Emitter<SDLEventMap>;
     private gameEvents: Emitter<GameEvents>;
     private running: boolean = false;
+    private windows: Map<WindowID, ManagedWindow> = new Map<WindowID, ManagedWindow>();
+    public mainWindow: WindowID = 0 as WindowID;
 
     public constructor() {
         if (Game._instance) {
@@ -31,8 +64,6 @@ export class Game {
         this.gameEvents = mitt<GameEvents>();
     }
 
-    private _system: System;
-
     public get system(): System {
         return this._system;
     }
@@ -43,6 +74,21 @@ export class Game {
 
     public dispose(): void {
         if (Game._instance) {
+            this.mainWindow = 0 as WindowID;
+            for (const managed of this.windows.values()) {
+                if (managed.msaa) {
+                    managed.msaa.dispose();
+                }
+                if (managed.resolve) {
+                    managed.resolve.dispose();
+                }
+
+                managed.device.releaseWindow(managed.window);
+                managed.device.dispose();
+                managed.window.dispose();
+            }
+            this.windows.clear();
+
             this._system.dispose();
             Game._instance = null;
         }
@@ -50,6 +96,45 @@ export class Game {
 
     public [Symbol.dispose](): void {
         this.dispose();
+    }
+
+    public createWindow(title: string, width: number, height: number): WindowID;
+    public createWindow(title: string, width: number, height: number, samples: GPUSampleCount): WindowID;
+    public createWindow(title: string, width: number, height: number, samples?: GPUSampleCount, flags?: SDL_WindowFlags): WindowID {
+        const wnd = Window.create(title, width, height, flags ?? 0n);
+        const dev = new Device(GPUShaderFormat.SPIRV, true);
+        dev.claimWindow(wnd);
+
+        const managed: ManagedWindow = {
+            window: wnd,
+            device: dev,
+            width,
+            height,
+            msaa: null,
+            resolve: null,
+        };
+
+        if (samples && samples as number > 1) {
+            managed.msaa = dev.createTexture({
+                type: GPUTextureType.TwoD,
+                format: dev.getSwapchainFormat(wnd),
+                width, height,
+                layer_count_or_depth: 1, num_levels: 1,
+                sample_count: samples,
+                usage: GPUTextureUsageFlags.ColorTarget,
+            });
+
+            managed.resolve = dev.createTexture({
+                type: GPUTextureType.TwoD,
+                format: dev.getSwapchainFormat(wnd),
+                width, height,
+                layer_count_or_depth: 1, num_levels: 1,
+                sample_count: GPUSampleCount.One,
+                usage: GPUTextureUsageFlags.ColorTarget | GPUTextureUsageFlags.Sampler,
+            });
+        }
+        this.windows.set(wnd.windowID, managed);
+        return wnd.windowID;
     }
 
     public on<K extends keyof SDLEventMap>(event: K, handler: (e: SDLEventMap[K]) => void): void;
@@ -332,7 +417,54 @@ export class Game {
                 }
             }
 
-            this.gameEvents.emit("Frame", {dt: 0});
+            for (const [windowId, target] of this.windows) {
+                const preframe = target.device.acquireCommandBuffer();
+                this.gameEvents.emit("PreFrame", {dt: 0, cb: preframe, window: windowId});
+                if (!preframe.submit()) {
+                    console.log(`Failed to submit preframe command buffer : ${sdlGetError()}`);
+                }
+
+                const frame = target.device.acquireCommandBuffer();
+                const swapchain = frame.waitAndAcquireSwapchainTexture(target.window);
+                this.gameEvents.emit("Frame", {dt: 0, cb: frame, window: windowId, texture: target.msaa, resolve_texture: target.resolve});
+
+                if (target.msaa && target.resolve) {
+                    frame.blitTexture({
+                        source: {
+                            texture: target.resolve.raw,
+                            mip_level: 0,
+                            layer_or_depth_plane: 0,
+                            x: 0,
+                            y: 0,
+                            w: 1440,
+                            h: 768,
+                        },
+                        destination: {
+                            texture: swapchain.texture,
+                            mip_level: 0,
+                            layer_or_depth_plane: 0,
+                            x: 0,
+                            y: 0,
+                            w: swapchain.width,
+                            h: swapchain.height,
+                        },
+                        load_op: GPULoadOp.DontCare,
+                        filter: GPUFilter.Linear,
+                        clear_color: {
+                            r: 0,
+                            g: 0,
+                            b: 0,
+                            a: 0,
+                        },
+                        flip_mode: FlipMode.None,
+                        cycle: false,
+                    });
+                }
+
+                if (!frame.submit()) {
+                    console.log(`Failed to submit frame command buffer : ${sdlGetError()}`);
+                }
+            }
         }
     }
 }
