@@ -2,9 +2,14 @@ import mitt, { type Emitter } from "mitt";
 import {
     CommandBuffer,
     Device,
-    EventType, FlipMode, GPUFilter, GPULoadOp,
+    EventType,
+    FlipMode,
+    GPUFilter,
+    GPULoadOp,
     GPUSampleCount,
-    GPUShaderFormat, GPUTextureType, GPUTextureUsageFlags,
+    GPUShaderFormat,
+    GPUTextureType,
+    GPUTextureUsageFlags,
     type SDL_WindowFlags,
     System,
     Texture,
@@ -36,7 +41,6 @@ type GameEvents = {
 
 interface ManagedWindow {
     window: Window;
-    device: Device;
     width: number;
     height: number;
     msaa: Texture | null;
@@ -45,12 +49,13 @@ interface ManagedWindow {
 
 export class Game {
     private static _instance: Game | null;
+    public mainWindow: WindowID = 0 as WindowID;
     private readonly _system: System;
+    private readonly _device: Device;
     private sdlEvents: Emitter<SDLEventMap>;
     private gameEvents: Emitter<GameEvents>;
     private running: boolean = false;
     private windows: Map<WindowID, ManagedWindow> = new Map<WindowID, ManagedWindow>();
-    public mainWindow: WindowID = 0 as WindowID;
 
     public constructor() {
         if (Game._instance) {
@@ -60,12 +65,17 @@ export class Game {
         }
 
         this._system = new System();
+        this._device = new Device(GPUShaderFormat.SPIRV, true);
         this.sdlEvents = mitt<SDLEventMap>();
         this.gameEvents = mitt<GameEvents>();
     }
 
     public get system(): System {
         return this._system;
+    }
+
+    public get device(): Device {
+        return this._device;
     }
 
     public get isRunning(): boolean {
@@ -83,12 +93,12 @@ export class Game {
                     managed.resolve.dispose();
                 }
 
-                managed.device.releaseWindow(managed.window);
-                managed.device.dispose();
+                this.device.releaseWindow(managed.window);
                 managed.window.dispose();
             }
             this.windows.clear();
 
+            this._device.dispose();
             this._system.dispose();
             Game._instance = null;
         }
@@ -102,12 +112,10 @@ export class Game {
     public createWindow(title: string, width: number, height: number, samples: GPUSampleCount): WindowID;
     public createWindow(title: string, width: number, height: number, samples?: GPUSampleCount, flags?: SDL_WindowFlags): WindowID {
         const wnd = Window.create(title, width, height, flags ?? 0n);
-        const dev = new Device(GPUShaderFormat.SPIRV, true);
-        dev.claimWindow(wnd);
+        this.device.claimWindow(wnd);
 
         const managed: ManagedWindow = {
             window: wnd,
-            device: dev,
             width,
             height,
             msaa: null,
@@ -115,18 +123,18 @@ export class Game {
         };
 
         if (samples && samples as number > 1) {
-            managed.msaa = dev.createTexture({
+            managed.msaa = this.device.createTexture({
                 type: GPUTextureType.TwoD,
-                format: dev.getSwapchainFormat(wnd),
+                format: this.device.getSwapchainFormat(wnd),
                 width, height,
                 layer_count_or_depth: 1, num_levels: 1,
                 sample_count: samples,
                 usage: GPUTextureUsageFlags.ColorTarget,
             });
 
-            managed.resolve = dev.createTexture({
+            managed.resolve = this.device.createTexture({
                 type: GPUTextureType.TwoD,
-                format: dev.getSwapchainFormat(wnd),
+                format: this.device.getSwapchainFormat(wnd),
                 width, height,
                 layer_count_or_depth: 1, num_levels: 1,
                 sample_count: GPUSampleCount.One,
@@ -135,6 +143,14 @@ export class Game {
         }
         this.windows.set(wnd.windowID, managed);
         return wnd.windowID;
+    }
+
+    public window(winId: WindowID): Window {
+        if (!this.windows.has(winId)) {
+            throw new Error(`Window ${winId} does not exist`);
+        }
+
+        return this.windows.get(winId)!.window;
     }
 
     public on<K extends keyof SDLEventMap>(event: K, handler: (e: SDLEventMap[K]) => void): void;
@@ -418,15 +434,21 @@ export class Game {
             }
 
             for (const [windowId, target] of this.windows) {
-                const preframe = target.device.acquireCommandBuffer();
+                const preframe = this.device.acquireCommandBuffer();
                 this.gameEvents.emit("PreFrame", {dt: 0, cb: preframe, window: windowId});
                 if (!preframe.submit()) {
                     console.log(`Failed to submit preframe command buffer : ${sdlGetError()}`);
                 }
 
-                const frame = target.device.acquireCommandBuffer();
+                const frame = this.device.acquireCommandBuffer();
                 const swapchain = frame.waitAndAcquireSwapchainTexture(target.window);
-                this.gameEvents.emit("Frame", {dt: 0, cb: frame, window: windowId, texture: target.msaa, resolve_texture: target.resolve});
+                this.gameEvents.emit("Frame", {
+                    dt: 0,
+                    cb: frame,
+                    window: windowId,
+                    texture: target.msaa,
+                    resolve_texture: target.resolve,
+                });
 
                 if (target.msaa && target.resolve) {
                     frame.blitTexture({

@@ -4,7 +4,6 @@ import { VectorContext } from "metis-vector";
 import { join } from "node:path";
 import {
     Device,
-    FlipMode,
     GPUBlendFactor,
     GPUBlendOp,
     GPUCompareOp,
@@ -23,12 +22,11 @@ import {
     Keymod,
     Mesh,
     Scancode,
-    Window,
 } from "sdl3";
-import { sdlGetError, sdlGetKeyboardState } from "sdl3/ffi";
+import { sdlGetKeyboardState } from "sdl3/ffi";
 import { Font, GPUTextEngine, Text, TTF } from "ttf3";
-import textShader from "./text.wgsl";
 
+import textShader from "./text.wgsl";
 import triangleShader from "./triangle.wgsl";
 import vectorShader from "./vector.wgsl";
 
@@ -59,37 +57,16 @@ console.log(`Platform: ${game.system.platform}`);
 using ttf = new TTF();
 console.log(`TTF: ${ttf.version} (FT ${ttf.freetypeVersion}; HB ${ttf.harfbuzzVersion})`);
 
-using wnd = Window.create("SDL Experiment", 1440, 768);
-console.log(`WindowID: ${wnd.windowID}`);
-
 console.log("Supported GPU drivers :", Device.listSupportedDrivers());
 
-using dev = new Device(GPUShaderFormat.SPIRV, true);
-dev.claimWindow(wnd);
+const dev = game.device;
 console.log(`Device Driver : ${dev.driver}`);
 console.log(`Device Shader Format : ${GPUShaderFormat[dev.shader_formats]}`);
 
-//game.mainWindow = game.createWindow("SDL Experiment", 1440, 768, GPUSampleCount.Four);
+game.mainWindow = game.createWindow("SDL Experiment", 1440, 768, GPUSampleCount.Four);
+const wnd = game.window(game.mainWindow);
 
 const keyboard = sdlGetKeyboardState();
-
-using msaaTexture = dev.createTexture({
-    type: GPUTextureType.TwoD,
-    format: dev.getSwapchainFormat(wnd),
-    width: 1440, height: 768,
-    layer_count_or_depth: 1, num_levels: 1,
-    sample_count: GPUSampleCount.Four,
-    usage: GPUTextureUsageFlags.ColorTarget,
-});
-
-using resolveTexture = dev.createTexture({
-    type: GPUTextureType.TwoD,
-    format: dev.getSwapchainFormat(wnd),
-    width: 1440, height: 768,
-    layer_count_or_depth: 1, num_levels: 1,
-    sample_count: GPUSampleCount.One,
-    usage: GPUTextureUsageFlags.ColorTarget | GPUTextureUsageFlags.Sampler,
-});
 
 using vertexShader = dev.createShader(triangleShader.vertex);
 using fragmentShader = dev.createShader(triangleShader.fragment);
@@ -276,20 +253,22 @@ using vectorPipeline = dev.buildGraphicsPipeline()
 
 const ortho = Mat4.orthographic(F32, 0, 1440, 0, 768, -1, 1);
 
-game.on("Quit", (e) => {
+game.on("Quit", ({timestamp}) => {
     game.exit();
-    console.log(`Got Quit event at ${e.timestamp}`);
+    console.log(`Got Quit event at ${timestamp}`);
 });
-game.on("KeyDown", (e) => {
-    console.log(`Got KeyDown event at ${e.timestamp} with ${Scancode[e.scancode]} (${decodeKeymods(e.mod).join(" | ")})`);
+game.on("KeyDown", ({timestamp, scancode, mod}) => {
+    console.log(`Got KeyDown event at ${timestamp} with ${Scancode[scancode]} (${decodeKeymods(mod).join(" | ")})`);
 });
-game.on("Frame", (ctx) => {
+game.on("Frame", ({cb, texture, resolve_texture}) => {
     if (keyboard[Scancode.W] === 1) {
         console.log("Keyboard state for W is true!");
     }
 
-    const cb = dev.acquireCommandBuffer();
-    const swapchain = cb.waitAndAcquireSwapchainTexture(wnd);
+    if (!texture || !resolve_texture) {
+        console.log("Wrong frame event? Shouldn't happen...");
+        return;
+    }
 
     const computePass = cb.beginComputePass([{
         texture: computeTexture.raw,
@@ -304,8 +283,8 @@ game.on("Frame", (ctx) => {
     cb.pushVertexUniformData(0, ortho.buffer);
 
     const pass = cb.beginRenderPass([{
-        texture: msaaTexture.raw,
-        resolve_texture: resolveTexture.raw,
+        texture: texture.raw,
+        resolve_texture: resolve_texture.raw,
         clear_color: {r: 0.3, g: 0.4, b: 0.5, a: 1.0},
         load_op: GPULoadOp.Clear,
         store_op: GPUStoreOp.Resolve,
@@ -355,42 +334,5 @@ game.on("Frame", (ctx) => {
         pass.drawIndexedPrimitives(call.indexCount, 1, call.firstIndex, 0);
     }
     pass.end();
-
-    cb.blitTexture({
-        source: {
-            texture: resolveTexture.raw,
-            mip_level: 0,
-            layer_or_depth_plane: 0,
-            x: 0,
-            y: 0,
-            w: 1440,
-            h: 768,
-        },
-        destination: {
-            texture: swapchain.texture,
-            mip_level: 0,
-            layer_or_depth_plane: 0,
-            x: 0,
-            y: 0,
-            w: swapchain.width,
-            h: swapchain.height,
-        },
-        load_op: GPULoadOp.DontCare,
-        filter: GPUFilter.Linear,
-        clear_color: {
-            r: 0,
-            g: 0,
-            b: 0,
-            a: 0,
-        },
-        flip_mode: FlipMode.None,
-        cycle: false,
-    });
-
-    if (!cb.submit()) {
-        console.log(`Failed to submit command buffer : ${sdlGetError()}`);
-    }
 });
 game.run();
-
-dev.releaseWindow(wnd);
