@@ -16,10 +16,12 @@ const CANDIDATE_FONTS = [
 ];
 
 let fontLoaded = false;
+let fontPath = "";
 for (const path of CANDIDATE_FONTS) {
     try {
         ctx.loadFont("bench", path);
         fontLoaded = true;
+        fontPath = path;
         console.log(`[bench] Loaded font: ${path}\n`);
         break;
     } catch {
@@ -195,12 +197,52 @@ group("transforms", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Text — full pipeline (drawText + fill + flush)
-// Covers: glyph outline extraction, Y-flip, lyon path build, tessellation.
+// Paint — gradients (new in this build)
 // ---------------------------------------------------------------------------
 
+group("paint gradients", () => {
+    bench("fill flat color", () => {
+        ctx.beginPath();
+        ctx.arc(50, 50, 50, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.fill(0, 0.5, 1, 1);
+        ctx.flush();
+    });
+
+    bench("fillLinearGradient", () => {
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(200, 0);
+        ctx.lineTo(200, 100);
+        ctx.lineTo(0, 100);
+        ctx.closePath();
+        ctx.fillLinearGradient(1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0);
+        ctx.flush();
+    });
+
+    bench("fillRadialGradient", () => {
+        ctx.beginPath();
+        ctx.arc(50, 50, 50, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.fillRadialGradient(0, 0, 1, 1, 1, 0, 0, 1, 0.5, 0.5, 0.5);
+        ctx.flush();
+    });
+
+    bench("strokeLinearGradient w=2", () => {
+        ctx.beginPath();
+        ctx.moveTo(0, 50);
+        ctx.lineTo(200, 50);
+        ctx.strokeLinearGradient(1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 2);
+        ctx.flush();
+    });
+});
+
 if (fontLoaded) {
-    group("text full pipeline (drawText + fill + flush)", () => {
+    // -----------------------------------------------------------------------
+    // Text — warm cache (shared ctx, cache pre-warmed at loadFont time)
+    // This is the steady-state cost per frame.
+    // -----------------------------------------------------------------------
+    group("text warm cache (drawText + fill + flush)", () => {
         bench("5 chars @ 16px", () => {
             ctx.drawText("Hello", "bench", 16, 0, 16);
             ctx.fill(0, 0, 0, 1);
@@ -242,10 +284,22 @@ if (fontLoaded) {
             ctx.fill(0, 0, 0, 1);
             ctx.flush();
         });
+
+        bench("cockpit readout '351 m/s' @ 16px", () => {
+            ctx.drawText("351 m/s", "bench", 16, 0, 16);
+            ctx.fill(1, 1, 1, 1);
+            ctx.flush();
+        });
+
+        bench("cockpit readout '351 m/s' @ 24px", () => {
+            ctx.drawText("351 m/s", "bench", 24, 0, 24);
+            ctx.fill(1, 1, 1, 1);
+            ctx.flush();
+        });
     });
 
     // -----------------------------------------------------------------------
-    // Isolate glyph expansion from tessellation:
+    // Text — glyph expansion only (no tessellation)
     // call clear() instead of flush() so Lyon never runs.
     // -----------------------------------------------------------------------
     group("text glyph expansion only (no tessellation)", () => {
@@ -272,6 +326,11 @@ if (fontLoaded) {
     // Font metrics — no draw, just parsing font tables
     // -----------------------------------------------------------------------
     group("font metrics", () => {
+        bench("loadFont (pre-warm cost)", () => {
+            const fresh = new VectorContext(0.25);
+            fresh.loadFont("bench", fontPath);
+        });
+
         bench("fontMetrics @ 16px", () => {
             ctx.fontMetrics("bench", 16);
         });
@@ -357,6 +416,30 @@ group("mixed scene", () => {
             ctx.drawText("Title",   "bench", 24, 10, 30); ctx.fill(0, 0, 0, 1);
             ctx.drawText("Label A", "bench", 14, 10, 60); ctx.fill(0.2, 0.2, 0.2, 1);
             ctx.drawText("Label B", "bench", 14, 10, 80); ctx.fill(0.2, 0.2, 0.2, 1);
+
+            ctx.flush();
+        });
+
+        bench("HUD scene: 5 readouts + 3 shapes", () => {
+            // Simulate a cockpit HUD: speed, heading, altitude, fuel, target distance
+            const readouts = ["351 m/s", "HDG 042°", "ALT 1,240m", "FUEL 87%", "4.2 km"];
+            for (let i = 0; i < readouts.length; i++) {
+                ctx.drawText(readouts[i]!, "bench", 16, 10, 20 + i * 22);
+                ctx.fill(1, 1, 1, 1);
+            }
+
+            // Three UI shapes
+            ctx.beginPath();
+            ctx.arc(200, 100, 40, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.fill(0, 0.5, 1, 0.8);
+
+            ctx.beginPath();
+            ctx.moveTo(160, 160);
+            ctx.lineTo(240, 160);
+            ctx.stroke(1, 1, 1, 0.5, 1);
+
+            filledRect(150, 170, 100, 4);
 
             ctx.flush();
         });
