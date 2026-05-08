@@ -281,6 +281,8 @@ pub fn render_text(
     // Phase 2: tessellate cache misses (still need immutable face for outlines).
     // Collect new entries so we can insert them without double-borrowing.
     let mut new_entries: Vec<(u16, CachedGlyph)> = Vec::new();
+    let has_misses = work_items.iter().any(|w| w.need_tessellation);
+    if has_misses {
     let lyon_rule = to_lyon_fill_rule(&fill_rule);
     let options = FillOptions::default().with_tolerance(tolerance).with_fill_rule(lyon_rule);
 
@@ -299,6 +301,7 @@ pub fn render_text(
             }
         }
     }
+    } // end has_misses
 
     // Phase 3: insert new cache entries.
     if !new_entries.is_empty() {

@@ -22,8 +22,8 @@ pub struct PositionCollector {
 impl PositionCollector {
     pub fn new() -> Self {
         PositionCollector {
-            positions: Vec::new(),
-            indices: Vec::new(),
+            positions: Vec::with_capacity(64),
+            indices: Vec::with_capacity(96),
             base_vertex: 0,
         }
     }
@@ -139,6 +139,9 @@ fn emit_with_uvs(
     let w = max_x - min_x;
     let h = max_y - min_y;
 
+    out_vertices.reserve(positions.len() * 4);
+    out_indices.reserve(local_indices.len());
+
     for &[x, y] in positions {
         let u = if w > 0.0 { (x - min_x) / w } else { 0.0 };
         let v = if h > 0.0 { (y - min_y) / h } else { 0.0 };
@@ -154,7 +157,7 @@ fn emit_with_uvs(
 // ---------------------------------------------------------------------------
 
 pub fn tessellate_command(
-    cmd: &PaintCommand,
+    cmd: PaintCommand,
     tolerance: f32,
     fill_tess: &mut FillTessellator,
     stroke_tess: &mut StrokeTessellator,
@@ -165,14 +168,14 @@ pub fn tessellate_command(
     let mut collector = PositionCollector::new();
     let ok = match cmd {
         PaintCommand::Fill { path, fill_rule } => {
-            fill_positions(fill_tess, path, fill_rule, tolerance, &mut collector)
+            fill_positions(fill_tess, &path, &fill_rule, tolerance, &mut collector)
         }
         PaintCommand::Stroke { path, width } => {
-            stroke_positions(stroke_tess, path, *width, tolerance, &mut collector)
+            stroke_positions(stroke_tess, &path, width, tolerance, &mut collector)
         }
-        PaintCommand::PreTessellated { vertices: pre_verts, indices: pre_idxs } => {
-            collector.positions = pre_verts.clone();
-            collector.indices = pre_idxs.clone();
+        PaintCommand::PreTessellated { vertices, indices } => {
+            collector.positions = vertices;
+            collector.indices = indices;
             true
         }
     };
@@ -240,7 +243,7 @@ mod tests {
         };
         let mut verts = Vec::new();
         let mut idxs = Vec::new();
-        let ok = tessellate_command(&cmd, 0.25, &mut fill_tess, &mut stroke_tess, &mut verts, &mut idxs);
+        let ok = tessellate_command(cmd, 0.25, &mut fill_tess, &mut stroke_tess, &mut verts, &mut idxs);
         assert!(ok);
         // stride is 4: [x, y, u, v]
         assert_eq!(verts.len() % 4, 0);
@@ -260,10 +263,10 @@ mod tests {
         let mut idxs = Vec::new();
         let path = square_path();
         let cmd = PaintCommand::Fill { path: path.clone(), fill_rule: CmdFillRule::NonZero };
-        tessellate_command(&cmd, 0.25, &mut fill_tess, &mut stroke_tess, &mut verts, &mut idxs);
+        tessellate_command(cmd, 0.25, &mut fill_tess, &mut stroke_tess, &mut verts, &mut idxs);
         let first_vcount = verts.len() / 4;
         let cmd2 = PaintCommand::Fill { path, fill_rule: CmdFillRule::NonZero };
-        tessellate_command(&cmd2, 0.25, &mut fill_tess, &mut stroke_tess, &mut verts, &mut idxs);
+        tessellate_command(cmd2, 0.25, &mut fill_tess, &mut stroke_tess, &mut verts, &mut idxs);
         // Every index in the second batch must be >= first_vcount
         let second_batch = &idxs[idxs.len() / 2..];
         for &idx in second_batch {
@@ -283,7 +286,7 @@ mod tests {
         };
         let mut verts = Vec::new();
         let mut idxs = Vec::new();
-        let ok = tessellate_command(&cmd, 0.25, &mut fill_tess, &mut stroke_tess, &mut verts, &mut idxs);
+        let ok = tessellate_command(cmd, 0.25, &mut fill_tess, &mut stroke_tess, &mut verts, &mut idxs);
         assert!(ok);
         assert_eq!(verts.len(), verts_in.len() * 4); // [x,y,u,v] per vertex
         assert_eq!(idxs, idxs_in);

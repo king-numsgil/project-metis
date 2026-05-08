@@ -486,15 +486,16 @@ impl VectorContext {
         self.pending_render = None;
         self.local_stack.clear();
 
-        let mut all_vertices: Vec<f32> = Vec::new();
-        let mut all_indices: Vec<u32> = Vec::new();
-        let mut draw_calls: Vec<GpuDrawCall> = Vec::new();
+        let hint = pending.len();
+        let mut all_vertices: Vec<f32> = Vec::with_capacity(hint * 6 * 4);
+        let mut all_indices: Vec<u32> = Vec::with_capacity(hint * 6);
+        let mut draw_calls: Vec<GpuDrawCall> = Vec::with_capacity(hint);
 
-        for draw in &pending {
+        for draw in pending {
             let first_index = all_indices.len() as u32;
 
             let ok = tessellate_command(
-                &draw.command,
+                draw.command,
                 self.tolerance,
                 &mut self.fill_tess,
                 &mut self.stroke_tess,
