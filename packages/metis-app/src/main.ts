@@ -4,8 +4,6 @@ import { VectorContext } from "metis-vector";
 import { join } from "node:path";
 import {
     Device,
-    GPUBlendFactor,
-    GPUBlendOp,
     GPUCompareOp,
     GPUFilter,
     GPUIndexElementSize,
@@ -24,9 +22,7 @@ import {
     Scancode,
 } from "sdl3";
 import { sdlGetKeyboardState } from "sdl3/ffi";
-import { Font, GPUTextEngine, Text, TTF } from "ttf3";
 
-import textShader from "./text.wgsl";
 import triangleShader from "./triangle.wgsl";
 import vectorShader from "./vector.wgsl";
 
@@ -47,15 +43,8 @@ if (!vectorShader.vertex || !vectorShader.fragment) {
     throw new Error("Failed loading vector shader");
 }
 
-if (!textShader.vertex || !textShader.fragment) {
-    throw new Error("Failed loading text shader");
-}
-
 using game = new Game();
 console.log(`Platform: ${game.system.platform}`);
-
-using ttf = new TTF();
-console.log(`TTF: ${ttf.version} (FT ${ttf.freetypeVersion}; HB ${ttf.harfbuzzVersion})`);
 
 console.log("Supported GPU drivers :", Device.listSupportedDrivers());
 
@@ -127,79 +116,6 @@ using pipeline = dev.buildGraphicsPipeline()
     .shaders(vertexShader, fragmentShader)
     .addColorTarget(dev.getSwapchainFormat(wnd))
     .addVertexInput(quadBuffer, 0)
-    .primitiveType(GPUPrimitiveType.TriangleList)
-    .multisample(GPUSampleCount.Four)
-    .build();
-
-// ---------- TTF text setup ----------
-using font = Font.open(join("assets", "JetBrainsMono-Regular.ttf"), 24);
-using textEngine = GPUTextEngine.create(dev.raw);
-using textObj = Text.create(textEngine.raw, font, "Hello World of TTF!");
-textObj.update();
-
-const WIN_W = 1440;
-const WIN_H = 768;
-const TEXT_X = 10;
-const TEXT_Y = 34;
-
-const drawData = textEngine.getDrawData(textObj);
-if (!drawData || drawData.length === 0) {
-    throw new Error("No TTF draw data");
-}
-
-// Handle the first (typically only) draw sequence for a single-line text
-const seq = drawData[0]!;
-const textMesh = new Mesh(
-    ArrayOf(StructOf({xy: Vec(F32, 2), uv: Vec(F32, 2)}), seq.num_vertices),
-    seq.num_indices,
-    "uint32",
-);
-
-// Convert pixel-space coordinates from SDL_ttf to NDC, applying the text offset
-for (let i = 0; i < seq.num_vertices; i++) {
-    const px = (seq.xy[i]!.x + TEXT_X) / WIN_W * 2.0 - 1.0;
-    const py = 1.0 - (seq.xy[i]!.y + TEXT_Y) / WIN_H * 2.0;
-    textMesh.vertices.at(i).set({
-        xy: [px, py],
-        uv: [seq.uv[i]!.x, seq.uv[i]!.y],
-    });
-}
-textMesh.setIndices(seq.indices);
-
-using textVertexBuf = textMesh.createVertexDeviceBuffer(dev);
-using textIndexBuf = textMesh.createIndexDeviceBuffer(dev);
-
-using textSampler = dev.createSampler({
-    min_filter: GPUFilter.Linear,
-    mag_filter: GPUFilter.Linear,
-    mipmap_mode: GPUSamplerMipmapMode.Linear,
-    address_mode_u: GPUSamplerAddressMode.ClampToEdge,
-    address_mode_v: GPUSamplerAddressMode.ClampToEdge,
-    address_mode_w: GPUSamplerAddressMode.ClampToEdge,
-    compare_op: GPUCompareOp.Invalid,
-    enable_anisotropy: false,
-    enable_compare: false,
-    min_lod: 0,
-    max_lod: 0,
-    max_anisotropy: 0,
-    mip_lod_bias: 0,
-});
-
-using textVertexShader = dev.createShader(textShader.vertex);
-using textFragmentShader = dev.createShader(textShader.fragment);
-
-using textPipeline = dev.buildGraphicsPipeline()
-    .shaders(textVertexShader, textFragmentShader)
-    .addColorTarget(dev.getSwapchainFormat(wnd), {
-        enable_blend: true,
-        color_blend_op: GPUBlendOp.Add,
-        alpha_blend_op: GPUBlendOp.Add,
-        src_color_blendfactor: GPUBlendFactor.SrcAlpha,
-        dst_color_blendfactor: GPUBlendFactor.OneMinusSrcAlpha,
-        src_alpha_blendfactor: GPUBlendFactor.One,
-        dst_alpha_blendfactor: GPUBlendFactor.DstAlpha,
-    })
-    .addVertexInput(textMesh, 0)
     .primitiveType(GPUPrimitiveType.TriangleList)
     .multisample(GPUSampleCount.Four)
     .build();
@@ -317,21 +233,6 @@ game.on("Frame", ({cb, texture, resolve_texture}) => {
         offset: 0,
     }, GPUIndexElementSize.Size16Bit);
     pass.drawIndexedPrimitives(6);
-
-    pass.bindGraphicsPipeline(textPipeline);
-    pass.bindFragmentSamplers([{
-        texture: seq.atlas_texture,
-        sampler: textSampler.raw,
-    }]);
-    pass.bindVertexBuffers([{
-        buffer: textVertexBuf.raw,
-        offset: 0,
-    }]);
-    pass.bindIndexBuffer({
-        buffer: textIndexBuf.raw,
-        offset: 0,
-    }, GPUIndexElementSize.Size32Bit);
-    pass.drawIndexedPrimitives(seq.num_indices);
 
     pass.bindGraphicsPipeline(vectorPipeline);
     cb.pushVertexUniformData(0, ortho.buffer);
