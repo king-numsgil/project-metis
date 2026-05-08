@@ -207,6 +207,7 @@ using textPipeline = dev.buildGraphicsPipeline()
 const ctx = new VectorContext();
 ctx.loadFont("JetBrainsMono", join("assets", "JetBrainsMono-Regular.ttf"));
 
+ctx.setId(1);
 ctx.beginPath();
 ctx.arc(75, 75, 50, 0, 2 * Math.PI);
 ctx.closePath();
@@ -217,6 +218,7 @@ ctx.fillRadialGradient(
 );
 ctx.stroke(1.0, 1.0, 1.0, 1.0, 2.5);
 
+ctx.setId(2);
 ctx.beginPath();
 ctx.moveTo(0, 0);
 ctx.lineTo(50, 0);
@@ -229,6 +231,7 @@ ctx.fillLinearGradient(
     0.0, 0.0, 1.0, 1.0,
 );
 
+ctx.setId(3);
 ctx.drawText("Hello World!", "JetBrainsMono", 50, 25, 200);
 ctx.fillLinearGradient(
     1.0, 1.0, 1.0, 1.0,
