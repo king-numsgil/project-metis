@@ -2,16 +2,55 @@ use std::collections::HashMap;
 use lyon_path::path::Builder;
 use lyon_path::geom::euclid::default::Transform2D;
 use lyon_path::math::{point, vector};
+use lyon_path::Path;
+use lyon_tessellation::{FillOptions, FillRule as LyonFillRule, FillTessellator};
 use ttf_parser::Face;
 
 use crate::commands::FillRule;
+use crate::tessellator::PositionCollector;
 
 // ---------------------------------------------------------------------------
-// Font store — bytes + face index, so .ttc collections work correctly
+// Glyph cache
 // ---------------------------------------------------------------------------
+
+/// Tessellated glyph geometry stored in raw font units (no scale, no Y-flip).
+/// Vertex positions are the raw outline coordinates as emitted by ttf-parser.
+struct CachedGlyph {
+    /// Position-only vertices in font units.
+    vertices: Vec<[f32; 2]>,
+    indices: Vec<u32>,
+    /// Horizontal advance in font units. Stored for future use (e.g. CJK layout).
+    #[allow(dead_code)]
+    advance: f32,
+}
+
+/// Unicode ranges to pre-warm at load time.
+const PREWARM_RANGES: &[(u32, u32)] = &[
+    (0x0020, 0x007E), // Basic Latin
+    (0x00A0, 0x00FF), // Latin-1 Supplement
+    (0x0152, 0x0153), // Œ / œ
+    (0x2000, 0x206F), // General Punctuation
+    (0x2190, 0x21FF), // Arrows
+    (0x2200, 0x22FF), // Mathematical Operators
+    (0x2100, 0x214F), // Letterlike Symbols
+    (0x25A0, 0x25FF), // Geometric Shapes
+    (0x2600, 0x26FF), // Miscellaneous Symbols
+];
+
+// ---------------------------------------------------------------------------
+// Font store
+// ---------------------------------------------------------------------------
+
+struct FontEntry {
+    bytes: Vec<u8>,
+    face_index: u32,
+    /// Keyed by GlyphId (u16). All cached geometry is in font units.
+    glyph_cache: HashMap<u16, CachedGlyph>,
+    fill_rule: FillRule,
+}
 
 pub struct FontStore {
-    fonts: HashMap<String, (Vec<u8>, u32)>,
+    fonts: HashMap<String, FontEntry>,
 }
 
 impl FontStore {
@@ -22,9 +61,14 @@ impl FontStore {
     pub fn load(&mut self, name: String, path: &str, face_index: u32) -> Result<(), String> {
         let bytes = std::fs::read(path)
             .map_err(|e| format!("Failed to read font file '{}': {}", path, e))?;
-        ttf_parser::Face::parse(&bytes, face_index)
+
+        let face = Face::parse(&bytes, face_index)
             .map_err(|e| format!("Failed to parse font '{}': {:?}", path, e))?;
-        self.fonts.insert(name, (bytes, face_index));
+
+        let fill_rule = detect_fill_rule(&face);
+        let glyph_cache = prewarm_cache(&face, fill_rule.clone());
+
+        self.fonts.insert(name, FontEntry { bytes, face_index, glyph_cache, fill_rule });
         Ok(())
     }
 
@@ -32,18 +76,87 @@ impl FontStore {
         self.fonts.remove(name);
     }
 
-    fn parse<'a>(&'a self, name: &str) -> Result<Face<'a>, String> {
-        let (bytes, idx) = self.fonts.get(name)
+    fn parse<'a>(&'a self, name: &str) -> Result<(Face<'a>, FillRule), String> {
+        let entry = self.fonts.get(name)
             .ok_or_else(|| format!("Unknown font: '{}'", name))?;
-        Face::parse(bytes, *idx)
-            .map_err(|e| format!("Failed to parse font '{}': {:?}", name, e))
+        let face = Face::parse(&entry.bytes, entry.face_index)
+            .map_err(|e| format!("Failed to parse font '{}': {:?}", name, e))?;
+        Ok((face, entry.fill_rule.clone()))
     }
 }
 
+fn detect_fill_rule(face: &Face) -> FillRule {
+    if face.tables().cff.is_some() { FillRule::EvenOdd } else { FillRule::NonZero }
+}
+
 // ---------------------------------------------------------------------------
-// GlyphWriter — implements ttf_parser::OutlineBuilder by writing directly
-// into a shared compound Lyon path builder with the per-glyph transform
-// applied inline.  No per-glyph Path allocation or collect() call.
+// Cache pre-warming — runs once at font load time
+// ---------------------------------------------------------------------------
+
+fn prewarm_cache(face: &Face, fill_rule: FillRule) -> HashMap<u16, CachedGlyph> {
+    let mut cache = HashMap::new();
+    let mut tess = FillTessellator::new();
+    let lyon_rule = to_lyon_fill_rule(&fill_rule);
+    let options = FillOptions::default()
+        .with_tolerance(0.25)
+        .with_fill_rule(lyon_rule);
+
+    let upm = face.units_per_em() as f32;
+
+    for &(lo, hi) in PREWARM_RANGES {
+        for cp in lo..=hi {
+            let ch = match char::from_u32(cp) { Some(c) => c, None => continue };
+            let glyph_id = match face.glyph_index(ch) { Some(id) => id, None => continue };
+
+            if cache.contains_key(&glyph_id.0) {
+                continue;
+            }
+
+            if let Some(glyph) = tessellate_glyph_in_font_units(face, glyph_id, upm, &options, &mut tess) {
+                cache.insert(glyph_id.0, glyph);
+            }
+        }
+    }
+    cache
+}
+
+/// Tessellate one glyph in font units (identity transform, no Y-flip).
+/// Returns None if the glyph has no outline or tessellation fails.
+fn tessellate_glyph_in_font_units(
+    face: &Face,
+    glyph_id: ttf_parser::GlyphId,
+    upm: f32,
+    options: &FillOptions,
+    tess: &mut FillTessellator,
+) -> Option<CachedGlyph> {
+    let mut path_builder = Path::builder();
+    let mut writer = GlyphWriter {
+        builder: &mut path_builder,
+        transform: Transform2D::identity(),
+    };
+    face.outline_glyph(glyph_id, &mut writer)?;
+    let path = path_builder.build();
+
+    let mut collector = PositionCollector::new();
+    tess.tessellate_path(&path, options, &mut collector).ok()?;
+
+    if collector.positions.is_empty() {
+        return None;
+    }
+
+    let advance = face.glyph_hor_advance(glyph_id)
+        .map(|a| a as f32)
+        .unwrap_or(upm * 0.5);
+
+    Some(CachedGlyph {
+        vertices: collector.positions,
+        indices: collector.indices,
+        advance,
+    })
+}
+
+// ---------------------------------------------------------------------------
+// GlyphWriter — implements OutlineBuilder, applies a transform inline
 // ---------------------------------------------------------------------------
 
 struct GlyphWriter<'a> {
@@ -81,11 +194,184 @@ impl ttf_parser::OutlineBuilder for GlyphWriter<'_> {
 }
 
 // ---------------------------------------------------------------------------
-// Public API
+// render_text — cache-backed path producing pre-tessellated screen-space verts
+// ---------------------------------------------------------------------------
+
+/// Render `text` into pre-tessellated screen-space vertices, using the glyph
+/// cache for any character that has been pre-warmed (or previously rendered).
+/// Cache misses are tessellated on the fly and inserted for future frames.
+///
+/// The Y-axis flip (font space → screen space) is applied here via the
+/// glyph transform, matching the same transform used by expand_text_path.
+pub fn render_text(
+    font_store: &mut FontStore,
+    font_name: &str,
+    size_px: f32,
+    text: &str,
+    origin_x: f32,
+    origin_y: f32,
+    local_transform: &Transform2D<f32>,
+    fill_tess: &mut FillTessellator,
+    tolerance: f32,
+    out_vertices: &mut Vec<[f32; 2]>,
+    out_indices: &mut Vec<u32>,
+) -> Result<FillRule, String> {
+    // Phase 1: immutable read — look up face, fill_rule, cache; process glyphs.
+    // Separate phase because Face borrows from entry.bytes; can't hold that
+    // borrow while also mutably updating entry.glyph_cache.
+    struct GlyphWork {
+        glyph_id_u16: u16,
+        transform: Transform2D<f32>,
+        need_tessellation: bool, // cache miss — must tessellate and cache
+        is_notdef: bool,
+    }
+
+    let fill_rule;
+    let upm;
+    let mut work_items: Vec<GlyphWork> = Vec::new();
+    let mut notdef_params: Vec<(f32, f32, f32, f32, f32, Transform2D<f32>)> = Vec::new();
+
+    {
+        let entry = font_store.fonts.get(font_name)
+            .ok_or_else(|| format!("Unknown font: '{}'", font_name))?;
+        let face = Face::parse(&entry.bytes, entry.face_index)
+            .map_err(|e| format!("Failed to parse font '{}': {:?}", font_name, e))?;
+
+        fill_rule = entry.fill_rule.clone();
+        upm = face.units_per_em() as f32;
+        let scale = size_px / upm;
+        let mut cursor_fu: f32 = 0.0;
+
+        for ch in text.chars() {
+            let glyph_id = face.glyph_index(ch);
+            let is_whitespace = ch.is_ascii_whitespace();
+
+            let advance_fu = glyph_id
+                .and_then(|id| face.glyph_hor_advance(id))
+                .map(|a| a as f32)
+                .unwrap_or(upm * 0.5);
+
+            let cursor_px = cursor_fu * scale + origin_x;
+            // Y-flip: scale(scale, -scale) matches the existing expand_text_path transform.
+            let glyph_transform = Transform2D::scale(scale, -scale)
+                .then_translate(vector(cursor_px, origin_y))
+                .then(local_transform);
+
+            match glyph_id {
+                None => {
+                    if !is_whitespace {
+                        notdef_params.push((size_px, cursor_px, origin_y, scale, upm, *local_transform));
+                    }
+                }
+                Some(id) => {
+                    let in_cache = entry.glyph_cache.contains_key(&id.0);
+                    work_items.push(GlyphWork {
+                        glyph_id_u16: id.0,
+                        transform: glyph_transform,
+                        need_tessellation: !in_cache,
+                        is_notdef: false,
+                    });
+                }
+            }
+
+            cursor_fu += advance_fu;
+        }
+    }
+
+    // Phase 2: tessellate cache misses (still need immutable face for outlines).
+    // Collect new entries so we can insert them without double-borrowing.
+    let mut new_entries: Vec<(u16, CachedGlyph)> = Vec::new();
+    let lyon_rule = to_lyon_fill_rule(&fill_rule);
+    let options = FillOptions::default().with_tolerance(tolerance).with_fill_rule(lyon_rule);
+
+    {
+        let entry = font_store.fonts.get(font_name).unwrap();
+        let face = Face::parse(&entry.bytes, entry.face_index)
+            .map_err(|e| format!("Failed to parse font '{}': {:?}", font_name, e))?;
+
+        for item in &work_items {
+            if !item.need_tessellation { continue; }
+            if new_entries.iter().any(|(id, _)| *id == item.glyph_id_u16) { continue; }
+
+            let glyph_id = ttf_parser::GlyphId(item.glyph_id_u16);
+            if let Some(glyph) = tessellate_glyph_in_font_units(&face, glyph_id, upm, &options, fill_tess) {
+                new_entries.push((item.glyph_id_u16, glyph));
+            }
+        }
+    }
+
+    // Phase 3: insert new cache entries.
+    if !new_entries.is_empty() {
+        let entry = font_store.fonts.get_mut(font_name).unwrap();
+        for (id, glyph) in new_entries {
+            entry.glyph_cache.insert(id, glyph);
+        }
+    }
+
+    // Phase 4: emit vertices from cache (all entries now present).
+    {
+        let entry = font_store.fonts.get(font_name).unwrap();
+
+        for item in &work_items {
+            if item.is_notdef { continue; }
+            let cached = match entry.glyph_cache.get(&item.glyph_id_u16) {
+                Some(c) => c,
+                None => continue, // tessellation failed for this glyph; skip
+            };
+            let base = out_vertices.len() as u32;
+            for &[x, y] in &cached.vertices {
+                let p = item.transform.transform_point(point(x, y));
+                out_vertices.push([p.x, p.y]);
+            }
+            for &idx in &cached.indices {
+                out_indices.push(idx + base);
+            }
+        }
+    }
+
+    // Phase 5: emit notdef boxes.
+    for (size_px, cursor_px, origin_y, scale, upm, lt) in notdef_params {
+        append_notdef_box(out_vertices, out_indices, size_px, cursor_px, origin_y, scale, upm, &lt);
+    }
+
+    Ok(fill_rule)
+}
+
+/// Append a filled notdef box directly as two triangles (no path → tessellator).
+fn append_notdef_box(
+    out_vertices: &mut Vec<[f32; 2]>,
+    out_indices: &mut Vec<u32>,
+    size_px: f32,
+    cursor_px: f32,
+    origin_y: f32,
+    scale: f32,
+    upm: f32,
+    local_transform: &Transform2D<f32>,
+) {
+    let width  = upm * 0.5 * scale;
+    let height = size_px * 0.7;
+    let inset  = size_px * 0.05;
+
+    let p0 = local_transform.transform_point(point(cursor_px + inset,         origin_y - height + inset));
+    let p1 = local_transform.transform_point(point(cursor_px + width - inset, origin_y - height + inset));
+    let p2 = local_transform.transform_point(point(cursor_px + width - inset, origin_y - inset));
+    let p3 = local_transform.transform_point(point(cursor_px + inset,         origin_y - inset));
+
+    let base = out_vertices.len() as u32;
+    out_vertices.push([p0.x, p0.y]);
+    out_vertices.push([p1.x, p1.y]);
+    out_vertices.push([p2.x, p2.y]);
+    out_vertices.push([p3.x, p3.y]);
+    out_indices.extend_from_slice(&[base, base+1, base+2, base, base+2, base+3]);
+}
+
+// ---------------------------------------------------------------------------
+// expand_text_path — Lyon path builder path (used for stroke support)
 // ---------------------------------------------------------------------------
 
 /// Expand `text` into a single compound Lyon path written directly into
 /// `builder`.  Returns the correct fill rule for the font's outline format.
+/// The Y-flip transform is applied inline (matching render_text).
 pub fn expand_text_path(
     font_store: &FontStore,
     font_name: &str,
@@ -96,9 +382,7 @@ pub fn expand_text_path(
     local_transform: &Transform2D<f32>,
     builder: &mut Builder,
 ) -> Result<FillRule, String> {
-    let face = font_store.parse(font_name)?;
-
-    let fill_rule = if face.tables().cff.is_some() { FillRule::EvenOdd } else { FillRule::NonZero };
+    let (face, fill_rule) = font_store.parse(font_name)?;
 
     let upm = face.units_per_em() as f32;
     let scale = size_px / upm;
@@ -122,8 +406,6 @@ pub fn expand_text_path(
                 }
             }
             Some(id) => {
-                // Y-flip in font space, then translate to screen position,
-                // then apply the caller's local transform.
                 let glyph_transform = Transform2D::scale(scale, -scale)
                     .then_translate(vector(cursor_px, origin_y))
                     .then(local_transform);
@@ -142,57 +424,6 @@ pub fn expand_text_path(
 
     Ok(fill_rule)
 }
-
-pub fn measure_text_width(
-    font_store: &FontStore,
-    font_name: &str,
-    size_px: f32,
-    text: &str,
-) -> Result<f32, String> {
-    let face = font_store.parse(font_name)?;
-    let upm = face.units_per_em() as f32;
-    let scale = size_px / upm;
-
-    let mut cursor_fu: f32 = 0.0;
-    for ch in text.chars() {
-        cursor_fu += face
-            .glyph_index(ch)
-            .and_then(|id| face.glyph_hor_advance(id))
-            .map(|a| a as f32)
-            .unwrap_or(upm * 0.5);
-    }
-
-    Ok(cursor_fu * scale)
-}
-
-pub fn get_font_metrics(
-    font_store: &FontStore,
-    font_name: &str,
-    size_px: f32,
-) -> Result<(f32, f32, f32, f32, f32, f32, f32), String> {
-    let face = font_store.parse(font_name)?;
-    let upm = face.units_per_em() as f32;
-    let scale = size_px / upm;
-
-    let ascender  = face.ascender()  as f32 * scale;
-    let descender = face.descender() as f32 * scale;
-    let line_gap  = face.line_gap()  as f32 * scale;
-    let line_height = ascender - descender + line_gap;
-
-    let cap_height = face.capital_height()
-        .map(|v| v as f32 * scale)
-        .unwrap_or(ascender * 0.72);
-
-    let x_height = face.x_height()
-        .map(|v| v as f32 * scale)
-        .unwrap_or(ascender * 0.53);
-
-    Ok((ascender, descender, line_gap, line_height, cap_height, x_height, upm))
-}
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
 
 fn write_notdef_box(
     builder: &mut Builder,
@@ -218,6 +449,72 @@ fn write_notdef_box(
     builder.line_to(p3);
     builder.close();
 }
+
+// ---------------------------------------------------------------------------
+// Metric helpers
+// ---------------------------------------------------------------------------
+
+pub fn measure_text_width(
+    font_store: &FontStore,
+    font_name: &str,
+    size_px: f32,
+    text: &str,
+) -> Result<f32, String> {
+    let (face, _) = font_store.parse(font_name)?;
+    let upm = face.units_per_em() as f32;
+    let scale = size_px / upm;
+
+    let mut cursor_fu: f32 = 0.0;
+    for ch in text.chars() {
+        cursor_fu += face
+            .glyph_index(ch)
+            .and_then(|id| face.glyph_hor_advance(id))
+            .map(|a| a as f32)
+            .unwrap_or(upm * 0.5);
+    }
+
+    Ok(cursor_fu * scale)
+}
+
+pub fn get_font_metrics(
+    font_store: &FontStore,
+    font_name: &str,
+    size_px: f32,
+) -> Result<(f32, f32, f32, f32, f32, f32, f32), String> {
+    let (face, _) = font_store.parse(font_name)?;
+    let upm = face.units_per_em() as f32;
+    let scale = size_px / upm;
+
+    let ascender  = face.ascender()  as f32 * scale;
+    let descender = face.descender() as f32 * scale;
+    let line_gap  = face.line_gap()  as f32 * scale;
+    let line_height = ascender - descender + line_gap;
+
+    let cap_height = face.capital_height()
+        .map(|v| v as f32 * scale)
+        .unwrap_or(ascender * 0.72);
+
+    let x_height = face.x_height()
+        .map(|v| v as f32 * scale)
+        .unwrap_or(ascender * 0.53);
+
+    Ok((ascender, descender, line_gap, line_height, cap_height, x_height, upm))
+}
+
+// ---------------------------------------------------------------------------
+// Internal utility
+// ---------------------------------------------------------------------------
+
+fn to_lyon_fill_rule(rule: &FillRule) -> LyonFillRule {
+    match rule {
+        FillRule::NonZero => LyonFillRule::NonZero,
+        FillRule::EvenOdd => LyonFillRule::EvenOdd,
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
 
 #[cfg(test)]
 mod tests {

@@ -15,7 +15,7 @@ use lyon_tessellation::{FillTessellator, StrokeTessellator};
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 
-use commands::{FillRule, PaintCommand};
+use commands::{FillRule, Paint, PaintCommand};
 use font::FontStore;
 use output::{FlushOutput, FontMetrics, GpuDrawCall};
 use tessellator::tessellate_command;
@@ -27,6 +27,7 @@ use tessellator::tessellate_command;
 struct PendingDraw {
     command: PaintCommand,
     world_transform: [f32; 16],
+    paint: Paint,
 }
 
 // ---------------------------------------------------------------------------
@@ -40,6 +41,9 @@ pub struct VectorContext {
     current_path: Option<Path>,
     path_is_from_text: bool,
     text_fill_rule: FillRule,
+
+    // Pre-tessellated text from the glyph cache (set by draw_text, consumed by fill)
+    pending_render: Option<(Vec<[f32; 2]>, Vec<u32>, FillRule)>,
 
     // Transform stacks
     local_stack: Vec<Transform2D<f32>>,
@@ -81,6 +85,7 @@ impl VectorContext {
             current_path: None,
             path_is_from_text: false,
             text_fill_rule: FillRule::NonZero,
+            pending_render: None,
             local_stack: Vec::new(),
             world_transform: identity_4x4(),
             pending: Vec::new(),
@@ -134,6 +139,7 @@ impl VectorContext {
     pub fn begin_path(&mut self) {
         self.path_builder = Some(Path::builder());
         self.current_path = None;
+        self.pending_render = None;
         self.path_is_from_text = false;
         self.text_fill_rule = FillRule::NonZero;
     }
@@ -212,7 +218,7 @@ impl VectorContext {
     }
 
     // -----------------------------------------------------------------------
-    // Paint operations
+    // Paint operations — flat color
     // -----------------------------------------------------------------------
 
     fn take_path(&mut self) -> Option<Path> {
@@ -227,38 +233,137 @@ impl VectorContext {
 
     #[napi]
     pub fn fill(&mut self, r: f64, g: f64, b: f64, a: f64) {
-        let path = match self.take_path() {
-            Some(p) => p,
-            None => return,
-        };
+        let paint = Paint::flat([r as f32, g as f32, b as f32, a as f32]);
+        self.push_fill_command(paint);
+    }
+
+    #[napi]
+    pub fn stroke(&mut self, r: f64, g: f64, b: f64, a: f64, width: f64) {
+        let paint = Paint::flat([r as f32, g as f32, b as f32, a as f32]);
+        self.push_stroke_command(paint, width as f32);
+    }
+
+    // -----------------------------------------------------------------------
+    // Paint operations — gradients
+    // -----------------------------------------------------------------------
+
+    #[napi]
+    pub fn fill_linear_gradient(
+        &mut self,
+        r1: f64, g1: f64, b1: f64, a1: f64,
+        r2: f64, g2: f64, b2: f64, a2: f64,
+        u1: f64, v1: f64,
+        u2: f64, v2: f64,
+    ) {
+        let paint = Paint::linear(
+            [r1 as f32, g1 as f32, b1 as f32, a1 as f32],
+            [r2 as f32, g2 as f32, b2 as f32, a2 as f32],
+            [u1 as f32, v1 as f32],
+            [u2 as f32, v2 as f32],
+        );
+        self.push_fill_command(paint);
+    }
+
+    #[napi]
+    pub fn fill_radial_gradient(
+        &mut self,
+        r1: f64, g1: f64, b1: f64, a1: f64,
+        r2: f64, g2: f64, b2: f64, a2: f64,
+        cu: f64, cv: f64,
+        radius: f64,
+    ) {
+        let paint = Paint::radial(
+            [r1 as f32, g1 as f32, b1 as f32, a1 as f32],
+            [r2 as f32, g2 as f32, b2 as f32, a2 as f32],
+            [cu as f32, cv as f32],
+            radius as f32,
+        );
+        self.push_fill_command(paint);
+    }
+
+    #[napi]
+    pub fn stroke_linear_gradient(
+        &mut self,
+        r1: f64, g1: f64, b1: f64, a1: f64,
+        r2: f64, g2: f64, b2: f64, a2: f64,
+        u1: f64, v1: f64,
+        u2: f64, v2: f64,
+        width: f64,
+    ) {
+        let paint = Paint::linear(
+            [r1 as f32, g1 as f32, b1 as f32, a1 as f32],
+            [r2 as f32, g2 as f32, b2 as f32, a2 as f32],
+            [u1 as f32, v1 as f32],
+            [u2 as f32, v2 as f32],
+        );
+        self.push_stroke_command(paint, width as f32);
+    }
+
+    #[napi]
+    pub fn stroke_radial_gradient(
+        &mut self,
+        r1: f64, g1: f64, b1: f64, a1: f64,
+        r2: f64, g2: f64, b2: f64, a2: f64,
+        cu: f64, cv: f64,
+        radius: f64,
+        width: f64,
+    ) {
+        let paint = Paint::radial(
+            [r1 as f32, g1 as f32, b1 as f32, a1 as f32],
+            [r2 as f32, g2 as f32, b2 as f32, a2 as f32],
+            [cu as f32, cv as f32],
+            radius as f32,
+        );
+        self.push_stroke_command(paint, width as f32);
+    }
+
+    // -----------------------------------------------------------------------
+    // Internal paint helpers
+    // -----------------------------------------------------------------------
+
+    fn push_fill_command(&mut self, paint: Paint) {
+        // Prefer pre-tessellated cache output (set by draw_text) for fills.
+        if let Some((verts, idxs, _fill_rule)) = self.pending_render.take() {
+            // current_path is still available for a subsequent stroke() call.
+            self.pending.push(PendingDraw {
+                command: PaintCommand::PreTessellated { vertices: verts, indices: idxs },
+                world_transform: self.world_transform,
+                paint,
+            });
+            return;
+        }
+
         let fill_rule = if self.path_is_from_text {
             self.text_fill_rule.clone()
         } else {
             FillRule::NonZero
         };
-        self.pending.push(PendingDraw {
-            command: PaintCommand::Fill {
-                path,
-                color: [r as f32, g as f32, b as f32, a as f32],
-                fill_rule,
-            },
-            world_transform: self.world_transform,
-        });
-    }
 
-    #[napi]
-    pub fn stroke(&mut self, r: f64, g: f64, b: f64, a: f64, width: f64) {
         let path = match self.take_path() {
             Some(p) => p,
             None => return,
         };
+
         self.pending.push(PendingDraw {
-            command: PaintCommand::Stroke {
-                path,
-                color: [r as f32, g as f32, b as f32, a as f32],
-                width: width as f32,
-            },
+            command: PaintCommand::Fill { path, fill_rule },
             world_transform: self.world_transform,
+            paint,
+        });
+    }
+
+    fn push_stroke_command(&mut self, paint: Paint, width: f32) {
+        // Discard cached text output — stroke always uses the Lyon path.
+        self.pending_render = None;
+
+        let path = match self.take_path() {
+            Some(p) => p,
+            None => return,
+        };
+
+        self.pending.push(PendingDraw {
+            command: PaintCommand::Stroke { path, width },
+            world_transform: self.world_transform,
+            paint,
         });
     }
 
@@ -299,9 +404,29 @@ impl VectorContext {
         }
 
         let lt = current_local(&self.local_stack);
-        let mut builder = Path::builder();
 
-        let fill_rule = font::expand_text_path(
+        // Cache path: pre-tessellated positions (used by the next fill() call).
+        let mut pre_verts: Vec<[f32; 2]> = Vec::new();
+        let mut pre_idxs: Vec<u32> = Vec::new();
+        let fill_rule = font::render_text(
+            &mut self.fonts,
+            &font_name,
+            size_px as f32,
+            &text,
+            x as f32,
+            y as f32,
+            &lt,
+            &mut self.fill_tess,
+            self.tolerance,
+            &mut pre_verts,
+            &mut pre_idxs,
+        ).map_err(napi::Error::from_reason)?;
+
+        self.pending_render = Some((pre_verts, pre_idxs, fill_rule.clone()));
+
+        // Also build the Lyon path so stroke() works after draw_text().
+        let mut builder = Path::builder();
+        font::expand_text_path(
             &self.fonts,
             &font_name,
             size_px as f32,
@@ -310,8 +435,7 @@ impl VectorContext {
             y as f32,
             &lt,
             &mut builder,
-        )
-        .map_err(napi::Error::from_reason)?;
+        ).map_err(napi::Error::from_reason)?;
 
         self.current_path = Some(builder.build());
         self.path_builder = None;
@@ -359,6 +483,7 @@ impl VectorContext {
         let pending = std::mem::take(&mut self.pending);
         self.current_path = None;
         self.path_builder = None;
+        self.pending_render = None;
         self.local_stack.clear();
 
         let mut all_vertices: Vec<f32> = Vec::new();
@@ -382,6 +507,7 @@ impl VectorContext {
                     first_index,
                     index_count: all_indices.len() as u32 - first_index,
                     model_matrix: Float32Array::new(draw.world_transform.to_vec()),
+                    paint: Float32Array::new(draw.paint.to_std140().to_vec()),
                 });
             }
         }
@@ -398,6 +524,7 @@ impl VectorContext {
         self.pending.clear();
         self.current_path = None;
         self.path_builder = None;
+        self.pending_render = None;
         self.local_stack.clear();
     }
 }

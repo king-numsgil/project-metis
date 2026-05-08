@@ -9,26 +9,29 @@ use lyon_tessellation::{
 use crate::commands::{FillRule as CmdFillRule, PaintCommand};
 
 // ---------------------------------------------------------------------------
-// Custom geometry builder — writes interleaved f32 directly into the caller's
-// output buffers, eliminating the VertexBuffers<Vertex, u32> intermediary.
+// Position-only geometry builder — used by both the tessellator (for UV
+// generation) and font.rs (for glyph cache pre-warming).
 // ---------------------------------------------------------------------------
 
-pub struct FlatOutput<'a> {
-    pub vertices: &'a mut Vec<f32>,
-    pub indices: &'a mut Vec<u32>,
-    pub color: [f32; 4],
+pub struct PositionCollector {
+    pub positions: Vec<[f32; 2]>,
+    pub indices: Vec<u32>,
     base_vertex: u32,
 }
 
-impl<'a> FlatOutput<'a> {
-    pub fn new(vertices: &'a mut Vec<f32>, indices: &'a mut Vec<u32>, color: [f32; 4]) -> Self {
-        FlatOutput { vertices, indices, color, base_vertex: 0 }
+impl PositionCollector {
+    pub fn new() -> Self {
+        PositionCollector {
+            positions: Vec::new(),
+            indices: Vec::new(),
+            base_vertex: 0,
+        }
     }
 }
 
-impl GeometryBuilder for FlatOutput<'_> {
+impl GeometryBuilder for PositionCollector {
     fn begin_geometry(&mut self) {
-        self.base_vertex = (self.vertices.len() / 6) as u32;
+        self.base_vertex = self.positions.len() as u32;
     }
 
     fn add_triangle(&mut self, a: VertexId, b: VertexId, c: VertexId) {
@@ -38,98 +41,117 @@ impl GeometryBuilder for FlatOutput<'_> {
     }
 }
 
-impl FillGeometryBuilder for FlatOutput<'_> {
+impl FillGeometryBuilder for PositionCollector {
     fn add_fill_vertex(
         &mut self,
         vertex: FillVertex,
     ) -> Result<VertexId, GeometryBuilderError> {
-        let local_id = (self.vertices.len() / 6) as u32 - self.base_vertex;
+        let local_id = self.positions.len() as u32 - self.base_vertex;
         let pos = vertex.position();
-        self.vertices.push(pos.x);
-        self.vertices.push(pos.y);
-        self.vertices.push(self.color[0]);
-        self.vertices.push(self.color[1]);
-        self.vertices.push(self.color[2]);
-        self.vertices.push(self.color[3]);
+        self.positions.push([pos.x, pos.y]);
         Ok(VertexId(local_id))
     }
 }
 
-impl StrokeGeometryBuilder for FlatOutput<'_> {
+impl StrokeGeometryBuilder for PositionCollector {
     fn add_stroke_vertex(
         &mut self,
         vertex: StrokeVertex,
     ) -> Result<VertexId, GeometryBuilderError> {
-        let local_id = (self.vertices.len() / 6) as u32 - self.base_vertex;
+        let local_id = self.positions.len() as u32 - self.base_vertex;
         let pos = vertex.position();
-        self.vertices.push(pos.x);
-        self.vertices.push(pos.y);
-        self.vertices.push(self.color[0]);
-        self.vertices.push(self.color[1]);
-        self.vertices.push(self.color[2]);
-        self.vertices.push(self.color[3]);
+        self.positions.push([pos.x, pos.y]);
         Ok(VertexId(local_id))
     }
 }
 
 // ---------------------------------------------------------------------------
-// Tessellation entry points — tessellators are caller-owned and reused
+// Internal helpers
 // ---------------------------------------------------------------------------
 
-pub fn tessellate_fill(
+fn fill_positions(
     tessellator: &mut FillTessellator,
     path: &Path,
-    color: [f32; 4],
     fill_rule: &CmdFillRule,
     tolerance: f32,
-    vertices: &mut Vec<f32>,
-    indices: &mut Vec<u32>,
+    collector: &mut PositionCollector,
 ) -> bool {
     let lyon_rule = match fill_rule {
         CmdFillRule::NonZero => FillRule::NonZero,
         CmdFillRule::EvenOdd => FillRule::EvenOdd,
     };
-
     let options = FillOptions::default()
         .with_tolerance(tolerance)
         .with_fill_rule(lyon_rule);
-
-    let mut output = FlatOutput::new(vertices, indices, color);
-
-    match tessellator.tessellate_path(path, &options, &mut output) {
+    match tessellator.tessellate_path(path, &options, collector) {
         Ok(_) => true,
-        Err(e) => {
-            eprintln!("Fill tessellation failed: {:?}", e);
-            false
-        }
+        Err(e) => { eprintln!("Fill tessellation failed: {:?}", e); false }
     }
 }
 
-pub fn tessellate_stroke(
+fn stroke_positions(
     tessellator: &mut StrokeTessellator,
     path: &Path,
-    color: [f32; 4],
     width: f32,
     tolerance: f32,
-    vertices: &mut Vec<f32>,
-    indices: &mut Vec<u32>,
+    collector: &mut PositionCollector,
 ) -> bool {
     let options = StrokeOptions::default()
         .with_tolerance(tolerance)
         .with_line_width(width)
         .with_line_cap(LineCap::Round)
         .with_line_join(LineJoin::Round);
-
-    let mut output = FlatOutput::new(vertices, indices, color);
-
-    match tessellator.tessellate_path(path, &options, &mut output) {
+    match tessellator.tessellate_path(path, &options, collector) {
         Ok(_) => true,
-        Err(e) => {
-            eprintln!("Stroke tessellation failed: {:?}", e);
-            false
-        }
+        Err(e) => { eprintln!("Stroke tessellation failed: {:?}", e); false }
     }
 }
+
+/// Compute AABB of a position list. Returns (min_x, min_y, max_x, max_y).
+fn aabb(positions: &[[f32; 2]]) -> (f32, f32, f32, f32) {
+    let mut min_x = f32::MAX;
+    let mut min_y = f32::MAX;
+    let mut max_x = f32::MIN;
+    let mut max_y = f32::MIN;
+    for &[x, y] in positions {
+        if x < min_x { min_x = x; }
+        if y < min_y { min_y = y; }
+        if x > max_x { max_x = x; }
+        if y > max_y { max_y = y; }
+    }
+    (min_x, min_y, max_x, max_y)
+}
+
+/// Emit [x, y, u, v] vertices into `out_vertices`, offsetting `local_indices`
+/// by `vertex_base` into `out_indices`.
+///
+/// UVs are derived from the tight AABB of `positions` (post-transform space).
+/// Degenerate axes (zero width or height) clamp UV to 0.0.
+fn emit_with_uvs(
+    positions: &[[f32; 2]],
+    local_indices: &[u32],
+    out_vertices: &mut Vec<f32>,
+    out_indices: &mut Vec<u32>,
+) {
+    let vertex_base = (out_vertices.len() / 4) as u32;
+
+    let (min_x, min_y, max_x, max_y) = aabb(positions);
+    let w = max_x - min_x;
+    let h = max_y - min_y;
+
+    for &[x, y] in positions {
+        let u = if w > 0.0 { (x - min_x) / w } else { 0.0 };
+        let v = if h > 0.0 { (y - min_y) / h } else { 0.0 };
+        out_vertices.extend_from_slice(&[x, y, u, v]);
+    }
+    for &idx in local_indices {
+        out_indices.push(idx + vertex_base);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Public tessellation entry point
+// ---------------------------------------------------------------------------
 
 pub fn tessellate_command(
     cmd: &PaintCommand,
@@ -139,15 +161,34 @@ pub fn tessellate_command(
     vertices: &mut Vec<f32>,
     indices: &mut Vec<u32>,
 ) -> bool {
-    match cmd {
-        PaintCommand::Fill { path, color, fill_rule } => {
-            tessellate_fill(fill_tess, path, *color, fill_rule, tolerance, vertices, indices)
+    // Phase 1: collect screen-space positions and local indices.
+    let mut collector = PositionCollector::new();
+    let ok = match cmd {
+        PaintCommand::Fill { path, fill_rule } => {
+            fill_positions(fill_tess, path, fill_rule, tolerance, &mut collector)
         }
-        PaintCommand::Stroke { path, color, width } => {
-            tessellate_stroke(stroke_tess, path, *color, *width, tolerance, vertices, indices)
+        PaintCommand::Stroke { path, width } => {
+            stroke_positions(stroke_tess, path, *width, tolerance, &mut collector)
         }
+        PaintCommand::PreTessellated { vertices: pre_verts, indices: pre_idxs } => {
+            collector.positions = pre_verts.clone();
+            collector.indices = pre_idxs.clone();
+            true
+        }
+    };
+
+    if !ok || collector.positions.is_empty() {
+        return ok;
     }
+
+    // Phase 2: compute per-draw-call AABB, generate UVs, emit [x, y, u, v].
+    emit_with_uvs(&collector.positions, &collector.indices, vertices, indices);
+    true
 }
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
 
 #[cfg(test)]
 mod tests {
@@ -168,58 +209,83 @@ mod tests {
     #[test]
     fn tessellate_fill_square() {
         let mut tess = FillTessellator::new();
-        let mut verts = Vec::new();
-        let mut idxs = Vec::new();
+        let mut collector = PositionCollector::new();
         let path = square_path();
-        let ok = tessellate_fill(&mut tess, &path, [1.0, 0.0, 0.0, 1.0], &CmdFillRule::NonZero, 0.25, &mut verts, &mut idxs);
+        let ok = fill_positions(&mut tess, &path, &CmdFillRule::NonZero, 0.25, &mut collector);
         assert!(ok);
-        assert!(!verts.is_empty());
-        assert!(!idxs.is_empty());
-        assert_eq!(verts.len() % 6, 0);
-        assert_eq!(idxs.len() % 3, 0);
+        assert!(!collector.positions.is_empty());
+        assert!(!collector.indices.is_empty());
+        assert_eq!(collector.indices.len() % 3, 0);
     }
 
     #[test]
     fn tessellate_stroke_square() {
         let mut tess = StrokeTessellator::new();
-        let mut verts = Vec::new();
-        let mut idxs = Vec::new();
+        let mut collector = PositionCollector::new();
         let path = square_path();
-        let ok = tessellate_stroke(&mut tess, &path, [0.0, 1.0, 0.0, 1.0], 2.0, 0.25, &mut verts, &mut idxs);
+        let ok = stroke_positions(&mut tess, &path, 2.0, 0.25, &mut collector);
         assert!(ok);
-        assert!(!verts.is_empty());
-        assert_eq!(idxs.len() % 3, 0);
+        assert!(!collector.positions.is_empty());
+        assert_eq!(collector.indices.len() % 3, 0);
     }
 
     #[test]
-    fn tessellate_fill_vertex_color() {
-        let mut tess = FillTessellator::new();
+    fn uv_range_zero_to_one() {
+        let mut fill_tess = FillTessellator::new();
+        let mut stroke_tess = StrokeTessellator::new();
+        let path = square_path();
+        let cmd = PaintCommand::Fill {
+            path,
+            fill_rule: CmdFillRule::NonZero,
+        };
         let mut verts = Vec::new();
         let mut idxs = Vec::new();
-        let path = square_path();
-        let color = [0.5, 0.25, 0.1, 0.8];
-        tessellate_fill(&mut tess, &path, color, &CmdFillRule::NonZero, 0.25, &mut verts, &mut idxs);
-        for chunk in verts.chunks_exact(6) {
-            assert!((chunk[2] - 0.5).abs() < 1e-6); // r
-            assert!((chunk[5] - 0.8).abs() < 1e-6); // a
+        let ok = tessellate_command(&cmd, 0.25, &mut fill_tess, &mut stroke_tess, &mut verts, &mut idxs);
+        assert!(ok);
+        // stride is 4: [x, y, u, v]
+        assert_eq!(verts.len() % 4, 0);
+        for chunk in verts.chunks_exact(4) {
+            let u = chunk[2];
+            let v = chunk[3];
+            assert!(u >= 0.0 && u <= 1.0, "u={u} out of [0,1]");
+            assert!(v >= 0.0 && v <= 1.0, "v={v} out of [0,1]");
         }
     }
 
     #[test]
     fn multi_draw_indices_non_overlapping() {
-        // Two back-to-back tessellations into the same buffers — indices must
-        // not alias each other.
-        let mut tess = FillTessellator::new();
+        let mut fill_tess = FillTessellator::new();
+        let mut stroke_tess = StrokeTessellator::new();
         let mut verts = Vec::new();
         let mut idxs = Vec::new();
         let path = square_path();
-        tessellate_fill(&mut tess, &path, [1.0, 0.0, 0.0, 1.0], &CmdFillRule::NonZero, 0.25, &mut verts, &mut idxs);
-        let first_vcount = verts.len() / 6;
-        tessellate_fill(&mut tess, &path, [0.0, 1.0, 0.0, 1.0], &CmdFillRule::NonZero, 0.25, &mut verts, &mut idxs);
+        let cmd = PaintCommand::Fill { path: path.clone(), fill_rule: CmdFillRule::NonZero };
+        tessellate_command(&cmd, 0.25, &mut fill_tess, &mut stroke_tess, &mut verts, &mut idxs);
+        let first_vcount = verts.len() / 4;
+        let cmd2 = PaintCommand::Fill { path, fill_rule: CmdFillRule::NonZero };
+        tessellate_command(&cmd2, 0.25, &mut fill_tess, &mut stroke_tess, &mut verts, &mut idxs);
         // Every index in the second batch must be >= first_vcount
-        let second_batch_indices = &idxs[idxs.len() / 2..]; // rough split
-        for &idx in second_batch_indices {
+        let second_batch = &idxs[idxs.len() / 2..];
+        for &idx in second_batch {
             assert!(idx >= first_vcount as u32);
         }
+    }
+
+    #[test]
+    fn pre_tessellated_passthrough() {
+        let mut fill_tess = FillTessellator::new();
+        let mut stroke_tess = StrokeTessellator::new();
+        let verts_in: Vec<[f32; 2]> = vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]];
+        let idxs_in: Vec<u32> = vec![0, 1, 2, 0, 2, 3];
+        let cmd = PaintCommand::PreTessellated {
+            vertices: verts_in.clone(),
+            indices: idxs_in.clone(),
+        };
+        let mut verts = Vec::new();
+        let mut idxs = Vec::new();
+        let ok = tessellate_command(&cmd, 0.25, &mut fill_tess, &mut stroke_tess, &mut verts, &mut idxs);
+        assert!(ok);
+        assert_eq!(verts.len(), verts_in.len() * 4); // [x,y,u,v] per vertex
+        assert_eq!(idxs, idxs_in);
     }
 }
