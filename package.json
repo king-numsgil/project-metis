@@ -5,8 +5,9 @@
         "compile": "bun compile.ts"
     },
     "dependencies": {
-        "koffi": "^2.16.1",
+        "koffi": "^2.16.2",
         "naga": "workspace:*",
+        "radashi": "^12.9.0",
         "type-fest": "^5.6.0"
     },
     "devDependencies": {

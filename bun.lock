@@ -5,8 +5,9 @@
     "": {
       "name": "metis",
       "dependencies": {
-        "koffi": "^2.16.1",
+        "koffi": "^2.16.2",
         "naga": "workspace:*",
+        "radashi": "^12.9.0",
         "type-fest": "^5.6.0",
       },
       "devDependencies": {
@@ -49,7 +50,7 @@
         "metis-data": "workspace:*",
         "mitt": "^3.0.1",
         "naga": "workspace:*",
-        "radashi": "^12.7.2",
+        "radashi": "^12.9.0",
         "sdl3": "workspace:*",
         "ttf3": "workspace:*",
         "type-fest": "^5.6.0",
@@ -80,7 +81,7 @@
     "packages/sdl3": {
       "name": "sdl3",
       "dependencies": {
-        "koffi": "^2.16.1",
+        "koffi": "^2.16.2",
         "metis-data": "workspace:*",
         "type-fest": "^5.6.0",
       },
@@ -94,7 +95,7 @@
     "packages/ttf3": {
       "name": "ttf3",
       "dependencies": {
-        "koffi": "^2.16.1",
+        "koffi": "^2.16.2",
         "metis-data": "workspace:*",
         "sdl3": "workspace:*",
         "type-fest": "^5.6.0",
@@ -314,7 +315,7 @@
 
     "json-with-bigint": ["json-with-bigint@3.5.8", "", {}, "sha512-eq/4KP6K34kwa7TcFdtvnftvHCD9KvHOGGICWwMFc4dOOKF5t4iYqnfLK8otCRCRv06FXOzGGyqE8h8ElMvvdw=="],
 
-    "koffi": ["koffi@2.16.1", "", {}, "sha512-0Ie6CfD026dNfWSosDw9dPxPzO9Rlyo0N8m5r05S8YjytIpuilzMFDMY4IDy/8xQsTwpuVinhncD+S8n3bcYZQ=="],
+    "koffi": ["koffi@2.16.2", "", {}, "sha512-owU0MRwv6xkrVqCd+33uw6BaYppkTRXbO/rVdJNI2dvZG0gzyRhYwW25eWtc5pauwK8TGh3AbkFONSezdykfSA=="],
 
     "metis-app": ["metis-app@workspace:packages/metis-app"],
 
@@ -336,7 +337,7 @@
 
     "obug": ["obug@2.1.1", "", {}, "sha512-uTqF9MuPraAQ+IsnPf366RG4cP9RtUi7MLO1N3KEc+wb0a6yKpeL0lmk2IB1jY5KHPAlTc6T/JRdC/YqxHNwkQ=="],
 
-    "radashi": ["radashi@12.7.2", "", {}, "sha512-BfoN4XJll34ok3rCHjVlRypymJvD3cE+M3UATC8519wUgHl1/AXt2dEEIFv5865gO6t0ENAU6qEOqjr/NcIRyQ=="],
+    "radashi": ["radashi@12.9.0", "", {}, "sha512-a0VUpLVwlZKLCE+JP5bBG4kN8oEfe2+wn9zF6HcUXvHGRNBYQXdqlHksYAVIxranbLcSWuXqMpAbgTnF/dyG4A=="],
 
     "safer-buffer": ["safer-buffer@2.1.2", "", {}, "sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg=="],
 
