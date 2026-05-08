@@ -577,3 +577,4 @@ if (!nativeBinding) {
 
 module.exports = nativeBinding
 module.exports.VectorContext = nativeBinding.VectorContext
+module.exports.DrawKind = nativeBinding.DrawKind

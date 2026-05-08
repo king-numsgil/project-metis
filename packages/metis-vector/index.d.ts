@@ -2,6 +2,7 @@
 /* eslint-disable */
 export declare class VectorContext {
   constructor(tolerance?: number | undefined | null)
+  setId(id: number): void
   pushTransform(matrix: Float32Array): void
   popTransform(): void
   setWorldTransform(matrix: Float32Array): void
@@ -27,6 +28,16 @@ export declare class VectorContext {
   clear(): void
 }
 
+/**
+ * Which kind of draw operation produced this call.
+ * Backed by a u32 — no marshalling cost across the N-API boundary.
+ */
+export declare const enum DrawKind {
+  Fill = 0,
+  Stroke = 1,
+  PreTessellated = 2
+}
+
 export interface FlushOutput {
   vertices: Float32Array
   indices: Uint32Array
@@ -44,6 +55,8 @@ export interface FontMetrics {
 }
 
 export interface GpuDrawCall {
+  id: number
+  kind: number
   firstIndex: number
   indexCount: number
   modelMatrix: Float32Array
