@@ -210,7 +210,11 @@ ctx.loadFont("JetBrainsMono", join("assets", "JetBrainsMono-Regular.ttf"));
 ctx.beginPath();
 ctx.arc(75, 75, 50, 0, 2 * Math.PI);
 ctx.closePath();
-ctx.fill(0.0, 0.0, 1.0, 1.0);
+ctx.fillRadialGradient(
+    0.0, 0.0, 1.0, 1.0,
+    0.0, 1.0, 0.0, 1.0,
+    0.5, 0.5, 0.4,
+);
 ctx.stroke(1.0, 1.0, 1.0, 1.0, 2.5);
 
 ctx.beginPath();
@@ -219,18 +223,27 @@ ctx.lineTo(50, 0);
 ctx.lineTo(50, 50);
 ctx.lineTo(0, 50);
 ctx.closePath();
-ctx.fill(1.0, 0.0, 0.0, 1.0);
+ctx.fillLinearGradient(
+    1.0, 0.0, 0.0, 1.0,
+    0.0, 0.0, 0.0, 1.0,
+    0.0, 0.0, 1.0, 1.0,
+);
 
 ctx.drawText("Hello World!", "JetBrainsMono", 50, 25, 200);
-ctx.fill(1.0, 1.0, 1.0, 1.0);
+ctx.fillLinearGradient(
+    1.0, 1.0, 1.0, 1.0,
+    0.0, 0.0, 0.0, 1.0,
+    0.0, 0.5,
+    1.0, 0.5,
+);
 ctx.stroke(0.0, 0.0, 0.0, 1.0, 1.5);
 const gpuVector = ctx.flush();
 
 console.log(`Number of draw calls for vector graphics : ${gpuVector.drawCalls.length}`);
 const vectorMesh = new Mesh(ArrayOf(StructOf({
         position: Vec(F32, 2),
-        color: Vec(F32, 4),
-    }), gpuVector.vertices.length / 6),
+        uv: Vec(F32, 2),
+    }), gpuVector.vertices.length / 4),
     gpuVector.indices.length,
     "uint32");
 
@@ -280,8 +293,6 @@ game.on("Frame", ({cb, texture, resolve_texture}) => {
     computePass.dispatch((1440 / 2 + 7) / 8, (768 / 2 + 7) / 8, 1);
     computePass.end();
 
-    cb.pushVertexUniformData(0, ortho.buffer);
-
     const pass = cb.beginRenderPass([{
         texture: texture.raw,
         resolve_texture: resolve_texture.raw,
@@ -320,6 +331,7 @@ game.on("Frame", ({cb, texture, resolve_texture}) => {
     pass.drawIndexedPrimitives(seq.num_indices);
 
     pass.bindGraphicsPipeline(vectorPipeline);
+    cb.pushVertexUniformData(0, ortho.buffer);
     pass.bindVertexBuffers([{
         buffer: vectorVertexBuffer.raw,
         offset: 0,
@@ -331,6 +343,7 @@ game.on("Frame", ({cb, texture, resolve_texture}) => {
 
     for (const call of gpuVector.drawCalls) {
         cb.pushVertexUniformData(1, call.modelMatrix.buffer as ArrayBuffer);
+        cb.pushFragmentUniformData(0, call.paint.buffer as ArrayBuffer);
         pass.drawIndexedPrimitives(call.indexCount, 1, call.firstIndex, 0);
     }
     pass.end();
