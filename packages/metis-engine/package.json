@@ -5,7 +5,8 @@
     "private": true,
     "exports": {
         ".": "./src/index.ts",
-        "./ecs": "./src/ecs/index.ts"
+        "./ecs": "./src/ecs/index.ts",
+        "./ui": "./src/ui/index.ts"
     },
     "devDependencies": {
         "@types/bun": "latest"
@@ -15,6 +16,7 @@
     },
     "dependencies": {
         "metis-data": "workspace:*",
+        "metis-vector": "workspace:*",
         "mitt": "^3.0.1",
         "naga": "workspace:*",
         "radashi": "^12.9.0",

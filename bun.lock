@@ -21,6 +21,7 @@
       "name": "metis-app",
       "dependencies": {
         "metis-data": "workspace:*",
+        "metis-engine": "workspace:*",
         "naga": "workspace:*",
         "sdl3": "workspace:*",
         "ttf3": "workspace:*",
@@ -48,6 +49,7 @@
       "name": "metis-engine",
       "dependencies": {
         "metis-data": "workspace:*",
+        "metis-vector": "workspace:*",
         "mitt": "^3.0.1",
         "naga": "workspace:*",
         "radashi": "^12.9.0",

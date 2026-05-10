@@ -10,6 +10,7 @@
         "typescript": "^6"
     },
     "dependencies": {
+        "metis-engine": "workspace:*",
         "metis-data": "workspace:*",
         "naga": "workspace:*",
         "sdl3": "workspace:*",

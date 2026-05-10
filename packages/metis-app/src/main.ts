@@ -1,7 +1,6 @@
-import { allocate, ArrayOf, F32, Mat4, PackingType, StructOf, Vec } from "metis-data";
+import { ArrayOf, F32, StructOf, Vec } from "metis-data";
 import { Game } from "metis-engine";
-import { DrawKind, VectorContext } from "metis-vector";
-import { join } from "node:path";
+import { RootWidget, TextWidget } from "metis-engine/ui";
 import {
     Device,
     GPUCompareOp,
@@ -24,7 +23,6 @@ import {
 import { sdlGetKeyboardState } from "sdl3/ffi";
 
 import triangleShader from "./triangle.wgsl";
-import vectorShader from "./vector.wgsl";
 
 function decodeKeymods(mod: Keymod): string[] {
     return (Object.keys(Keymod) as Array<keyof typeof Keymod>)
@@ -37,10 +35,6 @@ function decodeKeymods(mod: Keymod): string[] {
 
 if (!triangleShader.vertex || !triangleShader.fragment || !triangleShader.compute) {
     throw new Error("Failed loading triangle shader");
-}
-
-if (!vectorShader.vertex || !vectorShader.fragment) {
-    throw new Error("Failed loading vector shader");
 }
 
 using game = new Game();
@@ -120,85 +114,9 @@ using pipeline = dev.buildGraphicsPipeline()
     .multisample(GPUSampleCount.Four)
     .build();
 
-const ctx = new VectorContext();
-ctx.loadFont("JetBrainsMono", join("assets", "JetBrainsMono-Regular.ttf"));
-
-const Paint = StructOf({
-    color_a: Vec(F32, 4),
-    color_b: Vec(F32, 4),
-    gradient_start: Vec(F32, 2),
-    gradient_end: Vec(F32, 2),
-    mode: F32,
-}, PackingType.Uniform);
-
-ctx.setId(1);
-ctx.beginPath();
-ctx.arc(75, 75, 50, 0, 2 * Math.PI);
-ctx.closePath();
-ctx.fillRadialGradient(
-    0.0, 0.0, 1.0, 1.0,
-    0.0, 1.0, 0.0, 1.0,
-    0.5, 0.5, 0.4,
-);
-ctx.stroke(1.0, 1.0, 1.0, 1.0, 2.5);
-
-ctx.setId(2);
-ctx.beginPath();
-ctx.moveTo(0, 0);
-ctx.lineTo(50, 0);
-ctx.lineTo(50, 50);
-ctx.lineTo(0, 50);
-ctx.closePath();
-ctx.fillLinearGradient(
-    1.0, 0.0, 0.0, 1.0,
-    0.0, 0.0, 0.0, 1.0,
-    0.0, 0.0, 1.0, 1.0,
-);
-
-ctx.setId(3);
-ctx.drawText("Hello World!", "JetBrainsMono", 50, 25, 200);
-ctx.fillLinearGradient(
-    1.0, 1.0, 1.0, 1.0,
-    0.0, 0.0, 0.0, 1.0,
-    0.0, 0.5,
-    1.0, 0.5,
-);
-ctx.stroke(0.0, 0.0, 0.0, 1.0, 1.5);
-const gpuVector = ctx.flush();
-
-const textPaint = allocate(Paint);
-textPaint.get("color_a").set([1.0, 1.0, 1.0, 1.0]);
-textPaint.get("color_b").set([0.0, 1.0, 0.0, 1.0]);
-textPaint.get("gradient_start").set([0.1, 0.5]);
-textPaint.get("gradient_end").set([0.9, 0.5]);
-textPaint.get("mode").set(1);
-
-console.log(`Number of draw calls for vector graphics : ${gpuVector.drawCalls.length}`);
-const vectorMesh = new Mesh(ArrayOf(StructOf({
-        position: Vec(F32, 2),
-        uv: Vec(F32, 2),
-    }), gpuVector.vertices.length / 4),
-    gpuVector.indices.length,
-    "uint32");
-
-new Float32Array(vectorMesh.vertexBuffer).set(gpuVector.vertices);
-vectorMesh.setIndices(Array.from(gpuVector.indices));
-
-using vectorVertexBuffer = vectorMesh.createVertexDeviceBuffer(dev);
-using vectorIndexBuffer = vectorMesh.createIndexDeviceBuffer(dev);
-
-using vectorVertexShader = dev.createShader(vectorShader.vertex);
-using vectorFragmentShader = dev.createShader(vectorShader.fragment);
-
-using vectorPipeline = dev.buildGraphicsPipeline()
-    .shaders(vectorVertexShader, vectorFragmentShader)
-    .addColorTarget(dev.getSwapchainFormat(wnd))
-    .addVertexInput(vectorMesh, 0)
-    .primitiveType(GPUPrimitiveType.TriangleList)
-    .multisample(GPUSampleCount.Four)
-    .build();
-
-const ortho = Mat4.orthographic(F32, 0, 1440, 0, 768, -1, 1);
+using ui = new RootWidget(1440, 768);
+ui.init(dev, wnd, GPUSampleCount.Four);
+ui.add(new TextWidget("Hello World!", 50, [25, 200]));
 
 game.on("Quit", ({timestamp}) => {
     game.exit();
@@ -206,6 +124,9 @@ game.on("Quit", ({timestamp}) => {
 });
 game.on("KeyDown", ({timestamp, scancode, mod}) => {
     console.log(`Got KeyDown event at ${timestamp} with ${Scancode[scancode]} (${decodeKeymods(mod).join(" | ")})`);
+});
+game.on("PreFrame", (_) => {
+    ui.tessellate(dev);
 });
 game.on("Frame", ({cb, texture, resolve_texture}) => {
     if (keyboard[Scancode.W] === 1) {
@@ -249,27 +170,7 @@ game.on("Frame", ({cb, texture, resolve_texture}) => {
     }, GPUIndexElementSize.Size16Bit);
     pass.drawIndexedPrimitives(6);
 
-    pass.bindGraphicsPipeline(vectorPipeline);
-    cb.pushVertexUniformData(0, ortho.buffer);
-    pass.bindVertexBuffers([{
-        buffer: vectorVertexBuffer.raw,
-        offset: 0,
-    }]);
-    pass.bindIndexBuffer({
-        buffer: vectorIndexBuffer.raw,
-        offset: 0,
-    }, GPUIndexElementSize.Size32Bit);
-
-    for (const call of gpuVector.drawCalls) {
-        cb.pushVertexUniformData(1, call.modelMatrix.buffer as ArrayBuffer);
-        if (call.id === 3 && call.kind === DrawKind.Fill) {
-            cb.pushFragmentUniformData(0, textPaint.buffer);
-        } else {
-            cb.pushFragmentUniformData(0, call.paint.buffer as ArrayBuffer);
-        }
-
-        pass.drawIndexedPrimitives(call.indexCount, 1, call.firstIndex, 0);
-    }
+    ui.render(cb, pass);
     pass.end();
 });
 game.run();
