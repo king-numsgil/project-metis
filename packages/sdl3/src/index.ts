@@ -111,17 +111,19 @@ export type {
     GPUBlitInfo,
 } from "./ffi/types";
 
-export * from "./system.ts";
-export * from "./window.ts";
-export * from "./device.ts";
 export * from "./command_buffer.ts";
-export * from "./render_pass.ts";
-export * from "./device_buffer.ts";
-export * from "./transfer_buffer.ts";
-export * from "./fence.ts";
-export * from "./copy_pass.ts";
-export * from "./mesh.ts";
-export * from "./texture.ts";
-export * from "./sampler.ts";
-export * from "./compute_pipeline.ts";
 export * from "./compute_pass.ts";
+export * from "./compute_pipeline.ts";
+export * from "./copy_pass.ts";
+export * from "./device.ts";
+export * from "./device_buffer.ts";
+export * from "./fence.ts";
+export * from "./graphics_pipeline.ts";
+export * from "./mesh.ts";
+export * from "./render_pass.ts";
+export * from "./sampler.ts";
+export * from "./shader.ts";
+export * from "./system.ts";
+export * from "./texture.ts";
+export * from "./transfer_buffer.ts";
+export * from "./window.ts";
