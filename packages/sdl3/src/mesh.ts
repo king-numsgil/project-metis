@@ -16,6 +16,7 @@ import {
     type GPUVertexAttribute,
     GPUVertexElementFormat,
 } from "sdl3";
+import { sdlGetError } from "./ffi";
 
 /**
  * Supported index element sizes for index buffers.
@@ -461,6 +462,42 @@ export class Mesh<
     }
 
     /**
+     * Upload current vertex data into an existing device buffer.
+     *
+     * @param device - The SDL3 device to use for the upload
+     * @param buffer - The existing DeviceBuffer to update
+     * @param cycle - Whether to cycle the buffer (default: true)
+     */
+    updateVertexDeviceBuffer(device: Device, buffer: DeviceBuffer, cycle: boolean = true): void {
+        const size = this.vertexBufferSize;
+
+        using transfer = device.createTransferBuffer({
+            usage: GPUTransferBufferUsage.Upload,
+            size,
+        });
+
+        transfer.map(array_buffer => {
+            this.copyVertexBufferTo(array_buffer);
+        });
+
+        const cb = device.acquireCommandBuffer();
+        const copy = cb.beginCopyPass();
+        copy.uploadToDeviceBuffer({
+            transfer_buffer: transfer.raw,
+            offset: 0,
+        }, {
+            buffer: buffer.raw,
+            offset: 0,
+            size,
+        }, cycle);
+        copy.end();
+
+        if (!cb.submit()) {
+            console.log(`Failed to submit mesh update command buffer : ${sdlGetError()}`);
+        }
+    }
+
+    /**
      * Create and upload an index buffer to the GPU device.
      *
      * @param device - The SDL3 device to create the buffer on
@@ -497,6 +534,42 @@ export class Mesh<
         fence.wait();
 
         return buffer;
+    }
+
+    /**
+     * Upload current index data into an existing device buffer.
+     *
+     * @param device - The SDL3 device to use for the upload
+     * @param buffer - The existing DeviceBuffer to update
+     * @param cycle - Whether to cycle the buffer (default: true)
+     */
+    updateIndexDeviceBuffer(device: Device, buffer: DeviceBuffer, cycle: boolean = true): void {
+        const size = this.indexBufferSize;
+
+        using transfer = device.createTransferBuffer({
+            usage: GPUTransferBufferUsage.Upload,
+            size,
+        });
+
+        transfer.map(array_buffer => {
+            this.copyIndexBufferTo(array_buffer);
+        });
+
+        const cb = device.acquireCommandBuffer();
+        const copy = cb.beginCopyPass();
+        copy.uploadToDeviceBuffer({
+            transfer_buffer: transfer.raw,
+            offset: 0,
+        }, {
+            buffer: buffer.raw,
+            offset: 0,
+            size,
+        }, cycle);
+        copy.end();
+
+        if (!cb.submit()) {
+            console.log(`Failed to submit mesh update command buffer : ${sdlGetError()}`);
+        }
     }
 
     /**
