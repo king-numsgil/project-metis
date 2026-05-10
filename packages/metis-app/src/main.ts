@@ -1,6 +1,6 @@
-import { ArrayOf, F32, Mat4, StructOf, Vec } from "metis-data";
+import { allocate, ArrayOf, F32, Mat4, PackingType, StructOf, Vec } from "metis-data";
 import { Game } from "metis-engine";
-import { VectorContext } from "metis-vector";
+import { DrawKind, VectorContext } from "metis-vector";
 import { join } from "node:path";
 import {
     Device,
@@ -123,6 +123,14 @@ using pipeline = dev.buildGraphicsPipeline()
 const ctx = new VectorContext();
 ctx.loadFont("JetBrainsMono", join("assets", "JetBrainsMono-Regular.ttf"));
 
+const Paint = StructOf({
+    color_a: Vec(F32, 4),
+    color_b: Vec(F32, 4),
+    gradient_start: Vec(F32, 2),
+    gradient_end: Vec(F32, 2),
+    mode: F32,
+}, PackingType.Uniform);
+
 ctx.setId(1);
 ctx.beginPath();
 ctx.arc(75, 75, 50, 0, 2 * Math.PI);
@@ -157,6 +165,13 @@ ctx.fillLinearGradient(
 );
 ctx.stroke(0.0, 0.0, 0.0, 1.0, 1.5);
 const gpuVector = ctx.flush();
+
+const textPaint = allocate(Paint);
+textPaint.get("color_a").set([1.0, 1.0, 1.0, 1.0]);
+textPaint.get("color_b").set([0.0, 1.0, 0.0, 1.0]);
+textPaint.get("gradient_start").set([0.1, 0.5]);
+textPaint.get("gradient_end").set([0.9, 0.5]);
+textPaint.get("mode").set(1);
 
 console.log(`Number of draw calls for vector graphics : ${gpuVector.drawCalls.length}`);
 const vectorMesh = new Mesh(ArrayOf(StructOf({
@@ -247,7 +262,12 @@ game.on("Frame", ({cb, texture, resolve_texture}) => {
 
     for (const call of gpuVector.drawCalls) {
         cb.pushVertexUniformData(1, call.modelMatrix.buffer as ArrayBuffer);
-        cb.pushFragmentUniformData(0, call.paint.buffer as ArrayBuffer);
+        if (call.id === 3 && call.kind === DrawKind.Fill) {
+            cb.pushFragmentUniformData(0, textPaint.buffer);
+        } else {
+            cb.pushFragmentUniformData(0, call.paint.buffer as ArrayBuffer);
+        }
+
         pass.drawIndexedPrimitives(call.indexCount, 1, call.firstIndex, 0);
     }
     pass.end();
