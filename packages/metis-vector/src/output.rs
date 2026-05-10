@@ -2,14 +2,13 @@ use napi::bindgen_prelude::*;
 use napi_derive::napi;
 
 /// Which kind of draw operation produced this call.
-/// Backed by a u32 — no marshalling cost across the N-API boundary.
+/// Backed by a u32 — no marshaling cost across the N-API boundary.
 #[napi]
 #[derive(Clone, Copy, Debug)]
 #[repr(u32)]
 pub enum DrawKind {
     Fill           = 0,
     Stroke         = 1,
-    PreTessellated = 2, // text rendered via the glyph cache
 }
 
 #[napi(object)]

@@ -344,7 +344,7 @@ impl VectorContext {
                 command: PaintCommand::PreTessellated { vertices: verts, indices: idxs },
                 world_transform: self.world_transform,
                 id:   self.current_id,
-                kind: DrawKind::PreTessellated,
+                kind: DrawKind::Fill,
                 paint,
             });
             return;
