@@ -32,7 +32,7 @@ export declare class VectorContext {
  * Which kind of draw operation produced this call.
  * Backed by a u32 — no marshaling cost across the N-API boundary.
  */
-export declare const enum DrawKind {
+export declare enum DrawKind {
   Fill = 0,
   Stroke = 1
 }
