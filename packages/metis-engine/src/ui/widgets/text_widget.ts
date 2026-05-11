@@ -10,9 +10,6 @@ export class TextWidget implements IWidget {
     private readonly paintBuffer: PaintMemoryBuffer;
     private readonly model: MatMemoryBuffer<F32Descriptor, 4>;
     private dirty: boolean = true;
-    private _text: string;
-    private _position: [number, number];
-    private _size: number;
 
     public constructor(text: string, size: number, position: [number, number], color: [number, number, number, number] = [0, 0, 0, 1]) {
         this._text = text;
@@ -22,6 +19,39 @@ export class TextWidget implements IWidget {
         this.paintBuffer = allocate(Paint);
         paint_flat(this.paintBuffer, color);
         this.model = Mat4.identity(F32);
+    }
+
+    private _text: string;
+
+    public get text(): string {
+        return this._text;
+    }
+
+    public set text(value: string) {
+        this._text = value;
+        this.dirty = true;
+    }
+
+    private _position: [number, number];
+
+    public get position(): [number, number] {
+        return this._position;
+    }
+
+    public set position(value: [number, number]) {
+        this._position = value;
+        this.dirty = true;
+    }
+
+    private _size: number;
+
+    public get size(): number {
+        return this._size;
+    }
+
+    public set size(value: number) {
+        this._size = value;
+        this.dirty = true;
     }
 
     public get isDirty(): boolean {
@@ -40,41 +70,6 @@ export class TextWidget implements IWidget {
         return this._id;
     }
 
-    public get text(): string {
-        return this._text;
-    }
-
-    public set text(value: string) {
-        this._text = value;
-        this.dirty = true;
-    }
-
-    public get position(): [number, number] {
-        return this._position;
-    }
-
-    public set position(value: [number, number]) {
-        this._position = value;
-        this.dirty = true;
-    }
-
-    public get size(): number {
-        return this._size;
-    }
-
-    public set size(value: number) {
-        this._size = value;
-        this.dirty = true;
-    }
-
-    public get color(): [number, number, number, number] {
-        return this.paintBuffer.get("color_a").get();
-    }
-
-    public set color(value: [number, number, number, number]) {
-        this.paintBuffer.get("color_a").set(value);
-    }
-
     public owner: RootWidget | null = null;
 
     public render(ctx: VectorContext): void {
@@ -83,5 +78,13 @@ export class TextWidget implements IWidget {
         ctx.drawText(this._text, "Inter", this._size, this._position[0], this._position[1]);
         ctx.fill(r, g, b, a);
         this.dirty = false;
+    }
+
+    public get color(): [number, number, number, number] {
+        return this.paintBuffer.get("color_a").get();
+    }
+
+    public set color(value: [number, number, number, number]) {
+        this.paintBuffer.get("color_a").set(value);
     }
 }

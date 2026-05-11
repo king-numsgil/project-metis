@@ -5,6 +5,8 @@ import type { RootWidget } from "./root_widget.ts";
 import type { WidgetID } from "./widget_id.ts";
 
 export interface IWidget {
+    owner: RootWidget | null;
+
     get isDirty(): boolean;
 
     get modelMatrix(): MatMemoryBuffer<F32Descriptor, 4>;
@@ -12,8 +14,6 @@ export interface IWidget {
     get paint(): PaintMemoryBuffer;
 
     get id(): WidgetID;
-
-    owner: RootWidget | null;
 
     render(ctx: VectorContext): void;
 }

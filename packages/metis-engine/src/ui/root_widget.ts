@@ -18,7 +18,6 @@ import {
     Window,
 } from "sdl3";
 import type { IWidget } from "./interfaces.ts";
-
 import shader from "./vector.wgsl";
 import type { WidgetID } from "./widget_id.ts";
 
