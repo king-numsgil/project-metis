@@ -1,6 +1,6 @@
 import { allocate, F32, type F32Descriptor, Mat4, type MatMemoryBuffer } from "metis-data";
 import type { VectorContext } from "metis-vector";
-import type { IWidget } from "../interfaces.ts";
+import type { IPaintable, IWidget } from "../interfaces.ts";
 import { Paint, paint_flat, type PaintMemoryBuffer } from "../paint.ts";
 import type { RootWidget } from "../root_widget.ts";
 import { nextWidgetID, type WidgetID } from "../widget_id.ts";
@@ -11,6 +11,9 @@ export class LabelWidget implements IWidget {
     private readonly model: MatMemoryBuffer<F32Descriptor, 4>;
     private dirty: boolean = true;
 
+    private readonly strokeSlot: IPaintable;
+    private readonly strokePaint: PaintMemoryBuffer;
+
     public constructor(text: string, size: number, position: [number, number], color: [number, number, number, number] = [0, 0, 0, 1]) {
         this._text = text;
         this._position = position;
@@ -18,7 +21,16 @@ export class LabelWidget implements IWidget {
         this._id = nextWidgetID();
         this.paintBuffer = allocate(Paint);
         paint_flat(this.paintBuffer, color);
+        this.strokePaint = allocate(Paint);
+        paint_flat(this.strokePaint, [1 - color[0], 1 - color[1], 1 - color[2], color[3]]);
         this.model = Mat4.identity(F32);
+
+        this.strokeSlot = {
+            id: nextWidgetID(),
+            modelMatrix: this.model,
+            paint: this.strokePaint,
+            isDirty: undefined,
+        };
     }
 
     private _text: string;
@@ -70,12 +82,28 @@ export class LabelWidget implements IWidget {
         return this._id;
     }
 
-    public owner: RootWidget | null = null;
+    private _owner: RootWidget | null = null;
+
+    public get owner(): RootWidget | null {
+        return this._owner;
+    }
+
+    public set owner(value: RootWidget | null) {
+        if (this._owner) {
+            this._owner.remove(this.strokeSlot);
+        }
+
+        this._owner = value;
+        this._owner?.add(this.strokeSlot);
+    }
 
     public render(ctx: VectorContext): void {
         ctx.setId(this._id);
         ctx.drawText(this._text, "Inter", this._size, this._position[0], this._position[1]);
         ctx.fill();
+
+        ctx.setId(this.strokeSlot.id);
+        ctx.stroke(1);
         this.dirty = false;
     }
 

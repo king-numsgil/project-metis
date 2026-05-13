@@ -5,7 +5,7 @@ import type { RootWidget } from "./root_widget.ts";
 import type { WidgetID } from "./widget_id.ts";
 
 export interface IPaintable {
-    get isDirty(): boolean;
+    get isDirty(): boolean | undefined;
 
     get modelMatrix(): MatMemoryBuffer<F32Descriptor, 4>;
 

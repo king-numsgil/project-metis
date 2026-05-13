@@ -17,7 +17,7 @@ import {
     Shader,
     Window,
 } from "sdl3";
-import type { IWidget } from "./interfaces.ts";
+import type { IPaintable, IWidget } from "./interfaces.ts";
 import shader from "./vector.wgsl";
 import type { WidgetID } from "./widget_id.ts";
 
@@ -49,8 +49,7 @@ export class RootWidget {
         "uint32",
     );
 
-    private readonly _owned: Map<WidgetID, IWidget> = new Map();
-    private readonly _children: Array<IWidget> = new Array<IWidget>();
+    private readonly _owned: Map<WidgetID, IPaintable> = new Map();
 
     public constructor(width: number, height: number, tolerance: number = 0.25) {
         this.ctx = new VectorContext(tolerance);
@@ -61,12 +60,8 @@ export class RootWidget {
         this.proj = Mat4.orthographic(F32, 0, width, 0, height, -1, 1);
     }
 
-    public get children(): Array<IWidget> {
-        return this._children;
-    }
-
     public get isDirty(): boolean {
-        return this._children.some(child => child.isDirty);
+        return [...this._owned.values()].some(p => p.isDirty === true);
     }
 
     public dispose(): void {
@@ -138,28 +133,19 @@ export class RootWidget {
         }
     }
 
-    public own(widget: IWidget): this {
-        if (widget.owner && widget.owner !== this) {
-            widget.owner.disown(widget);
+    public add(paintable: IPaintable): this {
+        this._owned.set(paintable.id, paintable);
+        if ("owner" in paintable) {
+            (paintable as IWidget).owner = this;
         }
-
-        widget.owner = this;
-        this._owned.set(widget.id, widget);
         return this;
     }
 
-    public disown(widget: IWidget): this {
-        if (widget.owner && widget.owner === this) {
-            widget.owner = null;
-            this._owned.delete(widget.id);
+    public remove(paintable: IPaintable): this {
+        this._owned.delete(paintable.id);
+        if ("owner" in paintable) {
+            (paintable as IWidget).owner = null;
         }
-
-        return this;
-    }
-
-    public add(widget: IWidget): this {
-        this.own(widget);
-        this._children.push(widget);
         return this;
     }
 
@@ -169,7 +155,7 @@ export class RootWidget {
         }
 
         if (this.isDirty) {
-            this._children.forEach((child: IWidget) => {
+            this._owned.forEach((child: IPaintable) => {
                 child.render?.(this.ctx);
             });
 
