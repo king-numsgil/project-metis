@@ -73,10 +73,9 @@ export class TextWidget implements IWidget {
     public owner: RootWidget | null = null;
 
     public render(ctx: VectorContext): void {
-        const [r, g, b, a] = this.paintBuffer.get("color_a").get();
         ctx.setId(this._id);
         ctx.drawText(this._text, "Inter", this._size, this._position[0], this._position[1]);
-        ctx.fill(r, g, b, a);
+        ctx.fill();
         this.dirty = false;
     }
 

@@ -13,12 +13,8 @@ export declare class VectorContext {
   cubicTo(c1X: number, c1Y: number, c2X: number, c2Y: number, x: number, y: number): void
   arc(cx: number, cy: number, radius: number, startAngle: number, sweepAngle: number): void
   closePath(): void
-  fill(r: number, g: number, b: number, a: number): void
-  stroke(r: number, g: number, b: number, a: number, width: number): void
-  fillLinearGradient(r1: number, g1: number, b1: number, a1: number, r2: number, g2: number, b2: number, a2: number, u1: number, v1: number, u2: number, v2: number): void
-  fillRadialGradient(r1: number, g1: number, b1: number, a1: number, r2: number, g2: number, b2: number, a2: number, cu: number, cv: number, radius: number): void
-  strokeLinearGradient(r1: number, g1: number, b1: number, a1: number, r2: number, g2: number, b2: number, a2: number, u1: number, v1: number, u2: number, v2: number, width: number): void
-  strokeRadialGradient(r1: number, g1: number, b1: number, a1: number, r2: number, g2: number, b2: number, a2: number, cu: number, cv: number, radius: number, width: number): void
+  fill(): void
+  stroke(width: number): void
   loadFont(name: string, path: string, faceIndex?: number | undefined | null): void
   unloadFont(name: string): void
   drawText(text: string, fontName: string, sizePx: number, x: number, y: number): void
@@ -59,9 +55,4 @@ export interface GpuDrawCall {
   firstIndex: number
   indexCount: number
   modelMatrix: Float32Array
-  /**
-   * Paint descriptor — 16 f32s (64 bytes) in std140 layout.
-   * See Paint::to_std140() for the exact field layout.
-   */
-  paint: Float32Array
 }

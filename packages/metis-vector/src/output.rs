@@ -18,9 +18,6 @@ pub struct GpuDrawCall {
     pub first_index: u32,
     pub index_count: u32,
     pub model_matrix: Float32Array,
-    /// Paint descriptor — 16 f32s (64 bytes) in std140 layout.
-    /// See Paint::to_std140() for the exact field layout.
-    pub paint: Float32Array,
 }
 
 #[napi(object)]

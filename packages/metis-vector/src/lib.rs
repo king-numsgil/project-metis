@@ -15,7 +15,7 @@ use lyon_tessellation::{FillTessellator, StrokeTessellator};
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 
-use commands::{FillRule, Paint, PaintCommand};
+use commands::{FillRule, PaintCommand};
 use font::FontStore;
 use output::{DrawKind, FlushOutput, FontMetrics, GpuDrawCall};
 use tessellator::tessellate_command;
@@ -29,7 +29,6 @@ struct PendingDraw {
     world_transform: [f32; 16],
     id:   u32,
     kind: DrawKind,
-    paint: Paint,
 }
 
 // ---------------------------------------------------------------------------
@@ -247,96 +246,20 @@ impl VectorContext {
     }
 
     #[napi]
-    pub fn fill(&mut self, r: f64, g: f64, b: f64, a: f64) {
-        let paint = Paint::flat([r as f32, g as f32, b as f32, a as f32]);
-        self.push_fill_command(paint);
+    pub fn fill(&mut self) {
+        self.push_fill_command();
     }
 
     #[napi]
-    pub fn stroke(&mut self, r: f64, g: f64, b: f64, a: f64, width: f64) {
-        let paint = Paint::flat([r as f32, g as f32, b as f32, a as f32]);
-        self.push_stroke_command(paint, width as f32);
-    }
-
-    // -----------------------------------------------------------------------
-    // Paint operations — gradients
-    // -----------------------------------------------------------------------
-
-    #[napi]
-    pub fn fill_linear_gradient(
-        &mut self,
-        r1: f64, g1: f64, b1: f64, a1: f64,
-        r2: f64, g2: f64, b2: f64, a2: f64,
-        u1: f64, v1: f64,
-        u2: f64, v2: f64,
-    ) {
-        let paint = Paint::linear(
-            [r1 as f32, g1 as f32, b1 as f32, a1 as f32],
-            [r2 as f32, g2 as f32, b2 as f32, a2 as f32],
-            [u1 as f32, v1 as f32],
-            [u2 as f32, v2 as f32],
-        );
-        self.push_fill_command(paint);
-    }
-
-    #[napi]
-    pub fn fill_radial_gradient(
-        &mut self,
-        r1: f64, g1: f64, b1: f64, a1: f64,
-        r2: f64, g2: f64, b2: f64, a2: f64,
-        cu: f64, cv: f64,
-        radius: f64,
-    ) {
-        let paint = Paint::radial(
-            [r1 as f32, g1 as f32, b1 as f32, a1 as f32],
-            [r2 as f32, g2 as f32, b2 as f32, a2 as f32],
-            [cu as f32, cv as f32],
-            radius as f32,
-        );
-        self.push_fill_command(paint);
-    }
-
-    #[napi]
-    pub fn stroke_linear_gradient(
-        &mut self,
-        r1: f64, g1: f64, b1: f64, a1: f64,
-        r2: f64, g2: f64, b2: f64, a2: f64,
-        u1: f64, v1: f64,
-        u2: f64, v2: f64,
-        width: f64,
-    ) {
-        let paint = Paint::linear(
-            [r1 as f32, g1 as f32, b1 as f32, a1 as f32],
-            [r2 as f32, g2 as f32, b2 as f32, a2 as f32],
-            [u1 as f32, v1 as f32],
-            [u2 as f32, v2 as f32],
-        );
-        self.push_stroke_command(paint, width as f32);
-    }
-
-    #[napi]
-    pub fn stroke_radial_gradient(
-        &mut self,
-        r1: f64, g1: f64, b1: f64, a1: f64,
-        r2: f64, g2: f64, b2: f64, a2: f64,
-        cu: f64, cv: f64,
-        radius: f64,
-        width: f64,
-    ) {
-        let paint = Paint::radial(
-            [r1 as f32, g1 as f32, b1 as f32, a1 as f32],
-            [r2 as f32, g2 as f32, b2 as f32, a2 as f32],
-            [cu as f32, cv as f32],
-            radius as f32,
-        );
-        self.push_stroke_command(paint, width as f32);
+    pub fn stroke(&mut self, width: f64) {
+        self.push_stroke_command(width as f32);
     }
 
     // -----------------------------------------------------------------------
     // Internal paint helpers
     // -----------------------------------------------------------------------
 
-    fn push_fill_command(&mut self, paint: Paint) {
+    fn push_fill_command(&mut self) {
         // Prefer pre-tessellated cache output (set by draw_text) for fills.
         if let Some((verts, idxs, _fill_rule)) = self.pending_render.take() {
             // current_path is still available for a subsequent stroke() call.
@@ -345,7 +268,6 @@ impl VectorContext {
                 world_transform: self.world_transform,
                 id:   self.current_id,
                 kind: DrawKind::Fill,
-                paint,
             });
             return;
         }
@@ -366,11 +288,10 @@ impl VectorContext {
             world_transform: self.world_transform,
             id:   self.current_id,
             kind: DrawKind::Fill,
-            paint,
         });
     }
 
-    fn push_stroke_command(&mut self, paint: Paint, width: f32) {
+    fn push_stroke_command(&mut self, width: f32) {
         // Discard cached text output — stroke always uses the Lyon path.
         self.pending_render = None;
 
@@ -384,7 +305,6 @@ impl VectorContext {
             world_transform: self.world_transform,
             id:   self.current_id,
             kind: DrawKind::Stroke,
-            paint,
         });
     }
 
@@ -531,7 +451,6 @@ impl VectorContext {
                     model_matrix: Float32Array::new(draw.world_transform.to_vec()),
                     id:   draw.id,
                     kind: draw.kind as u32,
-                    paint: Float32Array::new(draw.paint.to_std140().to_vec()),
                 });
             }
         }
