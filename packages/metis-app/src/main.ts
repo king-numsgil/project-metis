@@ -1,6 +1,6 @@
 import { ArrayOf, F32, StructOf, Vec } from "metis-data";
 import { Game } from "metis-engine";
-import { RootWidget, TextWidget } from "metis-engine/ui";
+import { RootWidget, LabelWidget } from "metis-engine/ui";
 import {
     Device,
     GPUCompareOp,
@@ -116,7 +116,7 @@ using pipeline = dev.buildGraphicsPipeline()
 
 using ui = new RootWidget(1440, 768);
 ui.init(dev, wnd, GPUSampleCount.Four);
-ui.add(new TextWidget("Hello World!", 50, [25, 200]));
+ui.add(new LabelWidget("Hello World!", 50, [25, 200]));
 
 game.on("Quit", ({timestamp}) => {
     game.exit();

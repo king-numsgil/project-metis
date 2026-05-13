@@ -17,7 +17,6 @@ pub struct GpuDrawCall {
     pub kind: u32, // DrawKind value — napi enums export as numeric constants
     pub first_index: u32,
     pub index_count: u32,
-    pub model_matrix: Float32Array,
 }
 
 #[napi(object)]

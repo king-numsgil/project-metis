@@ -1,1 +1,1 @@
-export * from "./text_widget.ts";
+export * from "./label_widget.ts";

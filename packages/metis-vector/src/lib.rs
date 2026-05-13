@@ -26,7 +26,6 @@ use tessellator::tessellate_command;
 
 struct PendingDraw {
     command: PaintCommand,
-    world_transform: [f32; 16],
     id:   u32,
     kind: DrawKind,
 }
@@ -48,7 +47,6 @@ pub struct VectorContext {
 
     // Transform stacks
     local_stack: Vec<Transform2D<f32>>,
-    world_transform: [f32; 16],
 
     // Queued draw commands
     pending: Vec<PendingDraw>,
@@ -67,15 +65,6 @@ pub struct VectorContext {
     tolerance: f32,
 }
 
-fn identity_4x4() -> [f32; 16] {
-    [
-        1.0, 0.0, 0.0, 0.0,
-        0.0, 1.0, 0.0, 0.0,
-        0.0, 0.0, 1.0, 0.0,
-        0.0, 0.0, 0.0, 1.0,
-    ]
-}
-
 fn current_local(stack: &[Transform2D<f32>]) -> Transform2D<f32> {
     stack.last().copied().unwrap_or_else(Transform2D::identity)
 }
@@ -91,7 +80,6 @@ impl VectorContext {
             text_fill_rule: FillRule::NonZero,
             pending_render: None,
             local_stack: Vec::new(),
-            world_transform: identity_4x4(),
             pending: Vec::new(),
             fonts: FontStore::new(),
             current_id: 0,
@@ -134,15 +122,6 @@ impl VectorContext {
         if !self.local_stack.is_empty() {
             self.local_stack.pop();
         }
-    }
-
-    #[napi]
-    pub fn set_world_transform(&mut self, matrix: Float32Array) {
-        let mut wt = identity_4x4();
-        for (i, v) in matrix.as_ref().iter().enumerate().take(16) {
-            wt[i] = *v;
-        }
-        self.world_transform = wt;
     }
 
     // -----------------------------------------------------------------------
@@ -265,7 +244,6 @@ impl VectorContext {
             // current_path is still available for a subsequent stroke() call.
             self.pending.push(PendingDraw {
                 command: PaintCommand::PreTessellated { vertices: verts, indices: idxs },
-                world_transform: self.world_transform,
                 id:   self.current_id,
                 kind: DrawKind::Fill,
             });
@@ -285,7 +263,6 @@ impl VectorContext {
 
         self.pending.push(PendingDraw {
             command: PaintCommand::Fill { path, fill_rule },
-            world_transform: self.world_transform,
             id:   self.current_id,
             kind: DrawKind::Fill,
         });
@@ -302,7 +279,6 @@ impl VectorContext {
 
         self.pending.push(PendingDraw {
             command: PaintCommand::Stroke { path, width },
-            world_transform: self.world_transform,
             id:   self.current_id,
             kind: DrawKind::Stroke,
         });
@@ -448,7 +424,6 @@ impl VectorContext {
                 draw_calls.push(GpuDrawCall {
                     first_index,
                     index_count: all_indices.len() as u32 - first_index,
-                    model_matrix: Float32Array::new(draw.world_transform.to_vec()),
                     id:   draw.id,
                     kind: draw.kind as u32,
                 });

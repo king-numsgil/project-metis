@@ -5,7 +5,6 @@ export declare class VectorContext {
   setId(id: number): void
   pushTransform(matrix: Float32Array): void
   popTransform(): void
-  setWorldTransform(matrix: Float32Array): void
   beginPath(): void
   moveTo(x: number, y: number): void
   lineTo(x: number, y: number): void
@@ -54,5 +53,4 @@ export interface GpuDrawCall {
   kind: number
   firstIndex: number
   indexCount: number
-  modelMatrix: Float32Array
 }

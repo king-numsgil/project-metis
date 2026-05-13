@@ -5,7 +5,7 @@ import { Paint, paint_flat, type PaintMemoryBuffer } from "../paint.ts";
 import type { RootWidget } from "../root_widget.ts";
 import { nextWidgetID, type WidgetID } from "../widget_id.ts";
 
-export class TextWidget implements IWidget {
+export class LabelWidget implements IWidget {
     private readonly _id: WidgetID;
     private readonly paintBuffer: PaintMemoryBuffer;
     private readonly model: MatMemoryBuffer<F32Descriptor, 4>;
