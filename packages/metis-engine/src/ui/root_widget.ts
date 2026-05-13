@@ -170,7 +170,7 @@ export class RootWidget {
 
         if (this.isDirty) {
             this._children.forEach((child: IWidget) => {
-                child.render(this.ctx);
+                child.render?.(this.ctx);
             });
 
             this.flush = this.ctx.flush();
