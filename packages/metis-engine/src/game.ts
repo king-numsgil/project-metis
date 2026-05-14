@@ -458,8 +458,8 @@ export class Game {
                             layer_or_depth_plane: 0,
                             x: 0,
                             y: 0,
-                            w: 1440,
-                            h: 768,
+                            w: target.width,
+                            h: target.height,
                         },
                         destination: {
                             texture: swapchain.texture,
