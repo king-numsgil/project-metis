@@ -155,9 +155,9 @@ export class RootWidget {
         }
 
         if (this.isDirty) {
-            this._owned.forEach((child: IPaintable) => {
+            for (const [_id, child] of this._owned) {
                 child.render?.(this.ctx);
-            });
+            }
 
             this.flush = this.ctx.flush();
             new Float32Array(this.mesh.vertexBuffer).set(this.flush.vertices);
