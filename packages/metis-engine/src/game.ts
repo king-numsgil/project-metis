@@ -48,7 +48,7 @@ interface ManagedWindow {
 }
 
 export class Game {
-    private static _instance: Game | null;
+    private static _instance: Game | null = null;
     public mainWindow: WindowID = 0 as WindowID;
     private readonly _system: System;
     private readonly _device: Device;
