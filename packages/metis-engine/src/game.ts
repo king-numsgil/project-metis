@@ -9,14 +9,14 @@ import {
     GPUSampleCount,
     GPUShaderFormat,
     GPUTextureType,
-    GPUTextureUsageFlags,
+    GPUTextureUsageFlags, Scancode,
     type SDL_WindowFlags,
     System,
     Texture,
     Window,
     type WindowID,
 } from "sdl3";
-import { sdlGetError } from "sdl3/ffi";
+import { sdlGetError, sdlGetKeyboardState } from "sdl3/ffi";
 
 import { eventTypeToKey, SDL_EVENT_MAP_KEY_SET, type SDLEventMap } from "./game_events.ts";
 
@@ -52,6 +52,7 @@ export class Game {
     public mainWindow: WindowID = 0 as WindowID;
     private readonly _system: System;
     private readonly _device: Device;
+    private readonly _keyboard: Uint8Array;
     private sdlEvents: Emitter<SDLEventMap>;
     private gameEvents: Emitter<GameEvents>;
     private running: boolean = false;
@@ -66,6 +67,7 @@ export class Game {
 
         this._system = new System();
         this._device = new Device(GPUShaderFormat.SPIRV, true);
+        this._keyboard = sdlGetKeyboardState();
         this.sdlEvents = mitt<SDLEventMap>();
         this.gameEvents = mitt<GameEvents>();
     }
@@ -151,6 +153,10 @@ export class Game {
         }
 
         return this.windows.get(winId)!.window;
+    }
+
+    public isKeyDown(code: Scancode): boolean {
+        return this._keyboard[code] === 1;
     }
 
     public on<K extends keyof SDLEventMap>(event: K, handler: (e: SDLEventMap[K]) => void): void;

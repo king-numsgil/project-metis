@@ -1,6 +1,6 @@
 import { ArrayOf, F32, StructOf, Vec } from "metis-data";
 import { Game } from "metis-engine";
-import { RootWidget, LabelWidget } from "metis-engine/ui";
+import { LabelWidget, RootWidget } from "metis-engine/ui";
 import {
     Device,
     GPUCompareOp,
@@ -20,7 +20,6 @@ import {
     Mesh,
     Scancode,
 } from "sdl3";
-import { sdlGetKeyboardState } from "sdl3/ffi";
 
 import triangleShader from "./triangle.wgsl";
 
@@ -48,8 +47,6 @@ console.log(`Device Shader Format : ${GPUShaderFormat[dev.shader_formats]}`);
 
 game.mainWindow = game.createWindow("SDL Experiment", 1440, 768, GPUSampleCount.Four);
 const wnd = game.window(game.mainWindow);
-
-const keyboard = sdlGetKeyboardState();
 
 using vertexShader = dev.createShader(triangleShader.vertex);
 using fragmentShader = dev.createShader(triangleShader.fragment);
@@ -129,7 +126,7 @@ game.on("PreFrame", (_) => {
     ui.tessellate(dev);
 });
 game.on("Frame", ({cb, texture, resolve_texture}) => {
-    if (keyboard[Scancode.W] === 1) {
+    if (game.isKeyDown(Scancode.W)) {
         console.log("Keyboard state for W is true!");
     }
 
